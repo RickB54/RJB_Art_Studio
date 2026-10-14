@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Wooden Palette -->
+  <path d="M52 30C52 18 42 10 30 10C18 10 10 18 10 32C10 44 18 54 30 54C34 54 36 50 36 47C36 44 38 42 41 42C47 42 52 37 52 30Z" fill="#D99B52" stroke="#8D5524" stroke-width="2"/>
+  <!-- Thumb hole -->
+  <ellipse cx="44" cy="34" rx="4" ry="5" fill="#0A0A0C" stroke="#8D5524" stroke-width="1.5"/>
+  <!-- Paint dollops: Yellow, Green, Cobalt Blue, Red, Magenta -->
+  <circle cx="22" cy="20" r="4" fill="#F59E0B" />
+  <circle cx="34" cy="18" r="4.2" fill="#10B981" />
+  <circle cx="20" cy="32" r="4.5" fill="#3B82F6" />
+  <circle cx="28" cy="45" r="4.2" fill="#EF4444" />
+  <circle cx="44" cy="22" r="3.8" fill="#D946EF" />
+  <!-- Crossed brushes -->
+  <line x1="16" y1="48" x2="48" y2="16" stroke="#2D1A10" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="48,16 52,12 50,18" fill="#F59E0B"/>
+  <line x1="14" y1="40" x2="44" y2="14" stroke="#4A2E1B" stroke-width="2" stroke-linecap="round"/>
+  <polygon points="44,14 48,10 46,16" fill="#F59E0B"/>
+</svg>

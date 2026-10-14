@@ -1,0 +1,22 @@
+# ==============================================================================
+# RJB ART STUDIO - YOUTUBE VIDEO IMPORT LIST
+# ==============================================================================
+# Instructions:
+# 1. Paste one YouTube URL per line.
+# 2. Optionally add a category after a pipe symbol (|) like this:
+#    https://www.youtube.com/watch?v=EXAMPLE_ID | Wildlife
+# 3. Available categories:
+#    - Landscapes & Seascapes
+#    - Floral
+#    - Scenery
+#    - Wildlife
+#    - Portraits & Pet Portraits
+#    - Fan Art & Illustrations
+#    - 3D Art
+#    - Watercolor Paintings
+#    - Holiday
+# 4. Save this file, then run this command in PowerShell:
+#    npm run import-videos
+# ==============================================================================
+
+# Paste your YouTube video links below:

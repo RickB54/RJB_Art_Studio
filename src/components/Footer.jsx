@@ -1,0 +1,138 @@
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { Youtube, Facebook, Instagram, Pin, Twitter, Heart } from 'lucide-react'
+import siteData from '../data/site.json'
+
+export default function Footer() {
+  return (
+    <footer className="mt-24 border-t border-white/5 bg-studio-surface/80 backdrop-blur-md">
+      
+      {/* Site Migration Notice Bar */}
+      <div className="border-b border-white/5 bg-studio-purple/10 py-3.5 px-4 text-center">
+        <p className="text-xs sm:text-sm text-slate-300">
+          <span className="font-semibold text-studio-gold mr-1.5">Notice:</span>
+          {siteData.artist.siteMigrationNotice}
+        </p>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+          
+          {/* Brand Info */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-studio-card flex items-center justify-center border border-white/10">
+                <img src="/palette-icon.svg" alt="RJB" className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-serif text-lg font-bold text-white">{siteData.artist.studioName}</h3>
+                <p className="text-xs text-studio-gold font-medium">{siteData.artist.location}</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-400 max-w-md leading-relaxed">
+              {siteData.artist.tagline} {siteData.artist.bioShort}
+            </p>
+            <div className="inline-block p-3 rounded-lg bg-white/5 border border-white/5 text-xs text-slate-300">
+              <span className="text-studio-magenta font-semibold">Studio Update: </span>
+              {siteData.artist.recoveryNotice}
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-200">Explore</h4>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li><Link to="/gallery" className="hover:text-studio-magenta transition">Original Art Gallery</Link></li>
+              <li><Link to="/about" className="hover:text-studio-magenta transition">About the Artist & Studio</Link></li>
+              <li><Link to="/commissions" className="hover:text-studio-magenta transition">Commissions & Pricing</Link></li>
+              <li><Link to="/videos" className="hover:text-studio-magenta transition">YouTube Painting Tutorials</Link></li>
+              <li><Link to="/contact" className="hover:text-studio-magenta transition">Contact Rick</Link></li>
+            </ul>
+          </div>
+
+          {/* Socials & Connect */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-200">Connect</h4>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <a
+                href={siteData.socials.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="YouTube Channel"
+                className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-white/10 transition"
+              >
+                <Youtube className="w-5 h-5" />
+              </a>
+              <a
+                href={siteData.socials.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook Page"
+                className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-300 hover:text-blue-500 hover:bg-white/10 transition"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a
+                href={siteData.socials.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram Profile"
+                className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-300 hover:text-pink-500 hover:bg-white/10 transition"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href={siteData.socials.pinterest}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Pinterest Boards"
+                className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-300 hover:text-red-400 hover:bg-white/10 transition"
+              >
+                <Pin className="w-5 h-5" />
+              </a>
+              <a
+                href={siteData.socials.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="X / Twitter"
+                className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-300 hover:text-sky-400 hover:bg-white/10 transition"
+              >
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a
+                href={siteData.socials.fineArtAmerica}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Fine Art America Prints"
+                className="w-10 h-10 rounded-lg bg-studio-gold/15 border border-studio-gold/30 flex items-center justify-center text-studio-gold hover:bg-studio-gold hover:text-black transition"
+                title="Fine Art America Prints"
+              >
+                <span className="font-serif font-black text-xs">FAA</span>
+              </a>
+            </div>
+            <a
+              href={siteData.socials.fineArtAmerica}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 border border-white/10 text-studio-gold hover:bg-white/10 transition mt-2"
+            >
+              <span>Prints on Fine Art America</span>
+              <span className="text-[10px] text-slate-400">↗</span>
+            </a>
+            <p className="text-xs text-slate-500 pt-2">
+              All links can be edited in <code className="text-slate-400">src/data/site.json</code>.
+            </p>
+          </div>
+
+        </div>
+
+        <div className="mt-12 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+          <p>© {new Date().getFullYear()} Rick J Berube Art Studio. All rights reserved.</p>
+          <p className="flex items-center gap-1">
+            Fine Art from Methuen, MA
+          </p>
+        </div>
+      </div>
+    </footer>
+  )
+}

@@ -1,0 +1,9 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA redirect rule so refreshing /gallery, /about, etc. works seamlessly on Netlify
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
