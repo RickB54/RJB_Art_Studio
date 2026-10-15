@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/generate-sitemap.mjs && vite build",
     "preview": "vite preview",
     "import-videos": "node scripts/import-videos.mjs",
+    "sync-playlists": "node scripts/sync-playlists.mjs",
     "deploy": "npm run build && npx -y netlify deploy --prod --dir=dist",
     "publish": "node scripts/publish.mjs"
   },

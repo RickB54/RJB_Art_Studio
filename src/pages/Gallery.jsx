@@ -11,6 +11,7 @@ export default function Gallery() {
   const [selectedYear, setSelectedYear] = useState('All')
   const [selectedStatus, setSelectedStatus] = useState('All') // 'All' | 'Available' | 'Sold'
   const [searchQuery, setSearchQuery] = useState('')
+  const [visibleCount, setVisibleCount] = useState(24)
 
   // Lightbox State
   const [lightboxIndex, setLightboxIndex] = useState(null)
@@ -48,7 +49,20 @@ export default function Gallery() {
     return true
   })
 
-  // Keyboard navigation for lightbox
+  // Reset visible count when filters change
+  const prevFilterRef = React.useRef('')
+  const filterKey = selectedCategory + selectedMedium + selectedYear + selectedStatus + searchQuery
+  if (prevFilterRef.current !== filterKey) {
+    prevFilterRef.current = filterKey
+    // Use setTimeout to avoid setState during render
+    // (setVisibleCount(24) is safe in the body only if not causing infinite loop)
+  }
+  // We reset visibleCount via useEffect when filters change
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => { setVisibleCount(24) }, [selectedCategory, selectedMedium, selectedYear, selectedStatus, searchQuery])
+
+  const visiblePaintings = filteredPaintings.slice(0, visibleCount)
+  const hasMorePaintings = visibleCount < filteredPaintings.length
   useEffect(() => {
     if (lightboxIndex === null) return
 
@@ -211,8 +225,9 @@ export default function Gallery() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPaintings.map((painting, index) => {
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {visiblePaintings.map((painting, index) => {
             const displayImg = painting.customImage || painting.thumbnail
             return (
               <div

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film } from 'lucide-react'
+import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search } from 'lucide-react'
 import siteDataInitial from '../data/site.json'
 import paintingsDataInitial from '../data/paintings.json'
 
 export default function Admin() {
   const [paintings, setPaintings] = useState(paintingsDataInitial)
   const [site, setSite] = useState(siteDataInitial)
-  const [activeTab, setActiveTab] = useState('single') // 'single' | 'bulk' | 'manage' | 'site'
+  const [playlists, setPlaylists] = useState([])
+  const [activeTab, setActiveTab] = useState('single') // 'single' | 'bulk' | 'manage' | 'playlists' | 'site'
   
   // Single painting form state
   const [inputUrl, setInputUrl] = useState('')
@@ -37,6 +38,12 @@ export default function Admin() {
   const [bulkProcessing, setBulkProcessing] = useState(false)
   const [bulkResult, setBulkResult] = useState('')
 
+  // Playlist tab state
+  const [plSyncing, setPlSyncing] = useState({})
+  const [plSyncMsg, setPlSyncMsg] = useState('')
+  const [missingKey, setMissingKey] = useState(false)
+  const [domainReplaceCount, setDomainReplaceCount] = useState(null)
+
   // Load latest data on mount
   useEffect(() => {
     fetch('/__api/data')
@@ -44,11 +51,95 @@ export default function Admin() {
       .then(data => {
         if (data.paintings) setPaintings(data.paintings)
         if (data.site) setSite(data.site)
+        if (data.playlists) setPlaylists(data.playlists)
       })
-      .catch(() => {
-        // Fallback to imported state if not in dev server mode
-      })
+      .catch(() => {})
   }, [])
+
+  // Save playlists helper
+  const savePlaylists = async (updated) => {
+    await fetch('/__api/playlists', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playlists: updated })
+    })
+    setPlaylists(updated)
+  }
+
+  // Sync single playlist
+  const syncPlaylist = async (playlistId) => {
+    setPlSyncing(prev => ({ ...prev, [playlistId]: true }))
+    setPlSyncMsg(''); setMissingKey(false)
+    try {
+      const res = await fetch('/__api/sync-playlist', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playlistId })
+      })
+      const data = await res.json()
+      if (data.missingKey) { setMissingKey(true); setPlSyncMsg(data.error); return }
+      if (data.error) throw new Error(data.error)
+      setPlSyncMsg(`✓ Synced "${playlists.find(p=>p.playlistId===playlistId)?.title}" — ${data.count} videos (${data.added} new)`)
+      // Reload
+      const fresh = await fetch('/__api/data').then(r => r.json())
+      if (fresh.playlists) setPlaylists(fresh.playlists)
+    } catch (err) { setPlSyncMsg(`✗ ${err.message}`) }
+    setPlSyncing(prev => ({ ...prev, [playlistId]: false }))
+  }
+
+  // Sync all visible playlists sequentially
+  const syncAllPlaylists = async () => {
+    for (const pl of playlists.filter(p => p.show !== false)) {
+      await syncPlaylist(pl.playlistId)
+    }
+  }
+
+  // Move playlist up/down
+  const movePl = (idx, dir) => {
+    const arr = [...playlists]
+    const target = idx + dir
+    if (target < 0 || target >= arr.length) return
+    ;[arr[idx], arr[target]] = [arr[target], arr[idx]]
+    arr.forEach((p, i) => { p.order = i + 1 })
+    savePlaylists(arr)
+  }
+
+  // Count rjbartstudio.com mentions in all descriptions
+  const countOldDomain = () => {
+    let count = 0
+    for (const pl of playlists) {
+      for (const v of pl.videos || []) {
+        if (v.description && v.description.includes('rjbartstudio.com')) count++
+      }
+    }
+    for (const p of paintings) {
+      if (p.description && p.description.includes('rjbartstudio.com')) count++
+    }
+    setDomainReplaceCount(count)
+  }
+
+  // Replace old domain
+  const replaceOldDomain = async () => {
+    const OLD = 'rjbartstudio.com'
+    const NEW = 'https://rjb-art-studio.netlify.app'
+    const updatedPlaylists = playlists.map(pl => ({
+      ...pl,
+      videos: (pl.videos || []).map(v => ({
+        ...v,
+        description: v.description ? v.description.replace(new RegExp(OLD, 'g'), NEW) : v.description
+      }))
+    }))
+    const updatedPaintings = paintings.map(p => ({
+      ...p,
+      description: p.description ? p.description.replace(new RegExp(OLD, 'g'), NEW) : p.description
+    }))
+    await savePlaylists(updatedPlaylists)
+    await fetch('/__api/paintings', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paintings: updatedPaintings })
+    })
+    setPaintings(updatedPaintings)
+    setDomainReplaceCount(0)
+    setPlSyncMsg('✓ Old domain replaced in all descriptions.')
+  }
 
   // Handle single URL fetch
   const handleFetchUrl = async () => {
@@ -305,50 +396,19 @@ export default function Admin() {
 
       {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
-        <button
-          type="button"
-          onClick={() => setActiveTab('single')}
-          className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
-            activeTab === 'single'
-              ? 'bg-studio-magenta text-white shadow-glow-magenta'
-              : 'bg-white/5 text-slate-300 hover:bg-white/10'
-          }`}
-        >
-          {editingId ? 'Edit Painting' : 'Add Single Painting'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('bulk')}
-          className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
-            activeTab === 'bulk'
-              ? 'bg-studio-magenta text-white shadow-glow-magenta'
-              : 'bg-white/5 text-slate-300 hover:bg-white/10'
-          }`}
-        >
-          Bulk YouTube Importer
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('manage')}
-          className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
-            activeTab === 'manage'
-              ? 'bg-studio-magenta text-white shadow-glow-magenta'
-              : 'bg-white/5 text-slate-300 hover:bg-white/10'
-          }`}
-        >
-          Manage All Paintings ({paintings.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('site')}
-          className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
-            activeTab === 'site'
-              ? 'bg-studio-magenta text-white shadow-glow-magenta'
-              : 'bg-white/5 text-slate-300 hover:bg-white/10'
-          }`}
-        >
-          Edit Site Text & Links
-        </button>
+        {[['single', editingId ? 'Edit Painting' : 'Add Single Painting'],
+          ['bulk', 'Bulk Importer'],
+          ['manage', `Paintings (${paintings.length})`],
+          ['playlists', `Playlists (${playlists.length})`],
+          ['site', 'Site Text & Links']
+        ].map(([key, label]) => (
+          <button key={key} type="button" onClick={() => setActiveTab(key)}
+            className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
+              activeTab === key ? 'bg-studio-magenta text-white shadow-glow-magenta' : 'bg-white/5 text-slate-300 hover:bg-white/10'
+            }`}>
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* TAB 1: Single Painting Form */}
@@ -627,6 +687,150 @@ export default function Admin() {
             {bulkProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             <span>{bulkProcessing ? 'Processing Videos...' : 'Process & Import All'}</span>
           </button>
+        </div>
+      )}
+
+      {/* TAB: Playlists */}
+      {activeTab === 'playlists' && (
+        <div className="space-y-6">
+          {/* Header & Sync All */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
+                <Layers className="w-5 h-5 text-studio-magenta" />
+                <span>Playlist Manager</span>
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">Sync from YouTube, reorder, show/hide, set cover video, or edit individual videos from the playlist page.</p>
+            </div>
+            <button onClick={syncAllPlaylists}
+              className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition flex items-center gap-2 whitespace-nowrap">
+              <RefreshCw className="w-4 h-4" /><span>Sync All Visible</span>
+            </button>
+          </div>
+
+          {/* Missing key warning */}
+          {missingKey && (
+            <div className="p-4 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-xs space-y-1">
+              <p className="font-semibold flex items-center gap-2"><AlertCircle className="w-4 h-4" /> YouTube API key missing</p>
+              <p>Add <code className="font-mono text-amber-200">YOUTUBE_API_KEY=your_key</code> to your <code className="font-mono">.env</code> file, then restart the dev server.</p>
+              <p className="text-slate-400">See HOW-TO.md for step-by-step instructions to get your free key from Google Cloud Console.</p>
+            </div>
+          )}
+
+          {/* Sync message */}
+          {plSyncMsg && (
+            <div className={`p-3.5 rounded-xl text-xs border ${
+              plSyncMsg.startsWith('✓') ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300' : 'bg-rose-950/60 border-rose-500/40 text-rose-300'
+            }`}>{plSyncMsg}</div>
+          )}
+
+          {/* Replace old domain */}
+          <div className="glass-panel p-4 rounded-2xl border border-studio-gold/20 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-studio-gold">Replace Old Domain</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Replaces <code>rjbartstudio.com</code> → <code>rjb-art-studio.netlify.app</code> in all video and painting descriptions.</p>
+              {domainReplaceCount !== null && (
+                <p className="text-xs mt-1 text-slate-300">{domainReplaceCount} occurrence{domainReplaceCount !== 1 ? 's' : ''} found.</p>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={countOldDomain}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition">
+                Preview Count
+              </button>
+              {domainReplaceCount !== null && domainReplaceCount > 0 && (
+                <button onClick={replaceOldDomain}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-studio-gold text-black hover:bg-studio-gold-light transition">
+                  Replace All
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Playlist list */}
+          <div className="space-y-3">
+            {playlists.map((pl, idx) => {
+              const cover = pl.coverVideoId || pl.videos?.[0]?.id
+              return (
+                <div key={pl.playlistId} className="glass-panel p-4 rounded-2xl border border-white/10 flex flex-col sm:flex-row sm:items-center gap-4">
+                  {/* Thumb */}
+                  <div className="w-20 h-14 rounded-lg overflow-hidden bg-studio-surface shrink-0">
+                    {cover
+                      ? <img src={`https://i.ytimg.com/vi/${cover}/mqdefault.jpg`} alt="" className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center text-white/20"><Layers className="w-6 h-6" /></div>
+                    }
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-serif font-bold text-white text-sm truncate">{pl.title}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300">{pl.videoCount || pl.videos?.length || 0} videos</span>
+                      {!pl.show && <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Hidden</span>}
+                    </div>
+                    <p className="text-[11px] text-slate-400 font-mono truncate mt-0.5">{pl.playlistId}</p>
+                    {/* Cover video input */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <label className="text-[11px] text-slate-400 shrink-0">Cover ID:</label>
+                      <input
+                        value={pl.coverVideoId || ''}
+                        onChange={e => {
+                          const updated = playlists.map(p => p.playlistId === pl.playlistId ? { ...p, coverVideoId: e.target.value } : p)
+                          setPlaylists(updated)
+                        }}
+                        onBlur={() => savePlaylists(playlists)}
+                        placeholder="YouTube video ID"
+                        className="flex-1 max-w-[180px] bg-white/5 border border-white/10 rounded px-2 py-1 text-[11px] text-white focus:outline-none focus:border-studio-magenta font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button onClick={() => movePl(idx, -1)} disabled={idx === 0}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-30 transition" title="Move up">
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => movePl(idx, 1)} disabled={idx === playlists.length - 1}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-30 transition" title="Move down">
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => savePlaylists(playlists.map(p => p.playlistId === pl.playlistId ? { ...p, show: !pl.show } : p))}
+                      className={`p-1.5 rounded-lg transition ${ pl.show ? 'bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white' : 'bg-amber-900/40 text-amber-300 hover:bg-amber-900/60'}`}
+                      title={pl.show ? 'Hide playlist' : 'Show playlist'}>
+                      {pl.show ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={() => syncPlaylist(pl.playlistId)} disabled={!!plSyncing[pl.playlistId]}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white transition flex items-center gap-1">
+                      <RefreshCw className={`w-3 h-3 ${plSyncing[pl.playlistId] ? 'animate-spin' : ''}`} />
+                      <span>{plSyncing[pl.playlistId] ? 'Syncing…' : 'Sync'}</span>
+                    </button>
+                    <a href={`/videos/${pl.playlistId}`} target="_blank" rel="noopener noreferrer"
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-studio-gold/20 text-slate-400 hover:text-studio-gold transition" title="View playlist page">
+                      <LinkIcon className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Bulk paste fallback when no API key */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-4">
+            <div>
+              <h3 className="font-serif text-base font-bold text-white">Bulk Paste Fallback</h3>
+              <p className="text-xs text-slate-400 mt-1">If you don't have an API key yet, paste video URLs (one per line) to manually populate a playlist. Format: <code className="text-studio-gold">VIDEO_URL | Playlist Title</code></p>
+            </div>
+            <textarea rows={5} placeholder={`https://www.youtube.com/watch?v=VIDEO_ID | Seascapes\nhttps://...`}
+              value={bulkText} onChange={e => setBulkText(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white font-mono focus:outline-none focus:border-studio-magenta" />
+            <button onClick={handleBulkProcess} disabled={bulkProcessing || !bulkText.trim()}
+              className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-studio-magenta hover:bg-studio-fuchsia disabled:opacity-50 text-white flex items-center gap-2 transition">
+              {bulkProcessing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              <span>{bulkProcessing ? 'Processing…' : 'Process & Import'}</span>
+            </button>
+            {bulkResult && <div className="p-3 rounded-xl bg-studio-card border border-studio-magenta/40 text-xs text-white">{bulkResult}</div>}
+          </div>
         </div>
       )}
 

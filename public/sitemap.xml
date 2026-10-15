@@ -11,6 +11,11 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://rjb-art-studio.netlify.app/videos</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://rjb-art-studio.netlify.app/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -21,13 +26,48 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://rjb-art-studio.netlify.app/videos</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://rjb-art-studio.netlify.app/contact</loc>
     <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rjb-art-studio.netlify.app/videos/PLB-gvtlXq3oI9oQeXo1HOy-KDWBCQxWYt</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rjb-art-studio.netlify.app/videos/PLB-gvtlXq3oJXGhbv1PAd9aKlyS1b0IxT</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rjb-art-studio.netlify.app/videos/PLB-gvtlXq3oKR7AJvoABL0faiYlyq9liI</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rjb-art-studio.netlify.app/videos/PLB-gvtlXq3oIqZUokHElNevfM_VGMCLHX</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rjb-art-studio.netlify.app/videos/PLB-gvtlXq3oJBO1ABMKYugM01yjJNjrzJ</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rjb-art-studio.netlify.app/videos/PLB-gvtlXq3oJjHDOwvTuLwHWRnq8rbYZa</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rjb-art-studio.netlify.app/videos/PLB-gvtlXq3oJL-e8yY2Pab4Dm3RbY1Ei0</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rjb-art-studio.netlify.app/videos/PLB-gvtlXq3oK0mhCuYxCvg0bApBbqdoYY</loc>
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 </urlset>
