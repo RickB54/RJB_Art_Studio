@@ -1,0 +1,79 @@
+[
+  {
+    "playlistId": "PLB-gvtlXq3oI9oQeXo1HOy-KDWBCQxWYt",
+    "title": "Floral",
+    "order": 1,
+    "show": true,
+    "videoCount": 81,
+    "coverVideoId": "",
+    "videos": []
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oJXGhbv1PAd9aKlyS1b0IxT",
+    "title": "Wildlife",
+    "order": 2,
+    "show": true,
+    "videoCount": 54,
+    "coverVideoId": "",
+    "videos": []
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oKR7AJvoABL0faiYlyq9liI",
+    "title": "Watercolor Paintings",
+    "order": 3,
+    "show": true,
+    "videoCount": 99,
+    "coverVideoId": "",
+    "videos": []
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oIqZUokHElNevfM_VGMCLHX",
+    "title": "Acrylic Paintings",
+    "order": 4,
+    "show": true,
+    "videoCount": 137,
+    "coverVideoId": "",
+    "videos": []
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oJBO1ABMKYugM01yjJNjrzJ",
+    "title": "Holiday Paintings",
+    "order": 5,
+    "show": true,
+    "videoCount": 36,
+    "coverVideoId": "",
+    "videos": []
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oJjHDOwvTuLwHWRnq8rbYZa",
+    "title": "Fan Art",
+    "order": 6,
+    "show": true,
+    "videoCount": 41,
+    "coverVideoId": "",
+    "videos": []
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oJL-e8yY2Pab4Dm3RbY1Ei0",
+    "title": "Seascapes",
+    "order": 7,
+    "show": true,
+    "videoCount": 28,
+    "coverVideoId": "kYv9z5u0jI8",
+    "videos": [
+      {
+        "id": "kYv9z5u0jI8",
+        "title": "Nubble Lighthouse York Beach Maine Oil Painting"
+      }
+    ]
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oK0mhCuYxCvg0bApBbqdoYY",
+    "title": "3D Art / Still Life",
+    "order": 8,
+    "show": true,
+    "videoCount": 36,
+    "coverVideoId": "",
+    "videos": []
+  }
+]

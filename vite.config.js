@@ -14,6 +14,7 @@ function adminApiPlugin() {
 
         const paintingsPath = path.resolve(__dirname, 'src/data/paintings.json')
         const sitePath = path.resolve(__dirname, 'src/data/site.json')
+        const playlistsPath = path.resolve(__dirname, 'src/data/playlists.json')
 
         res.setHeader('Content-Type', 'application/json')
 
@@ -21,7 +22,8 @@ function adminApiPlugin() {
         if (req.method === 'GET' && req.url === '/__api/data') {
           const paintings = JSON.parse(fs.readFileSync(paintingsPath, 'utf-8'))
           const site = JSON.parse(fs.readFileSync(sitePath, 'utf-8'))
-          res.end(JSON.stringify({ paintings, site }))
+          const playlists = fs.existsSync(playlistsPath) ? JSON.parse(fs.readFileSync(playlistsPath, 'utf-8')) : []
+          res.end(JSON.stringify({ paintings, site, playlists }))
           return
         }
 
@@ -47,6 +49,19 @@ function adminApiPlugin() {
           } else {
             res.statusCode = 400
             res.end(JSON.stringify({ error: 'Expected paintings array' }))
+          }
+          return
+        }
+
+        // POST /__api/playlists
+        if (req.method === 'POST' && req.url === '/__api/playlists') {
+          const { playlists } = await readBody()
+          if (Array.isArray(playlists)) {
+            fs.writeFileSync(playlistsPath, JSON.stringify(playlists, null, 2), 'utf-8')
+            res.end(JSON.stringify({ success: true, count: playlists.length }))
+          } else {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: 'Expected playlists array' }))
           }
           return
         }

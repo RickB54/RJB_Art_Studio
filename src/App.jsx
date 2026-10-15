@@ -11,6 +11,7 @@ import PaintingDetail from './pages/PaintingDetail'
 import About from './pages/About'
 import Commissions from './pages/Commissions'
 import Videos from './pages/Videos'
+import PlaylistDetail from './pages/PlaylistDetail'
 import Contact from './pages/Contact'
 
 // Load Admin ONLY in local development
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/commissions" element={<Commissions />} />
           <Route path="/videos" element={<Videos />} />
+          <Route path="/videos/:playlistId" element={<PlaylistDetail />} />
           <Route path="/contact" element={<Contact />} />
           {import.meta.env.DEV && Admin && (
             <Route
