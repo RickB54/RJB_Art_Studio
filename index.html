@@ -4,13 +4,50 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/palette-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rick J Berube Art Studio | Oil & Acrylic Paintings</title>
-    <meta name="description" content="Official portfolio of Rick J Berube, fine artist in Methuen, MA. Oil and acrylic landscapes, seascapes, wildlife, florals, portraits, and custom commissions." />
+    <title>Rick J Berube Art Studio | Oil & Acrylic Paintings, Methuen MA</title>
+    <meta name="description" content="Official fine art portfolio of Rick J Berube in Methuen, MA. Oil and acrylic landscapes, seascapes, wildlife, florals, portraits, YouTube video tutorials, and custom commissions." />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://rjb-art-studio.netlify.app/" />
+    <meta property="og:title" content="Rick J Berube Art Studio | Oil & Acrylic Fine Art" />
+    <meta property="og:description" content="Explore original oil and acrylic paintings, watch video tutorials, and request custom commissions by award-winning artist Rick J Berube." />
+    <meta property="og:image" content="/palette-icon.svg" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://rjb-art-studio.netlify.app/" />
+    <meta name="twitter:title" content="Rick J Berube Art Studio" />
+    <meta name="twitter:description" content="Oil & Acrylic paintings, portraits, YouTube tutorials, and fine art commissions by Rick J Berube." />
+    <meta name="twitter:image" content="/palette-icon.svg" />
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
   </head>
   <body class="bg-studio-bg text-studio-text min-h-screen antialiased selection:bg-studio-magenta selection:text-white">
+    
+    <!-- Hidden static forms for Netlify crawler detection in React SPA -->
+    <form name="contact" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="text" name="subject" />
+      <textarea name="message"></textarea>
+    </form>
+
+    <form name="commission" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="itemType" />
+      <input type="text" name="size" />
+      <input type="text" name="medium" />
+      <input type="text" name="orientation" />
+      <textarea name="sceneryDescription"></textarea>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <input type="tel" name="phone" />
+      <textarea name="comments"></textarea>
+    </form>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

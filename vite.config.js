@@ -126,6 +126,7 @@ export default defineConfig({
   plugins: [react(), adminApiPlugin()],
   server: {
     port: 5180,
+    strictPort: true,
     open: false
   }
 })

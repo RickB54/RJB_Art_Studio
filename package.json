@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "import-videos": "node scripts/import-videos.mjs",
-    "publish": "git add . && git commit -m \"Update gallery and site content\" && git push origin main"
+    "deploy": "npm run build && npx -y netlify deploy --prod --dir=dist",
+    "publish": "node scripts/publish.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.11.17",

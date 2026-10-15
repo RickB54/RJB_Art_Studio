@@ -285,9 +285,21 @@ export default function Admin() {
             Add paintings from YouTube, edit descriptions, adjust prices, and update your site without touching code.
           </p>
         </div>
-        <div className="bg-black/40 border border-white/10 p-3 rounded-xl text-xs space-y-1">
-          <p className="text-studio-gold font-semibold">To make changes live on Netlify:</p>
-          <p className="text-slate-300">Run <code className="text-studio-magenta font-mono bg-white/5 px-1 py-0.5 rounded">npm run publish</code> in PowerShell</p>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <a
+            href="http://localhost:5180/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-2.5 rounded-xl text-xs font-bold bg-studio-magenta hover:bg-studio-fuchsia text-white shadow-glow-magenta transition flex items-center justify-center gap-2"
+          >
+            <Globe className="w-4 h-4" />
+            <span>View Website</span>
+            <span className="text-[10px] text-white/70">↗</span>
+          </a>
+          <div className="bg-black/40 border border-white/10 p-3 rounded-xl text-xs space-y-1">
+            <p className="text-studio-gold font-semibold">Publish changes to live site:</p>
+            <p className="text-slate-300">Run <code className="text-studio-magenta font-mono bg-white/5 px-1 py-0.5 rounded">npm run publish</code></p>
+          </div>
         </div>
       </div>
 
