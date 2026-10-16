@@ -161,7 +161,7 @@ function adminApiPlugin() {
               seen.add(id)
               const existing = existingMap[id]
               if (existing) {
-                mergedVideos.push({ ...existing, title: item.snippet.title || existing.title })
+                mergedVideos.push({ ...existing, title: existing.title || item.snippet.title })
               } else {
                 mergedVideos.push({ id, title: item.snippet.title || id, description: descMap[id] || '', hide: false })
               }
@@ -182,29 +182,57 @@ function adminApiPlugin() {
           return
         }
 
-        // POST /__api/upload-original  — resize image with sharp, save to public/images/originals/
-        if (req.method === 'POST' && req.url === '/__api/upload-original') {
+        // POST /__api/upload-photo  — resize with sharp: 1600px WebP + 500px thumb in public/images/paintings/
+        if (req.method === 'POST' && (req.url === '/__api/upload-photo' || req.url === '/__api/upload-original')) {
           let body = ''
           req.on('data', chunk => { body += chunk })
           req.on('end', async () => {
             try {
               const { filename, dataBase64 } = JSON.parse(body)
-              if (!filename || !dataBase64) { res.statusCode = 400; res.end(JSON.stringify({ error: 'filename and dataBase64 required' })); return }
+              if (!filename || !dataBase64) {
+                res.statusCode = 400
+                res.end(JSON.stringify({ error: 'filename and dataBase64 required' }))
+                return
+              }
               let sharp
-              try { sharp = (await import('sharp')).default } catch {
+              try {
+                sharp = (await import('sharp')).default
+              } catch {
                 res.statusCode = 500
-                res.end(JSON.stringify({ error: 'sharp not installed — run: npm install --save-dev sharp' }))
+                res.end(JSON.stringify({ error: 'sharp not installed' }))
                 return
               }
               const buffer = Buffer.from(dataBase64, 'base64')
-              const outDir = path.resolve(__dirname, 'public/images/originals')
+              const outDir = path.resolve(__dirname, 'public/images/paintings')
               fs.mkdirSync(outDir, { recursive: true })
-              const base = path.basename(filename, path.extname(filename)).replace(/[^a-z0-9-_]/gi, '-').toLowerCase()
-              const outPath = path.join(outDir, `${base}.webp`)
-              await sharp(buffer).resize({ width: 1600, withoutEnlargement: true }).webp({ quality: 88 }).toFile(outPath)
-              res.end(JSON.stringify({ success: true, url: `/images/originals/${base}.webp` }))
+              const rawBase = path.basename(filename, path.extname(filename)).replace(/[^a-z0-9-_]/gi, '-').toLowerCase()
+              const base = `${rawBase}-${Date.now().toString().slice(-6)}`
+              const fullPath = path.join(outDir, `${base}.webp`)
+              const thumbPath = path.join(outDir, `${base}-thumb.webp`)
+
+              await sharp(buffer)
+                .resize({ width: 1600, withoutEnlargement: true })
+                .webp({ quality: 85 })
+                .toFile(fullPath)
+
+              await sharp(buffer)
+                .resize({ width: 500, withoutEnlargement: true })
+                .webp({ quality: 80 })
+                .toFile(thumbPath)
+
+              const fullSize = fs.statSync(fullPath).size
+              const warning = fullSize > 500 * 1024 ? `File is over 500 KB (${Math.round(fullSize / 1024)} KB)` : null
+
+              res.end(JSON.stringify({
+                success: true,
+                url: `/images/paintings/${base}.webp`,
+                thumbnailUrl: `/images/paintings/${base}-thumb.webp`,
+                size: fullSize,
+                warning
+              }))
             } catch (err) {
-              res.statusCode = 500; res.end(JSON.stringify({ error: err.message }))
+              res.statusCode = 500
+              res.end(JSON.stringify({ error: err.message }))
             }
           })
           return

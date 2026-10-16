@@ -106,10 +106,10 @@ async function syncPlaylist(playlist) {
 
     const existing = existingMap[id]
     if (existing) {
-      // Update title only (never overwrite description, photos, hide flag, etc.)
+      // Never overwrite user edits, title, description, photos, hide flag, etc.
       updatedVideos.push({
         ...existing,
-        title: item.snippet.title || existing.title
+        title: existing.title || item.snippet.title
       })
     } else {
       // Brand new video

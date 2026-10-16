@@ -33,13 +33,23 @@ const playlistEntries = playlists
   .filter(p => p.show !== false)
   .map(p => urlEntry({ loc: `/videos/${p.playlistId}`, changefreq: 'weekly', priority: '0.7' }))
 
+const PAINTINGS_PATH = path.resolve(__dirname, '../src/data/paintings.json')
+const paintings = fs.existsSync(PAINTINGS_PATH)
+  ? JSON.parse(fs.readFileSync(PAINTINGS_PATH, 'utf-8'))
+  : []
+
+const paintingEntries = paintings
+  .filter(p => p.hide !== true)
+  .map(p => urlEntry({ loc: `/painting/${p.id}`, changefreq: 'weekly', priority: '0.8' }))
+
 const xml = [
   '<?xml version="1.0" encoding="UTF-8"?>',
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
   ...staticPages.map(urlEntry),
   ...playlistEntries,
+  ...paintingEntries,
   '</urlset>'
 ].join('\n')
 
 fs.writeFileSync(SITEMAP_PATH, xml, 'utf-8')
-console.log(`✓ sitemap.xml written with ${staticPages.length + playlistEntries.length} URLs`)
+console.log(`✓ sitemap.xml written with ${staticPages.length + playlistEntries.length + paintingEntries.length} URLs`)
