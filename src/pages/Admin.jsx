@@ -274,7 +274,7 @@ export default function Admin() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Bulk Process
+  // Bulk Process "URL | Name": if Name matches a playlist (case-insensitive) add video to it, otherwise warn
   const handleBulkProcess = async () => {
     if (!bulkText.trim()) return
     setBulkProcessing(true)
@@ -282,14 +282,41 @@ export default function Admin() {
 
     const lines = bulkText.split('\n').map(l => l.trim()).filter(Boolean)
     let addedCount = 0
-    let currentList = [...paintings]
+    let warnings = []
+    let currentPlaylists = [...playlists]
 
     for (let line of lines) {
-      let [url, category] = line.split('|').map(s => s.trim())
+      let [url, name] = line.split('|').map(s => s ? s.trim() : '')
+      if (!url) continue
+
       const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
       const videoId = match ? match[1] : null
 
-      if (!videoId || currentList.some(p => p.videoId === videoId)) continue
+      if (!videoId) {
+        warnings.push(`✗ Invalid YouTube URL: "${line}"`)
+        continue
+      }
+
+      if (!name) {
+        warnings.push(`⚠ Warning: Missing playlist name for URL "${url}". Required format: "URL | Name"`)
+        continue
+      }
+
+      const targetPlaylistIndex = currentPlaylists.findIndex(
+        p => p.title && p.title.trim().toLowerCase() === name.toLowerCase()
+      )
+
+      if (targetPlaylistIndex === -1) {
+        warnings.push(`⚠ Warning: Playlist "${name}" does not match any existing playlist (case-insensitive). Video ${videoId} was NOT added. Available playlists: ${currentPlaylists.map(p => p.title).join(', ')}`)
+        continue
+      }
+
+      const targetPlaylist = { ...currentPlaylists[targetPlaylistIndex] }
+      const videos = targetPlaylist.videos ? [...targetPlaylist.videos] : []
+      if (videos.some(v => v.id === videoId)) {
+        warnings.push(`ℹ Video ${videoId} is already in playlist "${targetPlaylist.title}".`)
+        continue
+      }
 
       let title = `Painting ${videoId}`
       try {
@@ -300,44 +327,35 @@ export default function Admin() {
         }
       } catch (e) {}
 
-      const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-      const newEntry = {
-        id: `video-${videoId}`,
+      videos.unshift({
+        id: videoId,
         title,
-        category: category || 'Landscapes & Seascapes',
-        year: new Date().getFullYear().toString(),
-        medium: 'Oil or Acrylic on Canvas',
-        size: 'Custom',
-        description: 'Original artwork created by Rick J Berube. Watch the complete painting demonstration in the video.',
-        sold: false,
-        price: null,
-        youtubeUrl: `https://www.youtube.com/watch?v=${videoId}`,
-        videoId,
-        thumbnail,
-        customImage: '',
-        fineArtAmericaUrl: site.socials.fineArtAmerica || '',
-        draft: true,
-        featured: false
-      }
+        description: '',
+        hide: false
+      })
 
-      currentList.unshift(newEntry)
+      targetPlaylist.videos = videos
+      targetPlaylist.videoCount = videos.length
+      if (!targetPlaylist.coverVideoId) targetPlaylist.coverVideoId = videoId
+      currentPlaylists[targetPlaylistIndex] = targetPlaylist
       addedCount++
     }
 
-    try {
-      await fetch('/__api/paintings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paintings: currentList })
-      })
-      setPaintings(currentList)
-      setBulkResult(`Successfully added ${addedCount} new paintings!`)
-      setBulkText('')
-    } catch (e) {
-      setBulkResult('Error saving bulk items: ' + e.message)
-    } finally {
-      setBulkProcessing(false)
+    if (addedCount > 0) {
+      try {
+        await savePlaylists(currentPlaylists)
+      } catch (e) {
+        warnings.push('Error saving playlists: ' + e.message)
+      }
     }
+
+    let summary = `Successfully added ${addedCount} video(s) to matching playlists.`
+    if (warnings.length > 0) {
+      summary += '\n\n' + warnings.join('\n')
+    }
+    setBulkResult(summary)
+    if (addedCount > 0 && warnings.length === 0) setBulkText('')
+    setBulkProcessing(false)
   }
 
   // Save Site Settings
@@ -653,27 +671,27 @@ export default function Admin() {
           <div>
             <h2 className="font-serif text-xl font-bold text-white">Bulk YouTube Video Importer</h2>
             <p className="text-xs text-slate-400 mt-1">
-              Paste up to 20 YouTube URLs from your channel (one per line). Optionally add a category separated by a pipe character (<code className="text-studio-gold">|</code>).
+              Paste YouTube URLs with a playlist name separated by a pipe (<code className="text-studio-gold">URL | Name</code>). If the Name matches a playlist (case-insensitive), the video is added to it; otherwise a warning is displayed.
             </p>
           </div>
 
           <div className="bg-black/30 p-3 rounded-xl border border-white/5 text-xs text-slate-400 font-mono space-y-1">
-            <p className="text-studio-gold font-semibold">Example format:</p>
-            <p>https://www.youtube.com/watch?v=VIDEO_ID1 | Wildlife</p>
-            <p>https://www.youtube.com/watch?v=VIDEO_ID2 | Landscapes & Seascapes</p>
-            <p>https://www.youtube.com/watch?v=VIDEO_ID3 | Floral</p>
+            <p className="text-studio-gold font-semibold">Format: URL | Name</p>
+            <p>https://www.youtube.com/watch?v=VIDEO_ID1 | Floral</p>
+            <p>https://www.youtube.com/watch?v=VIDEO_ID2 | Wildlife</p>
+            <p>https://www.youtube.com/watch?v=VIDEO_ID3 | Watercolor Paintings</p>
           </div>
 
           <textarea
             rows={8}
-            placeholder="Paste your video links here..."
+            placeholder="https://www.youtube.com/watch?v=... | Floral"
             value={bulkText}
             onChange={e => setBulkText(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm text-white font-mono focus:outline-none focus:border-studio-magenta"
           />
 
           {bulkResult && (
-            <div className="p-3.5 rounded-xl bg-studio-card border border-studio-magenta/40 text-xs text-white">
+            <div className="p-3.5 rounded-xl bg-studio-card border border-studio-magenta/40 text-xs text-white whitespace-pre-wrap font-mono">
               {bulkResult}
             </div>
           )}
