@@ -231,6 +231,7 @@ export default function PlaylistDetail() {
   }, [playlistId])
 
   useEffect(() => {
+    setPlaylist(initialPlaylists.find(p => p.playlistId === playlistId) || null)
     setActiveVideo(null); setIsVideoIframeLoaded(false)
     setVisibleCount(PAGE_SIZE)
     window.scrollTo({ top: 0, behavior: 'smooth' })
