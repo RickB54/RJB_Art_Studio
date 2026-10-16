@@ -54,8 +54,14 @@ function adminApiPlugin() {
         // GET /__api/playlist/:id  — lazy load single playlist
         const plMatch = req.method === 'GET' && req.url.match(/^\/__api\/playlist\/(.+)$/)
         if (plMatch) {
+          const plId = plMatch[1]
+          const singlePlFile = path.resolve(__dirname, `src/data/playlists/${plId}.json`)
+          if (fs.existsSync(singlePlFile)) {
+            res.end(fs.readFileSync(singlePlFile, 'utf-8'))
+            return
+          }
           const playlists = fs.existsSync(playlistsPath) ? JSON.parse(fs.readFileSync(playlistsPath, 'utf-8')) : []
-          const pl = playlists.find(p => p.playlistId === plMatch[1])
+          const pl = playlists.find(p => p.playlistId === plId)
           if (pl) { res.end(JSON.stringify(pl)); return }
           res.statusCode = 404; res.end(JSON.stringify({ error: 'Not found' })); return
         }
@@ -74,7 +80,17 @@ function adminApiPlugin() {
         if (req.method === 'POST' && req.url === '/__api/playlists') {
           const { playlists } = await readBody()
           if (Array.isArray(playlists)) {
-            fs.writeFileSync(playlistsPath, JSON.stringify(playlists, null, 2), 'utf-8')
+            const plDir = path.resolve(__dirname, 'src/data/playlists')
+            fs.mkdirSync(plDir, { recursive: true })
+            const summaries = []
+            for (const p of playlists) {
+              if (p.videos) {
+                fs.writeFileSync(path.join(plDir, `${p.playlistId}.json`), JSON.stringify(p, null, 2), 'utf-8')
+              }
+              const { videos, ...sum } = p
+              summaries.push(sum)
+            }
+            fs.writeFileSync(playlistsPath, JSON.stringify(summaries, null, 2), 'utf-8')
             res.end(JSON.stringify({ success: true, count: playlists.length }))
           } else { res.statusCode = 400; res.end(JSON.stringify({ error: 'Expected playlists array' })) }
           return
@@ -119,8 +135,10 @@ function adminApiPlugin() {
               return s === 'public' || s === 'unlisted'
             })
 
+            const singlePlPath = path.resolve(__dirname, `src/data/playlists/${playlistId}.json`)
+            let pl = fs.existsSync(singlePlPath) ? JSON.parse(fs.readFileSync(singlePlPath, 'utf-8')) : null
             const playlists = JSON.parse(fs.readFileSync(playlistsPath, 'utf-8'))
-            const pl = playlists.find(p => p.playlistId === playlistId)
+            if (!pl) pl = playlists.find(p => p.playlistId === playlistId)
             if (!pl) { res.statusCode = 404; res.end(JSON.stringify({ error: 'Playlist not found' })); return }
 
             const existingMap = {}
@@ -151,7 +169,11 @@ function adminApiPlugin() {
 
             const coverVideoId = pl.coverVideoId || (mergedVideos[0]?.id || '')
             const updatedPl = { ...pl, videoCount: mergedVideos.length, coverVideoId, videos: mergedVideos }
-            const updatedPlaylists = playlists.map(p => p.playlistId === playlistId ? updatedPl : p)
+            fs.mkdirSync(path.dirname(singlePlPath), { recursive: true })
+            fs.writeFileSync(singlePlPath, JSON.stringify(updatedPl, null, 2), 'utf-8')
+
+            const { videos: _v, ...summary } = updatedPl
+            const updatedPlaylists = playlists.map(p => p.playlistId === playlistId ? summary : p)
             fs.writeFileSync(playlistsPath, JSON.stringify(updatedPlaylists, null, 2), 'utf-8')
             res.end(JSON.stringify({ success: true, count: mergedVideos.length, added: newIds.length }))
           } catch (err) {
@@ -229,5 +251,32 @@ export default defineConfig({
     port: 5180,
     strictPort: true,
     open: false
+  },
+  build: {
+    chunkSizeWarningLimit: 500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('framer-motion')) {
+              return 'vendor-motion'
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-lucide'
+            }
+            if (
+              id.includes('react') ||
+              id.includes('react-dom') ||
+              id.includes('react-router') ||
+              id.includes('@remix-run') ||
+              id.includes('scheduler')
+            ) {
+              return 'vendor-react'
+            }
+            return 'vendor'
+          }
+        }
+      }
+    }
   }
 })

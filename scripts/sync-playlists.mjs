@@ -152,17 +152,29 @@ async function main() {
     process.exit(0)
   }
 
-  console.log(`\nSyncing ${toSync.length} playlist(s)...\n`)
+  const playlistsDir = path.resolve(__dirname, '../src/data/playlists')
+  fs.mkdirSync(playlistsDir, { recursive: true })
 
-  const updated = [...playlists]
-  for (const pl of toSync) {
-    const idx = updated.findIndex(p => p.playlistId === pl.playlistId)
-    const synced = await syncPlaylist(pl)
-    if (idx >= 0) updated[idx] = synced
+  const summaries = []
+  for (const pl of playlists) {
+    const isTarget = toSync.some(t => t.playlistId === pl.playlistId)
+    let fullPl = pl
+    const singleFile = path.join(playlistsDir, `${pl.playlistId}.json`)
+    if (fs.existsSync(singleFile)) {
+      try { fullPl = JSON.parse(fs.readFileSync(singleFile, 'utf-8')) } catch {}
+    }
+
+    if (isTarget) {
+      fullPl = await syncPlaylist(fullPl)
+      fs.writeFileSync(singleFile, JSON.stringify(fullPl, null, 2), 'utf-8')
+    }
+
+    const { videos, ...summary } = fullPl
+    summaries.push(summary)
   }
 
-  fs.writeFileSync(PLAYLISTS_PATH, JSON.stringify(updated, null, 2), 'utf-8')
-  console.log(`\n✓ Saved to src/data/playlists.json`)
+  fs.writeFileSync(PLAYLISTS_PATH, JSON.stringify(summaries, null, 2), 'utf-8')
+  console.log(`\n✓ Saved playlists to src/data/playlists/ and summary to src/data/playlists.json`)
   console.log('  Run: npm run publish to push changes live.\n')
 }
 

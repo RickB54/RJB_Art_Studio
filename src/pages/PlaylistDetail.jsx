@@ -4,7 +4,7 @@ import {
   ArrowLeft, Play, AlertCircle, ShoppingBag, MessageSquare,
   Image as ImageIcon, Sparkles, X, ChevronDown, RefreshCw,
   ZoomIn, Eye, EyeOff, Edit3, Save, Trash2, Upload, CheckCircle2,
-  ExternalLink, XCircle
+  ExternalLink, XCircle, Search
 } from 'lucide-react'
 import initialPlaylists from '../data/playlists.json'
 import initialPaintings from '../data/paintings.json'
@@ -200,6 +200,8 @@ function VideoEditor({ video, paintings, onSave, onClose }) {
 }
 
 // ── Main Component ───────────────────────────────────────────────────────────
+const playlistLoaders = import.meta.glob('../data/playlists/*.json')
+
 export default function PlaylistDetail() {
   const { playlistId } = useParams()
 
@@ -209,6 +211,7 @@ export default function PlaylistDetail() {
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
   const [missingKey, setMissingKey] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const [activeVideo, setActiveVideo] = useState(null)
   const [isVideoIframeLoaded, setIsVideoIframeLoaded] = useState(false)
@@ -218,22 +221,41 @@ export default function PlaylistDetail() {
   const PAGE_SIZE = 24
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
-  // Lazy-load from dev API
+  // Lazy-load playlist JSON file and sync dev paintings
   useEffect(() => {
     setLoading(true)
-    Promise.all([
-      fetch(`/__api/playlist/${playlistId}`).then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch('/__api/data').then(r => r.json()).catch(() => null)
-    ]).then(([plData, allData]) => {
-      if (plData) setPlaylist(plData)
-      if (allData?.paintings) setPaintings(allData.paintings)
-    }).finally(() => setLoading(false))
+    const loaderKey = `../data/playlists/${playlistId}.json`
+    if (playlistLoaders[loaderKey]) {
+      playlistLoaders[loaderKey]()
+        .then(mod => {
+          if (mod?.default) setPlaylist(mod.default)
+          else if (mod) setPlaylist(mod)
+        })
+        .catch(() => {
+          fetch(`/__api/playlist/${playlistId}`)
+            .then(r => r.ok ? r.json() : null)
+            .then(plData => { if (plData) setPlaylist(plData) })
+        })
+        .finally(() => setLoading(false))
+    } else {
+      fetch(`/__api/playlist/${playlistId}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(plData => { if (plData) setPlaylist(plData) })
+        .finally(() => setLoading(false))
+    }
+
+    fetch('/__api/data')
+      .then(r => r.json())
+      .then(allData => {
+        if (allData?.paintings) setPaintings(allData.paintings)
+      })
+      .catch(() => {})
   }, [playlistId])
 
   useEffect(() => {
-    setPlaylist(initialPlaylists.find(p => p.playlistId === playlistId) || null)
     setActiveVideo(null); setIsVideoIframeLoaded(false)
     setVisibleCount(PAGE_SIZE)
+    setSearchQuery('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [playlistId])
 
@@ -313,8 +335,14 @@ export default function PlaylistDetail() {
   }
 
   const allVideos = (playlist.videos || []).filter(v => !v.hide)
-  const visibleVideos = allVideos.slice(0, visibleCount)
-  const hasMore = visibleCount < allVideos.length
+  const filteredVideos = searchQuery.trim()
+    ? allVideos.filter(v => {
+        const q = searchQuery.toLowerCase()
+        return v.title?.toLowerCase().includes(q) || v.description?.toLowerCase().includes(q)
+      })
+    : allVideos
+  const visibleVideos = filteredVideos.slice(0, visibleCount)
+  const hasMore = visibleCount < filteredVideos.length
 
   const matchedPainting = activeVideo
     ? paintings.find(p => p.videoId === activeVideo.id || (p.youtubeUrl && p.youtubeUrl.includes(activeVideo.id)))
@@ -521,12 +549,38 @@ export default function PlaylistDetail() {
 
       {/* Video Grid */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-white/5 pb-3">
-          <h3 className="font-serif text-xl font-bold text-white">
-            Playlist Videos ({allVideos.length})
-          </h3>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-3">
+          <div className="flex items-center gap-3">
+            <h3 className="font-serif text-xl font-bold text-white">
+              Playlist Videos ({filteredVideos.length})
+            </h3>
+            {filteredVideos.length > 0 && (
+              <span className="text-xs text-slate-400">
+                Showing {Math.min(visibleCount, filteredVideos.length)} of {filteredVideos.length}
+              </span>
+            )}
+          </div>
+
           {allVideos.length > 0 && (
-            <span className="text-xs text-slate-400">Showing {Math.min(visibleCount, allVideos.length)} of {allVideos.length}</span>
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search videos in playlist..."
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); setVisibleCount(PAGE_SIZE) }}
+                className="w-full pl-9 pr-8 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-studio-magenta transition"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           )}
         </div>
 
@@ -556,7 +610,20 @@ export default function PlaylistDetail() {
           </div>
         )}
 
-        {!loading && allVideos.length > 0 && (
+        {!loading && allVideos.length > 0 && filteredVideos.length === 0 && (
+          <div className="text-center py-12 glass-panel rounded-2xl border border-white/10 space-y-3">
+            <p className="text-sm text-slate-400">No videos match &quot;{searchQuery}&quot; in this playlist.</p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition"
+            >
+              Clear Search
+            </button>
+          </div>
+        )}
+
+        {!loading && filteredVideos.length > 0 && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {visibleVideos.map((video) => {
@@ -587,7 +654,7 @@ export default function PlaylistDetail() {
                 <button onClick={() => setVisibleCount(prev => prev + PAGE_SIZE)}
                   className="px-8 py-3 rounded-xl text-xs font-semibold bg-white/10 hover:bg-studio-magenta text-white transition flex items-center gap-2 mx-auto shadow-md">
                   <ChevronDown className="w-4 h-4" />
-                  <span>Load More Videos ({allVideos.length - visibleCount} remaining)</span>
+                  <span>Load More Videos ({filteredVideos.length - visibleCount} remaining)</span>
                 </button>
               </div>
             )}

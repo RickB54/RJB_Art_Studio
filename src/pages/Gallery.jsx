@@ -5,10 +5,11 @@ import initialPaintings from '../data/paintings.json'
 import initialPlaylists from '../data/playlists.json'
 
 const PAGE_SIZE = 24
+const playlistLoaders = import.meta.glob('../data/playlists/*.json')
 
 export default function Gallery() {
   const [paintings, setPaintings] = useState(initialPaintings)
-  const [playlists, setPlaylists] = useState(initialPlaylists)
+  const [playlists, setPlaylists] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedStatus, setSelectedStatus] = useState('All') // 'All' | 'Available' | 'Sold'
   const [searchQuery, setSearchQuery] = useState('')
@@ -17,13 +18,29 @@ export default function Gallery() {
   // Lightbox State
   const [lightboxIndex, setLightboxIndex] = useState(null)
 
-  // Sync with latest data if dev API is active
+  // Lazy-load all visible playlists' full video JSON files
   useEffect(() => {
+    const visible = (initialPlaylists || []).filter(p => p.show !== false)
+    const promises = visible.map(pl => {
+      const loaderKey = `../data/playlists/${pl.playlistId}.json`
+      if (playlistLoaders[loaderKey]) {
+        return playlistLoaders[loaderKey]()
+          .then(mod => mod?.default || mod)
+          .catch(() => pl)
+      }
+      return fetch(`/__api/playlist/${pl.playlistId}`)
+        .then(r => r.ok ? r.json() : pl)
+        .catch(() => pl)
+    })
+
+    Promise.all(promises).then(fullPlaylists => {
+      setPlaylists(fullPlaylists)
+    })
+
     fetch('/__api/data')
       .then(res => res.json())
       .then(data => {
         if (data.paintings && Array.isArray(data.paintings)) setPaintings(data.paintings)
-        if (data.playlists && Array.isArray(data.playlists)) setPlaylists(data.playlists)
       })
       .catch(() => {})
   }, [])
