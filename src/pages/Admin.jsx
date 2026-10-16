@@ -43,6 +43,9 @@ export default function Admin() {
   const [plSyncMsg, setPlSyncMsg] = useState('')
   const [missingKey, setMissingKey] = useState(false)
   const [domainReplaceCount, setDomainReplaceCount] = useState(null)
+  const [newPlaylistInput, setNewPlaylistInput] = useState('')
+  const [newPlaylistTitle, setNewPlaylistTitle] = useState('')
+  const [addingPlaylist, setAddingPlaylist] = useState(false)
 
   // Load latest data on mount
   useEffect(() => {
@@ -90,6 +93,60 @@ export default function Admin() {
     for (const pl of playlists.filter(p => p.show !== false)) {
       await syncPlaylist(pl.playlistId)
     }
+  }
+
+  // Extract YouTube playlist ID from URL or raw ID
+  const extractPlaylistId = (str) => {
+    if (!str) return null
+    const trimmed = str.trim()
+    const match = trimmed.match(/[?&]list=([a-zA-Z0-9_-]+)/i)
+    if (match) return match[1]
+    if (/^[a-zA-Z0-9_-]{10,}$/.test(trimmed)) return trimmed
+    return null
+  }
+
+  // Add a playlist by pasting its YouTube playlist URL or ID, then sync fills it
+  const handleAddPlaylist = async (e) => {
+    e?.preventDefault()
+    const id = extractPlaylistId(newPlaylistInput)
+    if (!id) {
+      alert('Please enter a valid YouTube Playlist URL or ID (e.g. PL...)')
+      return
+    }
+
+    if (playlists.some(p => p.playlistId === id)) {
+      alert('Playlist already exists in manager!')
+      return
+    }
+
+    setAddingPlaylist(true)
+    let title = newPlaylistTitle.trim() || `Playlist ${id}`
+    try {
+      const res = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/playlist?list=${id}`)
+      if (res.ok) {
+        const d = await res.json()
+        if (d.title && !newPlaylistTitle.trim()) title = d.title
+      }
+    } catch {}
+
+    const newPl = {
+      playlistId: id,
+      title,
+      order: playlists.length + 1,
+      show: true,
+      videoCount: 0,
+      coverVideoId: '',
+      videos: []
+    }
+
+    const updated = [...playlists, newPl]
+    await savePlaylists(updated)
+    setNewPlaylistInput('')
+    setNewPlaylistTitle('')
+    setAddingPlaylist(false)
+
+    // Sync fills it
+    await syncPlaylist(id)
   }
 
   // Move playlist up/down
@@ -724,6 +781,44 @@ export default function Admin() {
               className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition flex items-center gap-2 whitespace-nowrap">
               <RefreshCw className="w-4 h-4" /><span>Sync All Visible</span>
             </button>
+          </div>
+
+          {/* Add Playlist Form */}
+          <div className="glass-panel p-5 rounded-2xl border border-studio-magenta/30 bg-gradient-to-r from-studio-magenta/10 via-studio-card to-studio-surface space-y-3">
+            <div>
+              <h3 className="font-serif text-sm font-bold text-white flex items-center gap-2">
+                <Plus className="w-4 h-4 text-studio-magenta" />
+                <span>Add YouTube Playlist</span>
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Paste any YouTube playlist URL or ID. Sync will immediately fill it with videos.
+              </p>
+            </div>
+            <form onSubmit={handleAddPlaylist} className="flex flex-col sm:flex-row gap-2.5">
+              <input
+                type="text"
+                placeholder="YouTube playlist URL or ID (e.g. PL...)"
+                value={newPlaylistInput}
+                onChange={e => setNewPlaylistInput(e.target.value)}
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-studio-magenta"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Title (optional)"
+                value={newPlaylistTitle}
+                onChange={e => setNewPlaylistTitle(e.target.value)}
+                className="w-full sm:w-52 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-studio-magenta"
+              />
+              <button
+                type="submit"
+                disabled={addingPlaylist || !newPlaylistInput.trim()}
+                className="px-5 py-2 rounded-xl text-xs font-semibold bg-studio-magenta hover:bg-studio-fuchsia disabled:opacity-50 text-white transition flex items-center justify-center gap-1.5 shrink-0 shadow-glow-magenta"
+              >
+                {addingPlaylist ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                <span>{addingPlaylist ? 'Adding…' : 'Add & Sync'}</span>
+              </button>
+            </form>
           </div>
 
           {/* Missing key warning */}
