@@ -7,7 +7,9 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const BASE = 'https://rjb-art-studio.netlify.app'
+const SITE_PATH = path.resolve(__dirname, '../src/data/site.json')
+const siteData = fs.existsSync(SITE_PATH) ? JSON.parse(fs.readFileSync(SITE_PATH, 'utf-8')) : {}
+const BASE = (siteData.artist && siteData.artist.siteUrl) || 'https://rjbart.netlify.app'
 
 const PLAYLISTS_PATH = path.resolve(__dirname, '../src/data/playlists.json')
 const SITEMAP_PATH = path.resolve(__dirname, '../public/sitemap.xml')

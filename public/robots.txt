@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-Sitemap: https://rjb-art-studio.netlify.app/sitemap.xml
+Sitemap: https://rjbart.netlify.app/sitemap.xml

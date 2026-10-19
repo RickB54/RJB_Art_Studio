@@ -179,7 +179,7 @@ export default function Admin() {
   // Replace old domain
   const replaceOldDomain = async () => {
     const OLD = 'rjbartstudio.com'
-    const NEW = 'https://rjb-art-studio.netlify.app'
+    const NEW = siteData.artist?.siteUrl || 'https://rjbart.netlify.app'
     const updatedPlaylists = playlists.map(pl => ({
       ...pl,
       videos: (pl.videos || []).map(v => ({
@@ -881,7 +881,7 @@ export default function Admin() {
           <div className="glass-panel p-4 rounded-2xl border border-studio-gold/20 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <p className="text-xs font-semibold text-studio-gold">Replace Old Domain</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Replaces <code>rjbartstudio.com</code> → <code>rjb-art-studio.netlify.app</code> in all video and painting descriptions.</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Replaces <code>rjbartstudio.com</code> → <code>rjbart.netlify.app</code> in all video and painting descriptions.</p>
               {domainReplaceCount !== null && (
                 <p className="text-xs mt-1 text-slate-300">{domainReplaceCount} occurrence{domainReplaceCount !== 1 ? 's' : ''} found.</p>
               )}
