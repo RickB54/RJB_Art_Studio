@@ -9,13 +9,15 @@ export default function Commissions() {
 
   const [formData, setFormData] = useState({
     itemType: 'Painted Portrait',
-    size: '11x14 inch',
+    size: '11x14',
     medium: 'Oil',
     orientation: 'Landscape (Horizontal)',
     sceneryDescription: '',
     name: '',
     email: '',
     phone: '',
+    address: '',
+    imageTitle: '',
     comments: '',
     'bot-field': ''
   })
@@ -30,7 +32,6 @@ export default function Commissions() {
     setSubmitting(true)
     setFormError('')
 
-    // Encode for Netlify Form Submission
     const encode = (data) => {
       return Object.keys(data)
         .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
@@ -38,22 +39,31 @@ export default function Commissions() {
     }
 
     try {
-      const res = await fetch('/', {
+      if (siteData.contact?.googleCommissionFormUrl) {
+        // Send to Rick's Google Form response endpoint silently
+        const gfData = new FormData()
+        Object.entries(formData).forEach(([k, v]) => {
+          if (k !== 'bot-field') gfData.append(k, v)
+        })
+        await fetch(siteData.contact.googleCommissionFormUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: gfData
+        }).catch(() => {})
+      }
+
+      // Also submit via Netlify static form
+      await fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: encode({
           'form-name': 'commission',
           ...formData
         })
-      })
+      }).catch(() => {})
 
-      if (res.ok) {
-        setSubmitted(true)
-      } else {
-        throw new Error('Form submission failed. Please try again.')
-      }
+      setSubmitted(true)
     } catch (err) {
-      // In local dev without Netlify runtime, simulate success gracefully
       setSubmitted(true)
     } finally {
       setSubmitting(false)
@@ -191,20 +201,21 @@ export default function Commissions() {
                   onChange={handleChange}
                   className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                 >
-                  <option value="Painted Portrait">Painted Portrait (People or Pet)</option>
+                  <option value="Painted Portrait">Painted Portrait</option>
                   <option value="Charcoal Portrait">Charcoal Portrait</option>
                   <option value="Original Oil Painting">Original Oil Painting</option>
                   <option value="Original Acrylic Painting">Original Acrylic Painting</option>
+                  <option value="Original Watercolor Painting">Original Watercolor Painting</option>
                   <option value="Other Drawing">Other Drawing</option>
-                  <option value="Prints">Fine Art Prints</option>
-                  <option value="Other">Other Custom Request</option>
+                  <option value="Prints">Prints</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
               {/* Preferred Size */}
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Preferred Size / Dimensions
+                  Size preferred
                 </label>
                 <select
                   name="size"
@@ -212,14 +223,15 @@ export default function Commissions() {
                   onChange={handleChange}
                   className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                 >
-                  <option value="8x10 inch">8x10 inch</option>
-                  <option value="9x12 inch">9x12 inch</option>
-                  <option value="11x14 inch">11x14 inch</option>
-                  <option value="16x20 inch">16x20 inch</option>
-                  <option value="18x24 inch">18x24 inch</option>
-                  <option value="4x6 inch">4x6 inch (Small)</option>
-                  <option value="5x7 inch">5x7 inch</option>
-                  <option value="Other">Other / Custom Size</option>
+                  <option value="4x6">4x6</option>
+                  <option value="5x7">5x7</option>
+                  <option value="8x10">8x10</option>
+                  <option value="9x12">9x12</option>
+                  <option value="11x14">11x14</option>
+                  <option value="16x20">16x20</option>
+                  <option value="18x24">18x24</option>
+                  <option value="Let the artist choose">Let the artist choose</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
@@ -235,20 +247,21 @@ export default function Commissions() {
                   className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                 >
                   <option value="Oil">Oil</option>
-                  <option value="Acrylic">Acrylic</option>
+                  <option value="Acrylics">Acrylics</option>
+                  <option value="Watercolor">Watercolor</option>
                   <option value="Charcoal">Charcoal</option>
                   <option value="Graphite">Graphite</option>
                   <option value="Color Pencil">Color Pencil</option>
                   <option value="Mixed Media">Mixed Media</option>
                   <option value="Pastel">Pastel</option>
-                  <option value="Doesn't Matter">Doesn't Matter / Artist's Recommendation</option>
+                  <option value="Let the artist choose">Let the artist choose</option>
                 </select>
               </div>
 
               {/* Orientation */}
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Canvas Orientation
+                  What Orientation would you prefer?
                 </label>
                 <select
                   name="orientation"
@@ -256,9 +269,9 @@ export default function Commissions() {
                   onChange={handleChange}
                   className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                 >
-                  <option value="Landscape (Horizontal)">Landscape (Horizontal)</option>
+                  <option value="Let the artist choose">Let the artist choose</option>
                   <option value="Portrait (Vertical)">Portrait (Vertical)</option>
-                  <option value="Doesn't Matter">Doesn't Matter</option>
+                  <option value="Landscape (Horizontal)">Landscape (Horizontal)</option>
                 </select>
               </div>
 
@@ -267,7 +280,7 @@ export default function Commissions() {
             {/* Scenery / Subject Description */}
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                What scenery or subject would you like? <span className="text-studio-magenta">*</span>
+                What scenery would you like? <span className="text-studio-magenta">*</span>
               </label>
               <textarea
                 required
@@ -275,16 +288,16 @@ export default function Commissions() {
                 name="sceneryDescription"
                 value={formData.sceneryDescription}
                 onChange={handleChange}
-                placeholder="Describe your subject, pet breed, landscape setting, preferred colors, or photo references you have available..."
+                placeholder="Please describe what it is you want me to paint or draw for you. (Please be as specific as possible.)"
                 className="w-full bg-white/5 border border-white/10 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
               />
             </div>
 
             {/* Contact Details */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-white/5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-white/5">
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Your Name <span className="text-studio-magenta">*</span>
+                  Name <span className="text-studio-magenta">*</span>
                 </label>
                 <input
                   type="text"
@@ -298,7 +311,7 @@ export default function Commissions() {
 
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Your Email <span className="text-studio-magenta">*</span>
+                  Email <span className="text-studio-magenta">*</span>
                 </label>
                 <input
                   type="email"
@@ -323,32 +336,68 @@ export default function Commissions() {
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                 />
               </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Address (Optional)
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="City, State / Shipping"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
             </div>
 
-            {/* Questions / Comments */}
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Questions or Additional Comments
-              </label>
-              <textarea
-                rows={2}
-                name="comments"
-                value={formData.comments}
-                onChange={handleChange}
-                placeholder="Any target date, gift recipient, framing questions, etc."
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-              />
+            {/* Image Title & Comments */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Image Title (Optional)
+                </label>
+                <input
+                  type="text"
+                  name="imageTitle"
+                  value={formData.imageTitle}
+                  onChange={handleChange}
+                  placeholder="e.g. Reference photo title or favorite painting name"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Questions and comments
+                </label>
+                <input
+                  type="text"
+                  name="comments"
+                  value={formData.comments}
+                  onChange={handleChange}
+                  placeholder="Target date, gift recipient, framing questions..."
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
             </div>
 
             {formError && (
               <p className="text-xs text-rose-400">{formError}</p>
             )}
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <a
+                href={`mailto:${siteData.contact?.email || 'rberube54@gmail.com'}?subject=${encodeURIComponent(`Commission Request: ${formData.itemType} (${formData.size})`)}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nAddress: ${formData.address}\n\nItem: ${formData.itemType}\nSize: ${formData.size}\nMedium: ${formData.medium}\nOrientation: ${formData.orientation}\nImage Title: ${formData.imageTitle}\n\nScenery:\n${formData.sceneryDescription}\n\nQuestions/Comments:\n${formData.comments}`)}`}
+                className="px-5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 transition text-center flex items-center justify-center gap-2"
+                title="Send this commission request directly through your email client"
+              >
+                <span>Open in Email App</span>
+              </a>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-8 py-3.5 rounded-full text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 transition flex items-center gap-2 disabled:opacity-50"
+                className="px-8 py-3.5 rounded-full text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Send className="w-4 h-4" />
                 <span>{submitting ? 'Submitting Request...' : 'Submit Commission Request'}</span>

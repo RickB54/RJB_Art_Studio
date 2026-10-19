@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Youtube, Facebook, Instagram, Pin, Twitter, Heart } from 'lucide-react'
+import { Youtube, Facebook, Instagram, Pin, Heart } from 'lucide-react'
 import siteData from '../data/site.json'
 
 export default function Footer() {
@@ -32,10 +32,24 @@ export default function Footer() {
             <p className="text-sm text-slate-400 max-w-md leading-relaxed">
               {siteData.artist.tagline} {siteData.artist.bioShort}
             </p>
-            <div className="inline-block p-3 rounded-lg bg-white/5 border border-white/5 text-xs text-slate-300">
-              <span className="text-studio-magenta font-semibold">Studio Update: </span>
-              {siteData.artist.recoveryNotice}
-            </div>
+            {siteData.contact?.email && (
+              <div className="inline-flex flex-wrap items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300">
+                <span className="text-studio-gold font-semibold">Artist Direct Email:</span>
+                <a
+                  href={`mailto:${siteData.contact.email}`}
+                  className="text-white hover:text-studio-magenta font-mono transition underline decoration-studio-magenta/40"
+                  title="Click to email Rick directly"
+                >
+                  {siteData.contact.email}
+                </a>
+              </div>
+            )}
+            {siteData.artist?.announcement && siteData.artist.announcement.trim() !== '' && (
+              <div className="inline-block p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300">
+                <span className="text-studio-magenta font-semibold">Studio Update: </span>
+                {siteData.artist.announcement}
+              </div>
+            )}
           </div>
 
           {/* Quick Links */}
@@ -91,13 +105,16 @@ export default function Footer() {
                 <Pin className="w-5 h-5" />
               </a>
               <a
-                href={siteData.socials.twitter}
+                href={siteData.socials.x || siteData.socials.twitter || 'https://x.com/rjbartstudio'}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="X / Twitter"
-                className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-300 hover:text-sky-400 hover:bg-white/10 transition"
+                aria-label="X (Twitter)"
+                className="w-10 h-10 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition"
+                title="X (Twitter)"
               >
-                <Twitter className="w-5 h-5" />
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
               </a>
               <a
                 href={siteData.socials.fineArtAmerica}

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import initialPlaylists from '../data/playlists.json'
 import initialPaintings from '../data/paintings.json'
+import { matchesSearch } from '../utils/search'
 
 // Render description text with clickable URLs and preserved line breaks
 function DescriptionText({ text }) {
@@ -212,6 +213,15 @@ export default function PlaylistDetail() {
   const [syncMsg, setSyncMsg] = useState('')
   const [missingKey, setMissingKey] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+
+  // Debounce search query by 150ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery)
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const [activeVideo, setActiveVideo] = useState(null)
   const [isVideoIframeLoaded, setIsVideoIframeLoaded] = useState(false)
@@ -335,11 +345,8 @@ export default function PlaylistDetail() {
   }
 
   const allVideos = (playlist.videos || []).filter(v => !v.hide)
-  const filteredVideos = searchQuery.trim()
-    ? allVideos.filter(v => {
-        const q = searchQuery.toLowerCase()
-        return v.title?.toLowerCase().includes(q) || v.description?.toLowerCase().includes(q)
-      })
+  const filteredVideos = debouncedQuery.trim()
+    ? allVideos.filter(v => matchesSearch(v, debouncedQuery))
     : allVideos
   const visibleVideos = filteredVideos.slice(0, visibleCount)
   const hasMore = visibleCount < filteredVideos.length
@@ -612,13 +619,13 @@ export default function PlaylistDetail() {
 
         {!loading && allVideos.length > 0 && filteredVideos.length === 0 && (
           <div className="text-center py-12 glass-panel rounded-2xl border border-white/10 space-y-3">
-            <p className="text-sm text-slate-400">No videos match &quot;{searchQuery}&quot; in this playlist.</p>
+            <p className="text-sm text-slate-300">No results for &quot;<span className="text-white font-semibold">{debouncedQuery}</span>&quot;</p>
             <button
               type="button"
-              onClick={() => setSearchQuery('')}
-              className="px-4 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition"
+              onClick={() => { setSearchQuery(''); setVisibleCount(PAGE_SIZE) }}
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-studio-magenta hover:bg-studio-fuchsia text-white transition shadow-glow-magenta"
             >
-              Clear Search
+              Reset Search
             </button>
           </div>
         )}

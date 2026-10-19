@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Mail, Send, CheckCircle2, MessageSquare, Youtube, Facebook, Instagram, Pin, Twitter, ShoppingBag, ShieldCheck } from 'lucide-react'
+import { Mail, Send, CheckCircle2, MessageSquare, Youtube, Facebook, Instagram, Pin, ShoppingBag, ShieldCheck } from 'lucide-react'
 import siteData from '../data/site.json'
 
 export default function Contact() {
@@ -46,22 +46,32 @@ export default function Contact() {
     }
 
     try {
-      const res = await fetch('/', {
+      if (siteData.contact?.googleContactFormUrl) {
+        // Send to Google Form response endpoint silently (no CORS restriction needed with mode: 'no-cors')
+        const gfData = new FormData()
+        gfData.append('name', formData.name)
+        gfData.append('email', formData.email)
+        gfData.append('subject', formData.subject)
+        gfData.append('message', formData.message)
+        await fetch(siteData.contact.googleContactFormUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: gfData
+        }).catch(() => {})
+      }
+
+      // Also submit via Netlify static form if present
+      await fetch('/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: encode({
           'form-name': 'contact',
           ...formData
         })
-      })
+      }).catch(() => {})
 
-      if (res.ok) {
-        setSubmitted(true)
-      } else {
-        throw new Error('Submission failed. Please try again.')
-      }
+      setSubmitted(true)
     } catch (err) {
-      // In local dev, gracefully simulate success
       setSubmitted(true)
     } finally {
       setSubmitting(false)
@@ -86,10 +96,28 @@ export default function Contact() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
-        {/* Left Column: Socials & Studio Channels */}
+        {/* Left Column: Direct Email & Studio Channels */}
         <div className="space-y-6">
+          
+          {/* Direct Email Card */}
+          <div className="glass-panel p-6 rounded-2xl border border-studio-gold/30 bg-gradient-to-br from-studio-card to-studio-surface space-y-3">
+            <div className="flex items-center gap-2 text-studio-gold">
+              <Mail className="w-5 h-5" />
+              <h3 className="font-serif text-lg font-bold text-white">Direct Email</h3>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Prefer using your email app? Send a message directly to Rick's studio inbox anytime:
+            </p>
+            <a
+              href={`mailto:${siteData.contact?.email || 'rberube54@gmail.com'}?subject=Art Studio Inquiry`}
+              className="block w-full py-2.5 px-3 rounded-xl bg-studio-gold/15 border border-studio-gold/30 hover:bg-studio-gold hover:text-black text-studio-gold text-xs font-mono font-semibold text-center transition"
+            >
+              {siteData.contact?.email || 'rberube54@gmail.com'}
+            </a>
+          </div>
+
           <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
-            <h3 className="font-serif text-lg font-bold text-white">Direct Connect</h3>
+            <h3 className="font-serif text-lg font-bold text-white">Studio Channels</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
               For public inquiries and video questions, feel free to reach out via my official studio channels:
             </p>
@@ -123,6 +151,19 @@ export default function Contact() {
               >
                 <Instagram className="w-4 h-4 text-pink-500" />
                 <span>Instagram Profile</span>
+              </a>
+
+              <a
+                href={siteData.socials.x || siteData.socials.twitter || 'https://x.com/rjbartstudio'}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="X (Twitter)"
+                className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 hover:bg-white/10 hover:text-white text-slate-300 text-xs transition border border-white/5"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current text-slate-300" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+                <span>X (Twitter)</span>
               </a>
 
               <a
@@ -241,11 +282,19 @@ export default function Contact() {
                 <p className="text-xs text-rose-400">{formError}</p>
               )}
 
-              <div className="pt-2 flex justify-end">
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <a
+                  href={`mailto:${siteData.contact?.email || 'rberube54@gmail.com'}?subject=${encodeURIComponent(formData.subject || 'Art Inquiry')}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\n${formData.message}`)}`}
+                  className="px-5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 transition text-center flex items-center justify-center gap-2"
+                  title="Open this inquiry in your favorite email app"
+                >
+                  <Mail className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Open in Email App</span>
+                </a>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-8 py-3 rounded-full text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 transition flex items-center gap-2 disabled:opacity-50"
+                  className="px-8 py-3 rounded-full text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 transition flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                   <span>{submitting ? 'Sending Message...' : 'Send Message'}</span>

@@ -40,19 +40,10 @@ export default function About() {
             Over the past decades, I have painted more than 500 original works—capturing the dramatic coastal cliffs of Maine, peaceful New England forests, majestic wildlife, delicate florals, and intimate portraits of loved ones and pets.
           </p>
         </div>
-
-        {/* Knee surgery personal note */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-studio-card/80 border border-studio-magenta/30 flex items-start gap-3.5">
-          <Heart className="w-5 h-5 text-studio-magenta shrink-0 mt-0.5" />
-          <div className="text-xs sm:text-sm text-slate-200">
-            <span className="font-semibold text-studio-magenta block mb-0.5">Studio Health Update:</span>
-            {siteData.artist.recoveryNotice}
-          </div>
-        </div>
       </div>
 
       {/* Mayoral Awards & Honors */}
-      <div className="space-y-6">
+      <div id="awards" className="space-y-6 scroll-mt-28">
         <div className="flex items-center gap-3">
           <Award className="w-6 h-6 text-studio-gold" />
           <div>
@@ -67,17 +58,24 @@ export default function About() {
               key={i}
               className="glass-panel p-6 sm:p-7 rounded-2xl border border-studio-gold/20 flex flex-col justify-between space-y-4 relative overflow-hidden"
             >
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <span className="inline-block px-3 py-1 rounded-full text-[11px] font-bold bg-studio-gold text-black uppercase tracking-wider">
                   {award.title}
                 </span>
-                <h3 className="font-serif text-xl font-bold text-white mt-2">
+
+                {award.image && (
+                  <div className="relative aspect-[16/10] rounded-xl overflow-hidden bg-black/40 border border-white/10 my-2">
+                    <img src={award.image} alt={award.title} className="w-full h-full object-cover" />
+                  </div>
+                )}
+
+                <h3 className="font-serif text-xl font-bold text-white">
                   Featured Artwork: "{award.artwork}"
                 </h3>
                 <p className="text-xs text-studio-gold/90 font-medium">
                   {award.conferredBy} • {award.medium}
                 </p>
-                <p className="text-xs sm:text-sm text-slate-300 pt-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-300 pt-1 leading-relaxed">
                   {award.description}
                 </p>
               </div>
@@ -92,7 +90,7 @@ export default function About() {
       </div>
 
       {/* The Studio Story */}
-      <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-6">
+      <div id="the-studio" className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-6 scroll-mt-28">
         <div className="flex items-center gap-3 border-b border-white/5 pb-4">
           <div className="w-10 h-10 rounded-full bg-studio-cobalt/20 flex items-center justify-center text-studio-cobalt border border-studio-cobalt/30">
             <Home className="w-5 h-5" />
@@ -108,18 +106,26 @@ export default function About() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-          <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
+          <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
             <span className="block font-serif text-xl font-bold text-white">33' × 17'</span>
             <span className="text-xs text-slate-400">Dedicated Creative Space</span>
           </div>
-          <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
-            <span className="block font-serif text-xl font-bold text-studio-gold">4K DSLR</span>
-            <span className="text-xs text-slate-400">Video Capture Setup</span>
-          </div>
-          <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
-            <span className="block font-serif text-xl font-bold text-studio-magenta">Oil & Acrylic</span>
-            <span className="text-xs text-slate-400">Custom Easel Stations</span>
-          </div>
+          <Link
+            to="/videos"
+            className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-studio-gold/40 hover:bg-studio-gold/5 transition-all duration-200 text-center group block focus:outline-none focus:ring-2 focus:ring-studio-gold"
+            title="Watch video tutorials filmed in this studio"
+          >
+            <span className="block font-serif text-xl font-bold text-studio-gold group-hover:brightness-125">4K DSLR</span>
+            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Video Capture Setup →</span>
+          </Link>
+          <Link
+            to="/gallery"
+            className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-studio-magenta/40 hover:bg-studio-magenta/5 transition-all duration-200 text-center group block focus:outline-none focus:ring-2 focus:ring-studio-magenta"
+            title="View paintings created on these custom easels"
+          >
+            <span className="block font-serif text-xl font-bold text-studio-magenta group-hover:brightness-125">Oil & Acrylic</span>
+            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Custom Easel Stations →</span>
+          </Link>
         </div>
       </div>
 

@@ -7,7 +7,8 @@
     "location": "Methuen, Massachusetts",
     "bioShort": "Self-taught fine artist specializing in oil and acrylic landscapes, seascapes, wildlife, florals, and commissioned portraits. Over 500 original paintings created with passion and dedication.",
     "bioExtended": "I became interested in landscape oil painting in the early 1990s, heavily inspired by the great television artist Bob Ross. Watching him every Saturday morning inspired me to paint using the wet-on-wet technique, which remained my primary style for many years. In 2017, I expanded into acrylics, colored pencils, and charcoal, which opened exciting new doors for custom commissions, portraits, wildlife, 3D art, and fan art.",
-    "recoveryNotice": "Note: I am currently taking time off for knee surgery recovery and look forward to being back at the easel painting again this winter!",
+    "email": "rberube54@gmail.com",
+    "announcement": "",
     "siteMigrationNotice": "Rick J Berube Art Studio has a new website. My earlier site, rjbartstudio.com, is no longer active."
   },
   "socials": {
@@ -15,7 +16,8 @@
     "facebook": "https://www.facebook.com/RickJBerube/",
     "instagram": "https://www.instagram.com/rick.berube/",
     "pinterest": "https://www.pinterest.com/rjbartstudio/",
-    "twitter": "https://twitter.com/rjbartstudio/",
+    "twitter": "https://x.com/rjbartstudio",
+    "x": "https://x.com/rjbartstudio",
     "fineArtAmerica": "https://fineartamerica.com/profiles/rick-berube"
   },
   "categories": [
@@ -41,14 +43,16 @@
       "conferredBy": "City of Methuen Mayor's Office (Mayor James Jajuga)",
       "artwork": "Nubble Lighthouse",
       "medium": "Oil painting on canvas",
-      "description": "Selected by the Mayor of Methuen to be featured in the Methuen City Hall main rotunda entrance for the month of July 2018."
+      "description": "Selected by the Mayor of Methuen to be featured in the Methuen City Hall main rotunda entrance for the month of July 2018.",
+      "image": ""
     },
     {
       "title": "Artist of the Month – December 2018",
       "conferredBy": "City of Methuen Mayor's Office (Mayor James Jajuga)",
       "artwork": "Christmas Tree Solace",
       "medium": "Acrylic painting",
-      "description": "Selected for a second honor to display 'Christmas Tree Solace' in the Methuen City Hall main entrance for December 2018."
+      "description": "Selected for a second honor to display 'Christmas Tree Solace' in the Methuen City Hall main entrance for December 2018.",
+      "image": ""
     }
   ],
   "services": [
@@ -86,9 +90,13 @@
     }
   ],
   "contact": {
-    "emailPublic": false,
+    "email": "rberube54@gmail.com",
+    "emailPublic": true,
+    "phone": "",
     "phonePublic": false,
     "addressPublic": false,
-    "instructions": "Send a message below or reach out via YouTube, Facebook, or Instagram for commission quotes and inquiries."
+    "instructions": "Inquire about available paintings, fine art prints, custom portrait commissions, or reach out directly at rberube54@gmail.com.",
+    "googleContactFormUrl": "",
+    "googleCommissionFormUrl": ""
   }
 }

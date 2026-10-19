@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles } from 'lucide-react'
 import siteDataInitial from '../data/site.json'
 import paintingsDataInitial from '../data/paintings.json'
 
@@ -8,6 +9,8 @@ export default function Admin() {
   const [site, setSite] = useState(siteDataInitial)
   const [playlists, setPlaylists] = useState([])
   const [activeTab, setActiveTab] = useState('single') // 'single' | 'bulk' | 'manage' | 'playlists' | 'site'
+  const [editPageSection, setEditPageSection] = useState('home') // 'home' | 'about' | 'commissions' | 'contact'
+  const [siteSaveSuccess, setSiteSaveSuccess] = useState('')
   
   // Single painting form state
   const [inputUrl, setInputUrl] = useState('')
@@ -418,6 +421,7 @@ export default function Admin() {
   // Save Site Settings
   const handleSaveSite = async (e) => {
     e.preventDefault()
+    setSiteSaveSuccess('')
     try {
       const res = await fetch('/__api/site', {
         method: 'POST',
@@ -425,7 +429,10 @@ export default function Admin() {
         body: JSON.stringify({ site })
       })
       if (res.ok) {
-        alert('Site content updated and saved to src/data/site.json!')
+        setSiteSaveSuccess('✓ Site content successfully updated and saved to src/data/site.json!')
+        setTimeout(() => setSiteSaveSuccess(''), 6000)
+      } else {
+        throw new Error('Save failed')
       }
     } catch (e) {
       alert('Failed to save site data: ' + e.message)
@@ -435,7 +442,7 @@ export default function Admin() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       
-      {/* Top Banner */}
+      {/* Top Banner with Exit Admin & View Website */}
       <div className="glass-panel p-6 rounded-2xl border border-studio-gold/30 bg-gradient-to-r from-studio-purple/20 via-studio-card to-studio-surface flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -448,10 +455,18 @@ export default function Admin() {
             Studio Backend & Content Manager
           </h1>
           <p className="text-xs sm:text-sm text-slate-300">
-            Add paintings from YouTube, edit descriptions, adjust prices, and update your site without touching code.
+            Edit page text, manage paintings, sync playlists, and update contact settings without writing code.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <Link
+            to="/"
+            className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white/10 hover:bg-rose-950/80 hover:border-rose-500/40 hover:text-rose-200 border border-white/10 text-white transition flex items-center justify-center gap-2 shadow-sm"
+            title="Exit Admin Console and return to public website"
+          >
+            <X className="w-4 h-4 text-rose-400" />
+            <span>Exit Admin</span>
+          </Link>
           <a
             href="http://localhost:5180/"
             target="_blank"
@@ -469,13 +484,38 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Quick Page Content Selector Bar - user requested dropdown to stay in Admin while picking pages */}
+      <div className="glass-panel p-4 rounded-xl border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/5">
+        <div className="flex items-center gap-2 text-xs">
+          <Sparkles className="w-4 h-4 text-studio-gold shrink-0" />
+          <span className="text-studio-gold font-semibold uppercase tracking-wider">Quick Page Editor:</span>
+          <span className="text-slate-300">Select any page to modify its text directly:</span>
+        </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <select
+            value={activeTab === 'site' ? editPageSection : ''}
+            onChange={(e) => {
+              setActiveTab('site')
+              setEditPageSection(e.target.value)
+            }}
+            className="w-full sm:w-auto bg-[#13111c] border border-studio-magenta/50 text-white text-xs font-medium rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-studio-magenta cursor-pointer shadow-sm"
+          >
+            <option value="" disabled>-- Select Page to Edit Text --</option>
+            <option value="home">🏠 Home Page Text & Bio</option>
+            <option value="about">🎨 About & Studio Page (Awards & Photos)</option>
+            <option value="commissions">✍ Commissions & Prints Services</option>
+            <option value="contact">✉ Contact & Direct Email / Google Forms</option>
+          </select>
+        </div>
+      </div>
+
       {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
         {[['single', editingId ? 'Edit Painting' : 'Add Single Painting'],
           ['bulk', 'Bulk Importer'],
           ['manage', `Paintings (${paintings.length})`],
           ['playlists', `Playlists (${playlists.length})`],
-          ['site', 'Site Text & Links']
+          ['site', 'Page Text & Content']
         ].map(([key, label]) => (
           <button key={key} type="button" onClick={() => setActiveTab(key)}
             className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
@@ -1015,64 +1055,319 @@ export default function Admin() {
         </div>
       )}
 
-      {/* TAB 4: Edit Site Settings */}
+      {/* TAB 5: Edit Site Content by Page */}
       {activeTab === 'site' && (
         <form onSubmit={handleSaveSite} className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/10 space-y-6">
-          <div>
-            <h2 className="font-serif text-xl font-bold text-white">Edit Site Content & Links</h2>
-            <p className="text-xs text-slate-400">All text is stored in <code className="text-slate-300">src/data/site.json</code>.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+            <div>
+              <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-studio-gold" />
+                <span>Page Text & Content Editor</span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Modify only the text, awards, photos, and links on any page. Changes are saved to <code className="text-slate-300">src/data/site.json</code>.
+              </p>
+            </div>
+            
+            {/* Page Section Dropdown */}
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-slate-300 font-semibold whitespace-nowrap">Editing Page:</label>
+              <select
+                value={editPageSection}
+                onChange={e => setEditPageSection(e.target.value)}
+                className="bg-[#13111c] border border-studio-magenta/40 text-white text-xs font-semibold rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-studio-magenta"
+              >
+                <option value="home">🏠 Home Page</option>
+                <option value="about">🎨 About & Studio (Awards & Photos)</option>
+                <option value="commissions">✍ Commissions & Prints</option>
+                <option value="contact">✉ Contact & Email / Google Forms</option>
+              </select>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Tagline</label>
-              <input
-                type="text"
-                value={site.artist.tagline}
-                onChange={e => setSite({ ...site, artist: { ...site.artist, tagline: e.target.value } })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white"
-              />
+          {siteSaveSuccess && (
+            <div className="p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{siteSaveSuccess}</span>
             </div>
+          )}
 
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Short Bio (Home Hero)</label>
-              <textarea
-                rows={2}
-                value={site.artist.bioShort}
-                onChange={e => setSite({ ...site, artist: { ...site.artist, bioShort: e.target.value } })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white"
-              />
-            </div>
+          {/* SECTION: HOME PAGE */}
+          {editPageSection === 'home' && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Home Page Text & Hero Content</h3>
+              
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Tagline (Under Rick J Berube)</label>
+                <input
+                  type="text"
+                  value={site.artist.tagline}
+                  onChange={e => setSite({ ...site, artist: { ...site.artist, tagline: e.target.value } })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Studio Update (Knee Surgery Note)</label>
-              <input
-                type="text"
-                value={site.artist.recoveryNotice}
-                onChange={e => setSite({ ...site, artist: { ...site.artist, recoveryNotice: e.target.value } })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white"
-              />
-            </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Short Bio (Hero Intro)</label>
+                <textarea
+                  rows={3}
+                  value={site.artist.bioShort}
+                  onChange={e => setSite({ ...site, artist: { ...site.artist, bioShort: e.target.value } })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Fine Art America Profile URL</label>
-              <input
-                type="url"
-                value={site.socials.fineArtAmerica}
-                onChange={e => setSite({ ...site, socials: { ...site.socials, fineArtAmerica: e.target.value } })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white"
-              />
-            </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Site Migration Notice Banner</label>
+                <input
+                  type="text"
+                  value={site.artist.siteMigrationNotice || ''}
+                  onChange={e => setSite({ ...site, artist: { ...site.artist, siteMigrationNotice: e.target.value } })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
 
-            <div className="pt-2 flex justify-end">
-              <button
-                type="submit"
-                className="px-7 py-2.5 rounded-xl text-sm font-semibold bg-studio-gold text-black hover:bg-studio-gold-light transition flex items-center gap-1.5"
-              >
-                <Save className="w-4 h-4" />
-                <span>Save Site Content</span>
-              </button>
+              <div className="pt-2">
+                <label className="block text-xs font-medium text-slate-300 mb-1">Fine Art America Profile URL</label>
+                <input
+                  type="url"
+                  value={site.socials.fineArtAmerica}
+                  onChange={e => setSite({ ...site, socials: { ...site.socials, fineArtAmerica: e.target.value } })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
             </div>
+          )}
+
+          {/* SECTION: ABOUT & STUDIO (AWARDS & PHOTOS) */}
+          {editPageSection === 'about' && (
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">About Page, Studio Bio & Mayoral Awards</h3>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Extended Artistic Bio</label>
+                <textarea
+                  rows={4}
+                  value={site.artist.bioExtended}
+                  onChange={e => setSite({ ...site, artist: { ...site.artist, bioExtended: e.target.value } })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-white/10 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Award className="w-5 h-5 text-studio-gold" />
+                  <h4 className="text-sm font-bold text-white">Mayoral Artist of the Month Awards & Photos</h4>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Update the descriptions and attach image URLs (such as the ceremony photo with Mayor James Jajuga and Rick's father).
+                </p>
+
+                {(site.awards || []).map((award, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Award Title</label>
+                        <input
+                          type="text"
+                          value={award.title}
+                          onChange={e => {
+                            const updated = [...site.awards]
+                            updated[idx] = { ...updated[idx], title: e.target.value }
+                            setSite({ ...site, awards: updated })
+                          }}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Artwork Featured</label>
+                        <input
+                          type="text"
+                          value={award.artwork}
+                          onChange={e => {
+                            const updated = [...site.awards]
+                            updated[idx] = { ...updated[idx], artwork: e.target.value }
+                            setSite({ ...site, awards: updated })
+                          }}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Award Photo Image URL</label>
+                      <input
+                        type="text"
+                        placeholder="https://... or /awards/mayor-ceremony.jpg"
+                        value={award.image || ''}
+                        onChange={e => {
+                          const updated = [...site.awards]
+                          updated[idx] = { ...updated[idx], image: e.target.value }
+                          setSite({ ...site, awards: updated })
+                        }}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                      <span className="text-[11px] text-slate-400">Paste the URL or local file path to display the award photo</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Description</label>
+                      <textarea
+                        rows={2}
+                        value={award.description}
+                        onChange={e => {
+                          const updated = [...site.awards]
+                          updated[idx] = { ...updated[idx], description: e.target.value }
+                          setSite({ ...site, awards: updated })
+                        }}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SECTION: COMMISSIONS & SERVICES */}
+          {editPageSection === 'commissions' && (
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Commissions & Prints Services</h3>
+
+              <div className="space-y-4">
+                {(site.services || []).map((svc, idx) => (
+                  <div key={svc.id || idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Service Title</label>
+                        <input
+                          type="text"
+                          value={svc.title}
+                          onChange={e => {
+                            const updated = [...site.services]
+                            updated[idx] = { ...updated[idx], title: e.target.value }
+                            setSite({ ...site, services: updated })
+                          }}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-300 mb-1">Subtitle</label>
+                        <input
+                          type="text"
+                          value={svc.subtitle}
+                          onChange={e => {
+                            const updated = [...site.services]
+                            updated[idx] = { ...updated[idx], subtitle: e.target.value }
+                            setSite({ ...site, services: updated })
+                          }}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">Description</label>
+                      <textarea
+                        rows={2}
+                        value={svc.description}
+                        onChange={e => {
+                          const updated = [...site.services]
+                          updated[idx] = { ...updated[idx], description: e.target.value }
+                          setSite({ ...site, services: updated })
+                        }}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SECTION: CONTACT & GOOGLE FORMS */}
+          {editPageSection === 'contact' && (
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Contact & Direct Email Setup</h3>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Artist Direct Email Address</label>
+                <input
+                  type="email"
+                  value={site.contact?.email || ''}
+                  onChange={e => setSite({ ...site, contact: { ...site.contact, email: e.target.value } })}
+                  placeholder="rberube54@gmail.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white font-mono focus:outline-none focus:border-studio-magenta"
+                />
+                <span className="text-[11px] text-slate-400">This email is shown in the footer and contact page for direct buyer inquiries.</span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Contact Page Intro Instructions</label>
+                <textarea
+                  rows={2}
+                  value={site.contact?.instructions || ''}
+                  onChange={e => setSite({ ...site, contact: { ...site.contact, instructions: e.target.value } })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
+
+              {/* Free Google Forms Notification Setup Card */}
+              <div className="p-4 rounded-xl bg-studio-gold/10 border border-studio-gold/30 space-y-3">
+                <div className="flex items-center gap-2 text-studio-gold font-semibold text-xs">
+                  <Mail className="w-4 h-4" />
+                  <span>100% Free Google Forms Email Notifications (No Netlify Pro Needed!)</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  To get free instant email notifications sent to your Gmail inbox every time someone submits a form:
+                </p>
+                <ol className="text-xs text-slate-300 list-decimal list-inside space-y-1 pl-1">
+                  <li>Open your Google Form in Google Drive.</li>
+                  <li>Click on the <strong>Responses</strong> tab at the top.</li>
+                  <li>Click the three vertical dots (<strong>⋮</strong>) next to the green Sheets icon.</li>
+                  <li>Click <strong>"Get email notifications for new responses"</strong>.</li>
+                </ol>
+                <p className="text-[11px] text-studio-gold font-medium">
+                  That's it! Google will immediately email you for every response for free forever.
+                </p>
+
+                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-studio-gold/20">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Google Contact Form Response URL (Optional)</label>
+                    <input
+                      type="url"
+                      placeholder="https://docs.google.com/forms/d/e/.../formResponse"
+                      value={site.contact?.googleContactFormUrl || ''}
+                      onChange={e => setSite({ ...site, contact: { ...site.contact, googleContactFormUrl: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Google Commission Form Response URL (Optional)</label>
+                    <input
+                      type="url"
+                      placeholder="https://docs.google.com/forms/d/e/.../formResponse"
+                      value={site.contact?.googleCommissionFormUrl || ''}
+                      onChange={e => setSite({ ...site, contact: { ...site.contact, googleCommissionFormUrl: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Save Button */}
+          <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+            <span className="text-xs text-slate-400">
+              Editing: <span className="text-studio-gold font-semibold uppercase">{editPageSection}</span>
+            </span>
+            <button
+              type="submit"
+              className="px-7 py-2.5 rounded-xl text-sm font-semibold bg-studio-gold text-black hover:bg-studio-gold-light transition flex items-center gap-1.5 shadow-md"
+            >
+              <Save className="w-4 h-4" />
+              <span>Save Page Content Changes</span>
+            </button>
           </div>
         </form>
       )}

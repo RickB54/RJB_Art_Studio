@@ -59,24 +59,40 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Studio Highlights Bar */}
+        {/* Studio Highlights Bar - Active Interactive Links */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          <div className="glass-panel p-4 rounded-xl text-center">
-            <span className="block font-serif text-2xl font-bold text-white">500+</span>
-            <span className="text-xs text-slate-400">Paintings Created</span>
-          </div>
-          <div className="glass-panel p-4 rounded-xl text-center">
-            <span className="block font-serif text-2xl font-bold text-studio-gold">2x</span>
-            <span className="text-xs text-slate-400">Artist of the Month</span>
-          </div>
-          <div className="glass-panel p-4 rounded-xl text-center">
-            <span className="block font-serif text-2xl font-bold text-studio-magenta">Oil & Acrylic</span>
-            <span className="text-xs text-slate-400">Fine Art Mediums</span>
-          </div>
-          <div className="glass-panel p-4 rounded-xl text-center">
-            <span className="block font-serif text-2xl font-bold text-studio-cobalt">YouTube</span>
-            <span className="text-xs text-slate-400">Video Tutorials</span>
-          </div>
+          <Link 
+            to="/gallery" 
+            className="glass-panel p-4 rounded-xl text-center hover:border-white/30 hover:scale-[1.03] transition-all duration-200 group block focus:outline-none focus:ring-2 focus:ring-studio-magenta"
+            title="Explore all paintings in the Gallery"
+          >
+            <span className="block font-serif text-2xl font-bold text-white group-hover:text-studio-magenta transition-colors">500+</span>
+            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Paintings Created →</span>
+          </Link>
+          <Link 
+            to="/about#awards" 
+            className="glass-panel p-4 rounded-xl text-center hover:border-studio-gold/40 hover:scale-[1.03] transition-all duration-200 group block focus:outline-none focus:ring-2 focus:ring-studio-gold"
+            title="Read about the Mayoral Artist of the Month awards"
+          >
+            <span className="block font-serif text-2xl font-bold text-studio-gold group-hover:brightness-125 transition-all">2x</span>
+            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Artist of the Month →</span>
+          </Link>
+          <Link 
+            to="/gallery" 
+            className="glass-panel p-4 rounded-xl text-center hover:border-studio-magenta/40 hover:scale-[1.03] transition-all duration-200 group block focus:outline-none focus:ring-2 focus:ring-studio-magenta"
+            title="Browse Oil & Acrylic artwork in the Gallery"
+          >
+            <span className="block font-serif text-2xl font-bold text-studio-magenta group-hover:brightness-125 transition-all">Oil & Acrylic</span>
+            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Fine Art Mediums →</span>
+          </Link>
+          <Link 
+            to="/videos" 
+            className="glass-panel p-4 rounded-xl text-center hover:border-red-500/40 hover:scale-[1.03] transition-all duration-200 group block focus:outline-none focus:ring-2 focus:ring-red-500"
+            title="Watch YouTube painting demonstrations and tutorials"
+          >
+            <span className="block font-serif text-2xl font-bold text-studio-cobalt group-hover:text-red-400 transition-colors">YouTube</span>
+            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Video Tutorials →</span>
+          </Link>
         </div>
 
       </section>

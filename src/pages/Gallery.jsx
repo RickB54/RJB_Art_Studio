@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Search, X, ChevronLeft, ChevronRight, Play, ShoppingBag, Eye, ChevronDown } from 'lucide-react'
 import initialPaintings from '../data/paintings.json'
 import initialPlaylists from '../data/playlists.json'
+import { matchesSearch } from '../utils/search'
 
 const PAGE_SIZE = 24
 const playlistLoaders = import.meta.glob('../data/playlists/*.json')
@@ -13,7 +14,16 @@ export default function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedStatus, setSelectedStatus] = useState('All') // 'All' | 'Available' | 'Sold'
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+
+  // Debounce search query by 150ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery)
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   // Lightbox State
   const [lightboxIndex, setLightboxIndex] = useState(null)
@@ -136,7 +146,7 @@ export default function Gallery() {
     return list
   }, [visiblePlaylists, allGalleryItems])
 
-  // Filtered list
+  // Filtered list strictly by category, status, and matchesSearch on title and description
   const filteredPaintings = useMemo(() => {
     return allGalleryItems.filter(item => {
       if (selectedCategory !== 'All' && !item.categories.includes(selectedCategory)) {
@@ -149,22 +159,18 @@ export default function Gallery() {
         if (!item.hasPaintingData || !item.sold) return false
       }
 
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase()
-        const inTitle = item.title?.toLowerCase().includes(q)
-        const inDesc = item.description?.toLowerCase().includes(q)
-        const inCat = item.categories.some(c => c.toLowerCase().includes(q))
-        if (!inTitle && !inDesc && !inCat) return false
+      if (debouncedQuery.trim()) {
+        if (!matchesSearch(item, debouncedQuery)) return false
       }
 
       return true
     })
-  }, [allGalleryItems, selectedCategory, selectedStatus, searchQuery])
+  }, [allGalleryItems, selectedCategory, selectedStatus, debouncedQuery])
 
   // Reset visibleCount when filters change
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
-  }, [selectedCategory, selectedStatus, searchQuery])
+  }, [selectedCategory, selectedStatus, debouncedQuery])
 
   const visibleItems = useMemo(() => {
     return filteredPaintings.slice(0, visibleCount)
@@ -228,7 +234,9 @@ export default function Gallery() {
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/15 transition focus:outline-none focus:ring-1 focus:ring-studio-magenta"
+                title="Clear search"
+                aria-label="Clear search"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -268,6 +276,24 @@ export default function Gallery() {
 
         </div>
 
+        {/* Active Search / Match indicator */}
+        {searchQuery.trim() && (
+          <div className="flex items-center justify-between text-xs px-3.5 py-2 rounded-xl bg-studio-card/80 border border-studio-magenta/30">
+            <span className="text-slate-200">
+              Showing <strong className="text-studio-gold">{filteredPaintings.length}</strong> artwork result{filteredPaintings.length === 1 ? '' : 's'} for "<span className="text-white font-medium">{searchQuery}</span>"
+            </span>
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-300 hover:text-white transition bg-rose-950/60 px-2 py-0.5 rounded-lg border border-rose-500/30"
+              title="Clear search"
+            >
+              <X className="w-3 h-3" />
+              <span>Clear Search</span>
+            </button>
+          </div>
+        )}
+
         {/* Category Pills with Counts from Visible Playlists */}
         <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
           {categoryPills.map((pill) => (
@@ -295,19 +321,40 @@ export default function Gallery() {
 
       {/* Gallery Grid */}
       {filteredPaintings.length === 0 ? (
-        <div className="text-center py-20 glass-panel rounded-2xl border border-white/10">
-          <p className="text-base text-slate-400">No artwork matches your current filters.</p>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedCategory('All')
-              setSelectedStatus('All')
-              setSearchQuery('')
-            }}
-            className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition"
-          >
-            Reset All Filters
-          </button>
+        <div className="text-center py-20 glass-panel rounded-2xl border border-white/10 space-y-3">
+          {debouncedQuery.trim() ? (
+            <>
+              <p className="text-base text-slate-300">
+                No results for &quot;<span className="text-white font-semibold">{debouncedQuery}</span>&quot;
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('')
+                  setSelectedCategory('All')
+                  setSelectedStatus('All')
+                }}
+                className="mt-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-studio-magenta hover:bg-studio-fuchsia text-white transition inline-flex items-center gap-1.5 shadow-glow-magenta"
+              >
+                <span>Reset Search & Filters</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-base text-slate-400">No artwork matches your current filters.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory('All')
+                  setSelectedStatus('All')
+                  setSearchQuery('')
+                }}
+                className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition"
+              >
+                Reset All Filters
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-8">

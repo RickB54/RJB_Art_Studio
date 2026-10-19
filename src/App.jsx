@@ -4,6 +4,8 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import PainterlyBackground from './components/PainterlyBackground'
 import FloatingAdminButton from './components/FloatingAdminButton'
+import BackToTop from './components/BackToTop'
+import ScrollToTop from './components/ScrollToTop'
 
 const Home = React.lazy(() => import('./pages/Home'))
 const Gallery = React.lazy(() => import('./pages/Gallery'))
@@ -13,6 +15,7 @@ const Commissions = React.lazy(() => import('./pages/Commissions'))
 const Videos = React.lazy(() => import('./pages/Videos'))
 const PlaylistDetail = React.lazy(() => import('./pages/PlaylistDetail'))
 const Contact = React.lazy(() => import('./pages/Contact'))
+const NotFound = React.lazy(() => import('./pages/NotFound'))
 
 // Load Admin ONLY in local development
 const Admin = import.meta.env.DEV ? React.lazy(() => import('./pages/Admin')) : null
@@ -25,6 +28,9 @@ export default function App() {
 
       {/* Navigation Header */}
       <Navbar />
+
+      {/* Scroll to top on route change */}
+      <ScrollToTop />
 
       {/* Main Page Content */}
       <main className="flex-1">
@@ -44,12 +50,16 @@ export default function App() {
                 element={<Admin />}
               />
             )}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </React.Suspense>
       </main>
 
       {/* Floating local-dev only admin button */}
       <FloatingAdminButton />
+
+      {/* Floating Back to Top Arrow */}
+      <BackToTop />
 
       {/* Site Footer */}
       <Footer />
