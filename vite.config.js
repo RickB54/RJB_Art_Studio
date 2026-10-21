@@ -30,6 +30,7 @@ function adminApiPlugin() {
         const paintingsPath = path.resolve(__dirname, 'src/data/paintings.json')
         const sitePath = path.resolve(__dirname, 'src/data/site.json')
         const playlistsPath = path.resolve(__dirname, 'src/data/playlists.json')
+        const pagesPath = path.resolve(__dirname, 'src/data/pages.json')
 
         res.setHeader('Content-Type', 'application/json')
 
@@ -47,7 +48,8 @@ function adminApiPlugin() {
           const paintings = JSON.parse(fs.readFileSync(paintingsPath, 'utf-8'))
           const site = JSON.parse(fs.readFileSync(sitePath, 'utf-8'))
           const playlists = fs.existsSync(playlistsPath) ? JSON.parse(fs.readFileSync(playlistsPath, 'utf-8')) : []
-          res.end(JSON.stringify({ paintings, site, playlists }))
+          const pages = fs.existsSync(pagesPath) ? JSON.parse(fs.readFileSync(pagesPath, 'utf-8')) : {}
+          res.end(JSON.stringify({ paintings, site, playlists, pages }))
           return
         }
 
@@ -103,6 +105,16 @@ function adminApiPlugin() {
             fs.writeFileSync(sitePath, JSON.stringify(site, null, 2), 'utf-8')
             res.end(JSON.stringify({ success: true }))
           } else { res.statusCode = 400; res.end(JSON.stringify({ error: 'Expected site object' })) }
+          return
+        }
+
+        // POST /__api/pages
+        if (req.method === 'POST' && req.url === '/__api/pages') {
+          const { pages } = await readBody()
+          if (pages && typeof pages === 'object') {
+            fs.writeFileSync(pagesPath, JSON.stringify(pages, null, 2), 'utf-8')
+            res.end(JSON.stringify({ success: true }))
+          } else { res.statusCode = 400; res.end(JSON.stringify({ error: 'Expected pages object' })) }
           return
         }
 

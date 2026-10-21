@@ -3,20 +3,30 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Sparkles, ExternalLink, Brush, Calendar, ShoppingBag } from 'lucide-react'
 import siteData from '../data/site.json'
 import paintingsData from '../data/paintings.json'
+import pagesData from '../data/pages.json'
 
 export default function Home() {
   const [paintings, setPaintings] = useState(paintingsData)
+  const [homeText, setHomeText] = useState(pagesData.home || {})
 
   useEffect(() => {
     fetch('/__api/data')
       .then(res => res.json())
       .then(data => {
         if (data.paintings && Array.isArray(data.paintings)) setPaintings(data.paintings)
+        if (data.pages?.home) setHomeText(data.pages.home)
       })
       .catch(() => {})
   }, [])
 
-  const featuredPaintings = paintings.filter(p => p.featured).slice(0, 4)
+  const featuredPaintings = paintings.filter(p => p.featured || p.highlighted).slice(0, 4)
+
+  const highlights = homeText.highlights || [
+    { stat: "500+", label: "Paintings Created →", link: "/gallery" },
+    { stat: "2x", label: "Artist of the Month →", link: "/about#awards" },
+    { stat: "Oil & Acrylic", label: "Fine Art Mediums →", link: "/gallery" },
+    { stat: "YouTube", label: "Video Tutorials →", link: "/videos" }
+  ]
 
   return (
     <div className="space-y-24 sm:space-y-32">
@@ -27,20 +37,20 @@ export default function Home() {
         {/* Pill Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-studio-card/80 border border-studio-magenta/30 text-xs sm:text-sm font-medium text-studio-magenta mb-8 shadow-glow-magenta backdrop-blur-md">
           <Sparkles className="w-4 h-4 text-studio-gold" />
-          <span>Original Fine Art • Methuen, Massachusetts</span>
+          <span>{homeText.pillBadge || "Original Fine Art • Methuen, Massachusetts"}</span>
         </div>
 
         {/* Primary Headline */}
         <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white max-w-4xl mx-auto leading-[1.15]">
-          Rick J Berube
+          {homeText.headline || "Rick J Berube"}
         </h1>
 
         <p className="mt-4 font-serif italic text-xl sm:text-2xl text-studio-gold font-normal">
-          "{siteData.artist.tagline}"
+          "{homeText.tagline || siteData.artist.tagline}"
         </p>
 
         <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          {siteData.artist.bioShort}
+          {homeText.bioShort || siteData.artist.bioShort}
         </p>
 
         {/* Action Buttons */}
@@ -49,7 +59,7 @@ export default function Home() {
             to="/gallery"
             className="px-7 py-3.5 rounded-full text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2"
           >
-            <span>Explore The Gallery</span>
+            <span>{homeText.primaryBtn || "Explore The Gallery"}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
           <a
@@ -59,51 +69,29 @@ export default function Home() {
             className="px-6 py-3.5 rounded-full text-sm font-semibold bg-studio-gold/15 border border-studio-gold/40 text-studio-gold hover:bg-studio-gold hover:text-black transition-all flex items-center gap-2 shadow-sm"
           >
             <ShoppingBag className="w-4 h-4" />
-            <span>Prints on Fine Art America</span>
+            <span>{homeText.faaBtn || "Prints on Fine Art America"}</span>
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
           <Link
             to="/commissions"
             className="px-6 py-3.5 rounded-full text-sm font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-2"
           >
-            <span>Request A Commission</span>
+            <span>{homeText.commissionBtn || "Request A Commission"}</span>
           </Link>
         </div>
 
         {/* Studio Highlights Bar - Active Interactive Links */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-          <Link 
-            to="/gallery" 
-            className="glass-panel p-4 rounded-xl text-center hover:border-white/30 hover:scale-[1.03] transition-all duration-200 group block focus:outline-none focus:ring-2 focus:ring-studio-magenta"
-            title="Explore all paintings in the Gallery"
-          >
-            <span className="block font-serif text-2xl font-bold text-white group-hover:text-studio-magenta transition-colors">500+</span>
-            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Paintings Created →</span>
-          </Link>
-          <Link 
-            to="/about#awards" 
-            className="glass-panel p-4 rounded-xl text-center hover:border-studio-gold/40 hover:scale-[1.03] transition-all duration-200 group block focus:outline-none focus:ring-2 focus:ring-studio-gold"
-            title="Read about the Mayoral Artist of the Month awards"
-          >
-            <span className="block font-serif text-2xl font-bold text-studio-gold group-hover:brightness-125 transition-all">2x</span>
-            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Artist of the Month →</span>
-          </Link>
-          <Link 
-            to="/gallery" 
-            className="glass-panel p-4 rounded-xl text-center hover:border-studio-magenta/40 hover:scale-[1.03] transition-all duration-200 group block focus:outline-none focus:ring-2 focus:ring-studio-magenta"
-            title="Browse Oil & Acrylic artwork in the Gallery"
-          >
-            <span className="block font-serif text-2xl font-bold text-studio-magenta group-hover:brightness-125 transition-all">Oil & Acrylic</span>
-            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Fine Art Mediums →</span>
-          </Link>
-          <Link 
-            to="/videos" 
-            className="glass-panel p-4 rounded-xl text-center hover:border-red-500/40 hover:scale-[1.03] transition-all duration-200 group block focus:outline-none focus:ring-2 focus:ring-red-500"
-            title="Watch YouTube painting demonstrations and tutorials"
-          >
-            <span className="block font-serif text-2xl font-bold text-studio-cobalt group-hover:text-red-400 transition-colors">YouTube</span>
-            <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">Video Tutorials →</span>
-          </Link>
+          {highlights.map((h, idx) => (
+            <Link 
+              key={idx}
+              to={h.link || "/gallery"} 
+              className="glass-panel p-4 rounded-xl text-center hover:border-white/30 hover:scale-[1.03] transition-all duration-200 group block focus:outline-none focus:ring-2 focus:ring-studio-magenta"
+            >
+              <span className="block font-serif text-2xl font-bold text-white group-hover:text-studio-magenta transition-colors">{h.stat}</span>
+              <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">{h.label}</span>
+            </Link>
+          ))}
         </div>
 
       </section>
@@ -112,14 +100,18 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
           <div>
-            <h2 className="text-xs uppercase tracking-widest text-studio-magenta font-semibold">Featured Works</h2>
-            <h3 className="font-serif text-3xl sm:text-4xl font-bold text-white mt-1">Explore Highlighted Paintings</h3>
+            <h2 className="text-xs uppercase tracking-widest text-studio-magenta font-semibold">
+              {homeText.featuredHeading || "Featured Works"}
+            </h2>
+            <h3 className="font-serif text-3xl sm:text-4xl font-bold text-white mt-1">
+              {homeText.featuredTitle || "Explore Highlighted Paintings"}
+            </h3>
           </div>
           <Link 
             to="/gallery" 
             className="text-sm font-medium text-studio-gold hover:text-white flex items-center gap-1.5 transition"
           >
-            <span>View All Categories</span>
+            <span>{homeText.featuredLink || "View All Categories"}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

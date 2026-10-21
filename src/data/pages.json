@@ -1,0 +1,108 @@
+{
+  "home": {
+    "pillBadge": "Original Fine Art • Methuen, Massachusetts",
+    "headline": "Rick J Berube",
+    "tagline": "Beauty & Nature inspire me...",
+    "bioShort": "Self-taught fine artist specializing in oil and acrylic landscapes, seascapes, wildlife, florals, and commissioned portraits. Over 500 original paintings created with passion and dedication.",
+    "primaryBtn": "Explore The Gallery",
+    "faaBtn": "Prints on Fine Art America",
+    "commissionBtn": "Request A Commission",
+    "highlights": [
+      { "stat": "500+", "label": "Paintings Created →", "link": "/gallery" },
+      { "stat": "2x", "label": "Artist of the Month →", "link": "/about#awards" },
+      { "stat": "Oil & Acrylic", "label": "Fine Art Mediums →", "link": "/gallery" },
+      { "stat": "YouTube", "label": "Video Tutorials →", "link": "/videos" }
+    ],
+    "featuredHeading": "Featured Works",
+    "featuredTitle": "Explore Highlighted Paintings",
+    "featuredLink": "View All Categories"
+  },
+  "gallery": {
+    "badge": "Original Art & YouTube Tutorials",
+    "title": "Painting Gallery",
+    "description": "Explore original paintings, demonstrations, and tutorials from Rick J Berube Art Studio. Click any piece to watch the creation video, view details, or inquire."
+  },
+  "about": {
+    "badge": "The Artist & Studio",
+    "title": "About Rick J Berube",
+    "tagline": "Beauty & Nature inspire me...",
+    "journeyTitle": "Artistic Journey",
+    "journeySubtitle": "Methuen, Massachusetts • Self-Taught Painter",
+    "bioExtended": "I became interested in landscape oil painting in the early 1990s, heavily inspired by the great television artist Bob Ross. Watching him every Saturday morning inspired me to paint using the wet-on-wet technique, which remained my primary style for many years. In 2017, I expanded into acrylics, colored pencils, and charcoal, which opened exciting new doors for custom commissions, portraits, wildlife, 3D art, and fan art.",
+    "storyParagraph2": "Over the past decades, I have painted more than 500 original works—capturing the dramatic coastal cliffs of Maine, peaceful New England forests, majestic wildlife, delicate florals, and intimate portraits of loved ones and pets.",
+    "awardsTitle": "Awards & Recognition",
+    "awardsSubtitle": "Honors bestowed by the City of Methuen Mayor's Office",
+    "awardsFooter": "Display Location: Methuen City Hall Rotunda",
+    "studioTitle": "The Studio (\"Where The Magic Happens\")",
+    "studioSubtitle": "Dedicated Art & Video Recording Facility",
+    "studioDescription": "In 2019, I designed and custom-built my own dedicated 33' x 17' painting and video recording studio in Methuen. Equipped with natural lighting, multiple DSLR overhead video angles, and specialized wet-on-wet easels, this studio is where every painting comes to life and where each YouTube demonstration video is produced.",
+    "studioStats": [
+      { "value": "33' × 17'", "label": "Dedicated Creative Space" },
+      { "value": "4K DSLR", "label": "Video Capture Setup →", "link": "/videos" },
+      { "value": "Oil & Acrylic", "label": "Custom Easel Stations →", "link": "/gallery" }
+    ],
+    "ctaTitle": "Interested in working together or purchasing art?",
+    "ctaDescription": "Browse the gallery of paintings, inquire about custom portrait commissions, or reach out with any questions.",
+    "ctaGalleryBtn": "Browse The Gallery",
+    "ctaContactBtn": "Contact Rick Directly"
+  },
+  "commissions": {
+    "badge": "Custom Artwork & Portrait Services",
+    "title": "Commissions & Prints",
+    "intro": "Order a personalized original oil painting, acrylic artwork, or expressive charcoal portrait of loved ones or pets. Every custom commission includes a signed and dated Certificate of Authenticity.",
+    "processTitle": "How The Commission Process Works",
+    "processSubtitle": "Simple, collaborative, and tailored to your vision",
+    "processSteps": [
+      { "num": "1", "title": "Request & Vision", "desc": "Submit the request form below with your desired subject, size, and photo references." },
+      { "num": "2", "title": "Consultation & Quote", "desc": "We'll discuss orientation, canvas vs panel, background color palette, and timeline." },
+      { "num": "3", "title": "Studio Creation", "desc": "I create the piece in my Methuen studio, with optional progress updates and video recording." },
+      { "num": "4", "title": "Signed & Delivered", "desc": "Your painting is signed, accompanied by a Certificate of Authenticity, and carefully packaged." }
+    ],
+    "pricingPolicyTitle": "Pricing Policy Notice",
+    "pricingPolicy": "Commission pricing varies based on medium, canvas dimensions, and subject complexity (e.g. single subject vs multiple subjects). Historical estimates start around $130 for 8x10 portrait panels and scale by dimension. All quotes are personalized and confirmed before painting begins.",
+    "watercolorNote": "I also paint watercolors. Originals are shown in the Gallery; I don't take watercolor commissions.",
+    "formBadge": "Interactive Request",
+    "formTitle": "Commission Request Form",
+    "formSubtitle": "Fill out the details below to receive a personalized quote and timeline directly from Rick."
+  },
+  "videos": {
+    "badge": "YouTube Studio Playlists",
+    "title": "Video Gallery & Playlists",
+    "intro": "Select any collection below to browse full-length demonstrations, time lapses, and painting techniques categorized directly from my YouTube channel.",
+    "bannerTitle": "Rick J Berube Art Studio",
+    "bannerSubtitle": "Subscribe on YouTube for weekly tutorials, techniques, and studio demonstrations.",
+    "bannerBtn": "Subscribe on YouTube",
+    "playlistsHeader": "Featured Playlists"
+  },
+  "contact": {
+    "badge": "Studio Inquiries",
+    "title": "Contact Rick",
+    "intro": "Inquire about available paintings, fine art prints, upcoming exhibitions, or general artistic collaborations.",
+    "directEmailTitle": "Direct Email",
+    "directEmailDesc": "Prefer using your email app? Send a message directly to Rick's studio inbox anytime:",
+    "channelsTitle": "Studio Channels",
+    "formTitle": "Send a Message",
+    "formSubtitle": "Fill out the form below and Rick will reply to your inquiry as soon as possible."
+  },
+  "footer": {
+    "studioName": "Rick J Berube Art Studio",
+    "location": "Methuen, Massachusetts",
+    "tagline": "Beauty & Nature inspire me...",
+    "bioShort": "Self-taught fine artist specializing in oil and acrylic landscapes, seascapes, wildlife, florals, and commissioned portraits. Over 500 original paintings created with passion and dedication.",
+    "emailLabel": "Artist Direct Email:",
+    "exploreTitle": "Explore",
+    "connectTitle": "Connect",
+    "priceListsTitle": "Official Price Lists",
+    "priceListsSubtitle": "Click any price list to view full screen, download PDF, or print",
+    "copyrightNotice": "Rick J Berube Art Studio. All rights reserved.",
+    "originText": "Fine Art from Methuen, MA"
+  },
+  "artShows": [
+    {
+      "title": "Local Artisan Shows & Fairs",
+      "date": "Winter & Spring 2027",
+      "location": "Merrimack Valley & North Shore, MA",
+      "details": "Original paintings and prints available directly in person. Check back soon for exact booth dates and locations!"
+    }
+  ]
+}
