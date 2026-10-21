@@ -725,11 +725,14 @@ export default function Admin() {
           ['bulk', 'Bulk Importer'],
           ['manage', `Paintings (${paintings.length})`],
           ['playlists', `Playlists (${playlists.length})`],
-          ['site', 'Page Text & Content']
+          ['site', 'Page Text & Content'],
+          ['help', '? Help']
         ].map(([key, label]) => (
           <button key={key} type="button" onClick={() => setActiveTab(key)}
             className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
-              activeTab === key ? 'bg-studio-magenta text-white shadow-glow-magenta' : 'bg-white/5 text-slate-300 hover:bg-white/10'
+              activeTab === key
+                ? (key === 'help' ? 'bg-studio-gold text-black shadow' : 'bg-studio-magenta text-white shadow-glow-magenta')
+                : 'bg-white/5 text-slate-300 hover:bg-white/10'
             }`}>
             {label}
           </button>
@@ -1918,6 +1921,103 @@ export default function Admin() {
             </button>
           </div>
         </form>
+      )}
+
+      {/* TAB: HELP */}
+      {activeTab === 'help' && (
+        <div className="space-y-6">
+          <div className="glass-panel p-6 rounded-2xl border border-studio-gold/30 bg-gradient-to-b from-studio-gold/5 to-transparent">
+            <h2 className="font-serif text-xl font-bold text-studio-gold mb-1">Admin Help & How-To Guide</h2>
+            <p className="text-xs text-slate-400">Everything you need to know to manage your art studio website. No coding required.</p>
+          </div>
+
+          {/* QUICK START */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="text-studio-gold">🚀</span> Quick Start — Typical Workflow</h3>
+            <ol className="text-xs text-slate-300 list-decimal list-inside space-y-1.5 pl-2">
+              <li>Run <code className="text-studio-magenta font-mono bg-white/5 px-1 rounded">npm run dev</code> in a terminal to start the local admin server.</li>
+              <li>Open <a href="http://localhost:5180/admin" className="text-studio-magenta underline" target="_blank">localhost:5180/admin</a> in your browser.</li>
+              <li>Add or edit paintings, sync playlists, and update page text as needed.</li>
+              <li>Click <strong className="text-white">View Website</strong> in the top bar to preview changes.</li>
+              <li>When satisfied, run <code className="text-studio-magenta font-mono bg-white/5 px-1 rounded">npm run publish</code> (or <code className="text-studio-magenta font-mono bg-white/5 px-1 rounded">npm run publish -- "your message"</code>) to push everything live.</li>
+            </ol>
+          </div>
+
+          {/* ADD PAINTINGS */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="text-studio-gold">🖼️</span> Adding Paintings</h3>
+            <div className="space-y-2 text-xs text-slate-300">
+              <p><strong className="text-white">Photo-Only Painting:</strong> Click <em>Add Single Painting</em> tab, make sure <em>Photo only</em> mode is selected, drag-and-drop or browse for your photo(s). Multiple files create multiple catalog entries automatically. Photos are resized to 1600px WebP + 500px thumbnail on upload (requires dev server running).</p>
+              <p><strong className="text-white">From YouTube Video:</strong> Switch to <em>From YouTube video</em> mode, paste the video URL, click <em>Fetch Info</em>. The title and best available thumbnail are filled in for you. Optionally attach a high-res photo to override the thumbnail.</p>
+              <p><strong className="text-white">Bulk Import:</strong> Use the <em>Bulk Importer</em> tab to paste multiple <code className="font-mono bg-white/5 px-1 rounded">URL | Playlist Name</code> lines at once. The playlist name must match an existing playlist exactly (case-insensitive).</p>
+            </div>
+          </div>
+
+          {/* STATUS BADGES */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="text-studio-gold">🏷️</span> Status Badges & Availability</h3>
+            <div className="text-xs text-slate-300 space-y-1.5">
+              <p>Each painting can have one of these status badges shown in the gallery:</p>
+              <ul className="list-disc list-inside pl-2 space-y-1">
+                <li><strong className="text-emerald-400">For Sale</strong> — Shows an Inquire/Buy button and displays the price if set.</li>
+                <li><strong className="text-rose-400">Sold</strong> — Shows a red Sold badge. Hides Buy/Inquire button.</li>
+                <li><strong className="text-amber-400">Reserved</strong> — Shows an amber Reserved badge.</li>
+                <li><strong className="text-slate-400">Not Available for Sale</strong> — Shows a gray badge. No buy button.</li>
+                <li><em>None</em> — No badge shown.</li>
+              </ul>
+              <p className="pt-1">Change status from the <em>Paintings</em> tab using the quick dropdown next to each item, or select multiple items and use <em>Bulk Set Status</em>.</p>
+            </div>
+          </div>
+
+          {/* HIDING PAINTINGS */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="text-studio-gold">👁️</span> Hiding & Showing Paintings</h3>
+            <p className="text-xs text-slate-300">In the <em>Paintings</em> tab, click the eye icon next to any item to hide it from the public Gallery without deleting it. Hidden items appear dimmed in the admin list. Click the eye again to show it. This is useful for works-in-progress or seasonal items.</p>
+          </div>
+
+          {/* PLAYLISTS & SYNC */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="text-studio-gold">▶️</span> Playlists & YouTube Sync</h3>
+            <div className="text-xs text-slate-300 space-y-1.5">
+              <p><strong className="text-white">Add a Playlist:</strong> Paste a YouTube Playlist URL or ID in the <em>Playlists</em> tab and click <em>Add & Sync</em>. Requires <code className="font-mono bg-white/5 px-1 rounded">YOUTUBE_API_KEY</code> in your <code className="font-mono bg-white/5 px-1 rounded">.env</code> file.</p>
+              <p><strong className="text-white">Sync:</strong> Click the <em>Sync</em> button next to a playlist to pull the latest videos from YouTube. New videos are added; existing videos and your custom edits are never overwritten. Click <em>Sync All</em> to update every playlist at once.</p>
+              <p><strong className="text-white">Command-line sync:</strong> You can also run <code className="font-mono bg-white/5 px-1 rounded">npm run sync-playlists</code> from a terminal (reads your <code className="font-mono bg-white/5 px-1 rounded">.env</code> automatically).</p>
+              <p><strong className="text-white">Replace Old Domain:</strong> If video descriptions contain your old <em>rjbartstudio.com</em> links, click <em>Replace Old Domain</em> in the Playlists tab to update them all in one step.</p>
+            </div>
+          </div>
+
+          {/* PAGE TEXT */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="text-studio-gold">📝</span> Editing Page Text</h3>
+            <div className="text-xs text-slate-300 space-y-1.5">
+              <p>Use the <em>Page Text & Content</em> tab (or the Quick Page Editor dropdown at the top) to edit headings, bios, service descriptions, awards, and contact details for every page of your website.</p>
+              <p>Changes are saved to <code className="font-mono bg-white/5 px-1 rounded">src/data/site.json</code> on your computer. They will appear instantly in the local preview and go live the next time you run <code className="font-mono bg-white/5 px-1 rounded">npm run publish</code>.</p>
+              <p><strong className="text-white">Restoring defaults:</strong> If you make a mistake, the <em>Restore Defaults</em> button in the Site tab reloads the original text from <code className="font-mono bg-white/5 px-1 rounded">src/data/pages.default.json</code>.</p>
+            </div>
+          </div>
+
+          {/* PREVIEW & PUBLISH */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="text-studio-gold">🌐</span> Previewing & Publishing</h3>
+            <div className="text-xs text-slate-300 space-y-1.5">
+              <p><strong className="text-white">Preview locally:</strong> Click <em>View Website</em> in the top bar. This opens your local site at <code className="font-mono bg-white/5 px-1 rounded">localhost:5180</code> — changes appear here immediately without publishing.</p>
+              <p><strong className="text-white">Publish to the live site:</strong></p>
+              <ul className="list-disc list-inside pl-2 space-y-0.5">
+                <li>Open a terminal in the project folder.</li>
+                <li>Run: <code className="font-mono bg-white/5 px-1 rounded">npm run publish</code></li>
+                <li>Or with a custom git commit message: <code className="font-mono bg-white/5 px-1 rounded">npm run publish -- "Added new seascape"</code></li>
+              </ul>
+              <p>This automatically: stages all changes → commits → pushes to GitHub → builds → deploys to Netlify.</p>
+              <p><strong className="text-white">Emergency deploy only (skip git):</strong> <code className="font-mono bg-white/5 px-1 rounded">npm run deploy</code></p>
+            </div>
+          </div>
+
+          {/* SMOKE TEST */}
+          <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="text-studio-gold">✅</span> Site Health Check</h3>
+            <p className="text-xs text-slate-300">Run <code className="font-mono bg-white/5 px-1 rounded">npm run check</code> in a terminal to verify that all pages, JSON data files, and key site features are working correctly before publishing. The check runs without a browser and reports any problems.</p>
+          </div>
+        </div>
       )}
 
     </div>
