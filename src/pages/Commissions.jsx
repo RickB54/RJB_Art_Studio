@@ -1,15 +1,19 @@
 import React, { useState } from 'react'
-import { Brush, CheckCircle2, ShieldCheck, ShoppingBag, Send, AlertCircle, ArrowRight, HeartHandshake } from 'lucide-react'
+import { Brush, CheckCircle2, ShieldCheck, ShoppingBag, Send, AlertCircle, ArrowRight, HeartHandshake, FileText, Info } from 'lucide-react'
 import siteData from '../data/site.json'
+import { PRICE_LISTS } from '../data/priceLists'
+import PriceListModal from '../components/PriceListModal'
 
 export default function Commissions() {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
+  const [activePriceList, setActivePriceList] = useState(null)
 
   const [formData, setFormData] = useState({
     itemType: 'Painted Portrait',
     size: '11x14',
+    numberOfSubjects: '1',
     medium: 'Oil',
     orientation: 'Landscape (Horizontal)',
     sceneryDescription: '',
@@ -70,6 +74,15 @@ export default function Commissions() {
     }
   }
 
+  // Map service card ID to corresponding PRICE_LIST item
+  const getServicePriceList = (svcId) => {
+    if (svcId === 'charcoal-portraits') return PRICE_LISTS.find(p => p.id === 'charcoal-portrait-prices')
+    if (svcId === 'painted-portraits') return PRICE_LISTS.find(p => p.id === 'painted-portrait-prices')
+    if (svcId === 'custom-paintings') return PRICE_LISTS.find(p => p.id === 'product-price-list')
+    if (svcId === 'archival-prints') return PRICE_LISTS.find(p => p.id === 'prints-price-list')
+    return null
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       
@@ -86,23 +99,60 @@ export default function Commissions() {
         </p>
       </div>
 
-      {/* Services Grid */}
+      {/* Services Grid with In-Card Thumbnails */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {siteData.services.map((svc) => (
-          <div key={svc.id} className="glass-panel p-7 rounded-2xl border border-white/10 flex flex-col justify-between space-y-3">
-            <div>
-              <span className="text-[11px] font-semibold text-studio-magenta uppercase tracking-wider">{svc.subtitle}</span>
-              <h3 className="font-serif text-xl font-bold text-white mt-1">{svc.title}</h3>
-              <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">{svc.description}</p>
+        {siteData.services.map((svc) => {
+          const pl = getServicePriceList(svc.id)
+          return (
+            <div key={svc.id} className="glass-panel p-7 rounded-2xl border border-white/10 flex flex-col justify-between space-y-4">
+              <div>
+                <span className="text-[11px] font-semibold text-studio-magenta uppercase tracking-wider">{svc.subtitle}</span>
+                <h3 className="font-serif text-xl font-bold text-white mt-1">{svc.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">{svc.description}</p>
+              </div>
+
+              {/* Price list thumbnail inside the card */}
+              {pl && (
+                <button
+                  type="button"
+                  onClick={() => setActivePriceList(pl)}
+                  className="group/thumb p-2.5 rounded-xl bg-black/40 hover:bg-black/60 border border-white/10 hover:border-studio-gold/60 transition flex items-center gap-3 text-left w-full focus:outline-none focus:ring-2 focus:ring-studio-gold"
+                  title={`View ${pl.title} Price List`}
+                >
+                  <img
+                    src={pl.thumb}
+                    alt={pl.alt}
+                    className="w-16 h-12 rounded object-cover border border-white/10 shrink-0 group-hover/thumb:scale-105 transition-transform"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-semibold text-white group-hover/thumb:text-studio-gold transition block truncate">
+                      {pl.title} Price List
+                    </span>
+                    <span className="text-[10px] text-slate-400 block">Click to view full screen, print, or download</span>
+                  </div>
+                  <FileText className="w-4 h-4 text-studio-gold shrink-0 opacity-70 group-hover/thumb:opacity-100" />
+                </button>
+              )}
+
+              <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
+                <span className="flex items-center gap-1.5 text-studio-gold font-medium">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Certificate of Authenticity</span>
+                </span>
+                <span className="text-[11px] text-slate-500">Offered on all paintings</span>
+              </div>
             </div>
-            <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
-              <span className="flex items-center gap-1.5 text-studio-gold">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Certificate of Authenticity</span>
-              </span>
-            </div>
-          </div>
-        ))}
+          )
+        })}
+      </div>
+
+      {/* Watercolor Note */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-studio-purple/15 border border-studio-purple/30 flex items-start sm:items-center gap-3 text-xs sm:text-sm text-slate-200">
+        <Info className="w-5 h-5 text-studio-gold shrink-0 mt-0.5 sm:mt-0" />
+        <p className="leading-relaxed">
+          <strong className="text-studio-gold font-semibold">Watercolor Note: </strong>
+          I also paint watercolors. Originals are shown in the Gallery; I don't take watercolor commissions.
+        </p>
       </div>
 
       {/* The 4-Step Commission Process */}
@@ -145,6 +195,48 @@ export default function Commissions() {
         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
           Commission pricing varies based on medium, canvas dimensions, and subject complexity (e.g. single subject vs multiple subjects). Historical estimates start around $130 for 8x10 portrait panels and scale by dimension. All quotes are personalized and confirmed before painting begins.
         </p>
+      </div>
+
+      {/* Dedicated Price Lists Section Above Commission Form */}
+      <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <span className="text-xs uppercase tracking-widest font-semibold text-studio-gold">
+              Source of Truth
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mt-1">
+              Price Lists
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1">
+              Click any price list thumbnail to open full screen, download the original PDF, or print directly.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {PRICE_LISTS.map((pl) => (
+            <button
+              type="button"
+              key={pl.id}
+              onClick={() => setActivePriceList(pl)}
+              className="group p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-studio-gold/50 transition flex flex-col items-center text-center focus:outline-none focus:ring-2 focus:ring-studio-gold"
+            >
+              <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-black/60 border border-white/10 mb-3 relative">
+                <img
+                  src={pl.thumb}
+                  alt={pl.alt}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+              </div>
+              <span className="text-xs sm:text-sm font-serif font-bold text-white group-hover:text-studio-gold transition line-clamp-1">
+                {pl.title}
+              </span>
+              <span className="text-[11px] text-slate-400 mt-1">View / Print / PDF →</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Commission Request Form */}
@@ -205,7 +297,6 @@ export default function Commissions() {
                   <option value="Charcoal Portrait">Charcoal Portrait</option>
                   <option value="Original Oil Painting">Original Oil Painting</option>
                   <option value="Original Acrylic Painting">Original Acrylic Painting</option>
-                  <option value="Original Watercolor Painting">Original Watercolor Painting</option>
                   <option value="Other Drawing">Other Drawing</option>
                   <option value="Prints">Prints</option>
                   <option value="Other">Other</option>
@@ -215,7 +306,7 @@ export default function Commissions() {
               {/* Preferred Size */}
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Size preferred
+                  Size preferred <span className="text-studio-magenta">*</span>
                 </label>
                 <select
                   name="size"
@@ -223,15 +314,32 @@ export default function Commissions() {
                   onChange={handleChange}
                   className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                 >
-                  <option value="4x6">4x6</option>
-                  <option value="5x7">5x7</option>
                   <option value="8x10">8x10</option>
                   <option value="9x12">9x12</option>
                   <option value="11x14">11x14</option>
                   <option value="16x20">16x20</option>
                   <option value="18x24">18x24</option>
-                  <option value="Let the artist choose">Let the artist choose</option>
-                  <option value="Other">Other</option>
+                  <option value="22x28">22x28</option>
+                  <option value="24x36">24x36</option>
+                </select>
+              </div>
+
+              {/* Number of Subjects Field */}
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  Number of Subjects <span className="text-studio-magenta">*</span>
+                </label>
+                <select
+                  name="numberOfSubjects"
+                  value={formData.numberOfSubjects}
+                  onChange={handleChange}
+                  className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                >
+                  <option value="1">1 Subject (Single Person / Pet / Scenery)</option>
+                  <option value="2">2 Subjects</option>
+                  <option value="3">3 Subjects</option>
+                  <option value="4">4 Subjects</option>
+                  <option value="5+">5+ Subjects</option>
                 </select>
               </div>
 
@@ -248,7 +356,6 @@ export default function Commissions() {
                 >
                   <option value="Oil">Oil</option>
                   <option value="Acrylics">Acrylics</option>
-                  <option value="Watercolor">Watercolor</option>
                   <option value="Charcoal">Charcoal</option>
                   <option value="Graphite">Graphite</option>
                   <option value="Color Pencil">Color Pencil</option>
@@ -259,7 +366,7 @@ export default function Commissions() {
               </div>
 
               {/* Orientation */}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
                   What Orientation would you prefer?
                 </label>
@@ -388,7 +495,7 @@ export default function Commissions() {
 
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <a
-                href={`mailto:${siteData.contact?.email || 'rberube54@gmail.com'}?subject=${encodeURIComponent(`Commission Request: ${formData.itemType} (${formData.size})`)}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nAddress: ${formData.address}\n\nItem: ${formData.itemType}\nSize: ${formData.size}\nMedium: ${formData.medium}\nOrientation: ${formData.orientation}\nImage Title: ${formData.imageTitle}\n\nScenery:\n${formData.sceneryDescription}\n\nQuestions/Comments:\n${formData.comments}`)}`}
+                href={`mailto:${siteData.contact?.email || 'rberube54@gmail.com'}?subject=${encodeURIComponent(`Commission Request: ${formData.itemType} (${formData.size})`)}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nAddress: ${formData.address}\n\nItem: ${formData.itemType}\nSize: ${formData.size}\nNumber of Subjects: ${formData.numberOfSubjects}\nMedium: ${formData.medium}\nOrientation: ${formData.orientation}\nImage Title: ${formData.imageTitle}\n\nScenery:\n${formData.sceneryDescription}\n\nQuestions/Comments:\n${formData.comments}`)}`}
                 className="px-5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 transition text-center flex items-center justify-center gap-2"
                 title="Send this commission request directly through your email client"
               >
@@ -408,6 +515,10 @@ export default function Commissions() {
         )}
 
       </div>
+
+      {activePriceList && (
+        <PriceListModal item={activePriceList} onClose={() => setActivePriceList(null)} />
+      )}
 
     </div>
   )

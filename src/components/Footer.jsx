@@ -1,9 +1,12 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Youtube, Facebook, Instagram, Pin, Heart } from 'lucide-react'
 import siteData from '../data/site.json'
+import { PRICE_LISTS } from '../data/priceLists'
+import PriceListModal from './PriceListModal'
 
 export default function Footer() {
+  const [activePriceList, setActivePriceList] = useState(null)
   return (
     <footer className="mt-24 border-t border-white/5 bg-studio-surface/80 backdrop-blur-md">
       
@@ -142,6 +145,52 @@ export default function Footer() {
           </div>
 
         </div>
+
+        {/* Price Lists Quick Thumbnails */}
+        <div className="mt-10 pt-8 border-t border-white/5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-studio-gold">
+                Official Price Lists
+              </h4>
+              <p className="text-xs text-slate-400">
+                Click any price list to view full screen, download PDF, or print
+              </p>
+            </div>
+            <Link to="/commissions" className="text-xs text-studio-magenta hover:underline">
+              View Commissions & Prints page →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {PRICE_LISTS.map((pl) => (
+              <button
+                type="button"
+                key={pl.id}
+                onClick={() => setActivePriceList(pl)}
+                className="group p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-studio-gold/50 transition flex flex-col items-center text-center focus:outline-none focus:ring-2 focus:ring-studio-gold text-left"
+              >
+                <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-black/60 border border-white/5 mb-2 relative">
+                  <img
+                    src={pl.thumb}
+                    alt={pl.alt}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                </div>
+                <span className="text-xs font-serif font-bold text-white group-hover:text-studio-gold transition line-clamp-1">
+                  {pl.title}
+                </span>
+                <span className="text-[10px] text-slate-400 mt-0.5">View Price List</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {activePriceList && (
+          <PriceListModal item={activePriceList} onClose={() => setActivePriceList(null)} />
+        )}
 
         <div className="mt-12 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <p>© {new Date().getFullYear()} Rick J Berube Art Studio. All rights reserved.</p>
