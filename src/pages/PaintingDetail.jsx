@@ -69,6 +69,8 @@ export default function PaintingDetail() {
   // Build unified items list
   const unifiedItems = useMemo(() => {
     const paintingByVideoId = new Map()
+    const usedPaintingIds = new Set()
+
     for (const pt of paintings) {
       const vid = pt.videoId || (pt.youtubeUrl ? pt.youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)?.[1] : null)
       if (vid) paintingByVideoId.set(vid, pt)
@@ -76,19 +78,23 @@ export default function PaintingDetail() {
 
     const visiblePlaylists = (playlists || []).filter(p => p.show !== false)
     const items = []
-    const seen = new Set()
+    const seenVideoIds = new Set()
 
     for (const pl of visiblePlaylists) {
       const validVideos = (pl.videos || []).filter(v => !v.hide)
       for (const v of validVideos) {
-        if (seen.has(v.id)) continue
-        seen.add(v.id)
+        if (seenVideoIds.has(v.id)) continue
+        seenVideoIds.add(v.id)
 
         const matched = paintingByVideoId.get(v.id)
+        if (matched) usedPaintingIds.add(matched.id)
+
         const hasRealPaintingData = !!(
           matched && (
             (matched.price !== null && matched.price !== undefined && matched.price !== '') ||
             matched.sold === true ||
+            matched.status ||
+            (matched.photo && matched.photo.trim() !== '') ||
             (matched.originalImage && matched.originalImage.trim() !== '') ||
             (matched.customImage && matched.customImage.trim() !== '')
           )
@@ -98,26 +104,63 @@ export default function PaintingDetail() {
         const yearMatch = v.title?.match(/\b(19\d\d|20\d\d)\b/) || v.description?.match(/\b(19\d\d|20\d\d)\b/)
         if (yearMatch) ytYear = yearMatch[1]
 
-        const originalImg = matched?.originalImage || matched?.customImage || null
+        const originalImg = matched?.photo || matched?.originalImage || matched?.customImage || null
 
         items.push({
           id: matched?.id || `video-${v.id}`,
           videoId: v.id,
-          title: v.title,
+          title: matched?.title || v.title,
           description: matched?.description || v.description,
           category: pl.title,
+          categories: [pl.title, ...(matched?.categories || [])],
           hasPaintingData: hasRealPaintingData,
-          sold: hasRealPaintingData ? !!matched.sold : false,
+          sold: hasRealPaintingData ? !!(matched.sold || matched.status === 'Sold') : false,
+          status: matched?.status || (matched?.sold ? 'Sold' : (matched?.price ? 'For Sale' : '')),
           price: hasRealPaintingData ? matched.price : null,
           medium: hasRealPaintingData ? matched.medium : null,
           size: hasRealPaintingData ? matched.size : null,
           year: hasRealPaintingData ? (matched.year || ytYear) : ytYear,
           displayImage: originalImg || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
           fineArtAmericaUrl: matched?.fineArtAmericaUrl || null,
+          hasVideo: true,
           youtubeUrl: `https://www.youtube.com/watch?v=${v.id}`
         })
       }
     }
+
+    // Add paintings not in visible playlists (e.g. photo-only)
+    for (const pt of paintings) {
+      if (usedPaintingIds.has(pt.id)) continue
+      const vid = pt.videoId || (pt.youtubeUrl ? pt.youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)?.[1] : null)
+      if (vid && seenVideoIds.has(vid)) continue
+
+      usedPaintingIds.add(pt.id)
+      if (vid) seenVideoIds.add(vid)
+
+      const photoImg = pt.photo || pt.originalImage || pt.customImage || null
+      const cats = Array.isArray(pt.categories) && pt.categories.length ? pt.categories : (pt.category ? [pt.category] : ['Paintings'])
+
+      items.push({
+        id: pt.id || (vid ? `video-${vid}` : `painting-${Date.now()}`),
+        videoId: vid || null,
+        title: pt.title || 'Untitled',
+        description: pt.description || '',
+        category: cats[0] || 'Paintings',
+        categories: cats,
+        hasPaintingData: true,
+        sold: Boolean(pt.sold || pt.status === 'Sold'),
+        status: pt.status || (pt.sold ? 'Sold' : (pt.price ? 'For Sale' : '')),
+        price: pt.price || null,
+        medium: pt.medium || null,
+        size: pt.size || null,
+        year: pt.year || null,
+        displayImage: photoImg || (vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : pt.thumbnail || '/images/placeholder.webp'),
+        fineArtAmericaUrl: pt.fineArtAmericaUrl || null,
+        hasVideo: Boolean(vid || pt.youtubeUrl),
+        youtubeUrl: pt.youtubeUrl || (vid ? `https://www.youtube.com/watch?v=${vid}` : null)
+      })
+    }
+
     return items
   }, [paintings, playlists])
 
@@ -187,28 +230,25 @@ export default function PaintingDetail() {
               className="w-full h-full border-0"
             />
           ) : (
-            <div className="relative w-full h-full group cursor-pointer" onClick={() => setVideoPlaying(true)}>
+            <div
+              className={`relative w-full h-full group ${painting.videoId ? 'cursor-pointer' : ''}`}
+              onClick={() => painting.videoId && setVideoPlaying(true)}
+            >
               <img
                 src={painting.displayImage}
                 alt={painting.title}
                 className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex flex-col items-center justify-center p-6 text-center backdrop-blur-[1px]">
-                {painting.videoId ? (
-                  <>
-                    <div className="w-20 h-20 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-glow-magenta group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
-                      <Play className="w-9 h-9 fill-white translate-x-0.5" />
-                    </div>
-                    <span className="mt-4 px-4 py-1.5 rounded-full text-xs font-semibold bg-black/70 text-white backdrop-blur-md border border-white/10">
-                      Click to Watch Creation Video
-                    </span>
-                  </>
-                ) : (
-                  <span className="px-4 py-1.5 rounded-full text-xs font-semibold bg-black/70 text-white backdrop-blur-md border border-white/10">
-                    High Resolution Artwork View
+              {painting.videoId && (
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex flex-col items-center justify-center p-6 text-center backdrop-blur-[1px]">
+                  <div className="w-20 h-20 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-glow-magenta group-hover:scale-110 group-hover:bg-red-600 transition-all duration-300">
+                    <Play className="w-9 h-9 fill-white translate-x-0.5" />
+                  </div>
+                  <span className="mt-4 px-4 py-1.5 rounded-full text-xs font-semibold bg-black/70 text-white backdrop-blur-md border border-white/10">
+                    Click to Watch Creation Video
                   </span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -241,7 +281,7 @@ export default function PaintingDetail() {
           <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/10 space-y-4">
             <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-studio-gold" />
-              <span>About This Demonstration</span>
+              <span>{painting.hasVideo ? 'About This Demonstration' : 'About This Artwork'}</span>
             </h2>
             <div className="text-sm sm:text-base text-slate-300 leading-relaxed whitespace-pre-line font-sans">
               {renderDescriptionWithLinks(painting.description)}
@@ -271,39 +311,61 @@ export default function PaintingDetail() {
         {/* Right Column: Specifications & Purchasing Panel */}
         <div className="glass-panel p-6 sm:p-7 rounded-2xl border border-white/10 space-y-6 sticky top-28">
           
-          {/* Price & Availability: only if real painting data */}
-          {painting.hasPaintingData ? (
+          {/* Price & Availability: only if real painting data or status is set */}
+          {painting.status || painting.hasPaintingData ? (
             <div className="border-b border-white/10 pb-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-slate-400">Current Status</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                  painting.sold
-                    ? 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
-                    : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
-                }`}>
-                  {painting.sold ? 'Sold / Permanent Collection' : 'Available for Purchase'}
-                </span>
+                {painting.status ? (
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    painting.status === 'Sold' || painting.sold
+                      ? 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
+                      : painting.status === 'For Sale'
+                      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
+                      : painting.status === 'Reserved'
+                      ? 'bg-amber-950/80 text-amber-300 border border-amber-500/30'
+                      : 'bg-slate-800 text-slate-300 border border-slate-600/30'
+                  }`}>
+                    {painting.status}
+                  </span>
+                ) : (
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    painting.sold
+                      ? 'bg-rose-950/80 text-rose-300 border border-rose-500/30'
+                      : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
+                  }`}>
+                    {painting.sold ? 'Sold' : 'Available'}
+                  </span>
+                )}
               </div>
-              {painting.price && !painting.sold ? (
+              {painting.price && !painting.sold && painting.status !== 'Sold' && painting.status !== 'Not Available for Sale' ? (
                 <div className="mt-3">
                   <span className="text-3xl font-bold text-studio-gold font-serif">${painting.price}</span>
                   <span className="text-xs text-slate-400 ml-2">USD (Original Piece)</span>
                 </div>
               ) : (
                 <p className="text-xs text-slate-400 mt-2">
-                  {painting.sold ? 'Inquire for similar custom commission' : 'Contact for purchase inquiry and shipping details.'}
+                  {painting.sold || painting.status === 'Sold' ? 'Inquire for similar custom commission' : 'Contact for purchase inquiry and shipping details.'}
                 </p>
               )}
             </div>
           ) : (
             <div className="border-b border-white/10 pb-5">
-              <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-black/70 text-red-400 border border-red-500/30 inline-flex items-center gap-1.5">
-                <Play className="w-3.5 h-3.5 fill-red-500 text-red-500" />
-                <span>YouTube Studio Demo</span>
-              </span>
-              <p className="text-xs text-slate-400 mt-3">
-                Watch full video tutorial and time lapse above. You can contact Rick for custom commissions or prints.
-              </p>
+              {painting.hasVideo ? (
+                <>
+                  <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-black/70 text-red-400 border border-red-500/30 inline-flex items-center gap-1.5">
+                    <Play className="w-3.5 h-3.5 fill-red-500 text-red-500" />
+                    <span>Painting Demonstration</span>
+                  </span>
+                  <p className="text-xs text-slate-400 mt-3">
+                    Watch full video demonstration above. You can contact Rick for custom commissions or prints.
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-slate-400">
+                  Original artwork by Rick J Berube. Inquire below for purchase details or custom commissions.
+                </p>
+              )}
             </div>
           )}
 

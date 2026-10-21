@@ -1,11 +1,22 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Sparkles, ExternalLink, Brush, Calendar, ShoppingBag } from 'lucide-react'
 import siteData from '../data/site.json'
 import paintingsData from '../data/paintings.json'
 
 export default function Home() {
-  const featuredPaintings = paintingsData.filter(p => p.featured).slice(0, 4)
+  const [paintings, setPaintings] = useState(paintingsData)
+
+  useEffect(() => {
+    fetch('/__api/data')
+      .then(res => res.json())
+      .then(data => {
+        if (data.paintings && Array.isArray(data.paintings)) setPaintings(data.paintings)
+      })
+      .catch(() => {})
+  }, [])
+
+  const featuredPaintings = paintings.filter(p => p.featured).slice(0, 4)
 
   return (
     <div className="space-y-24 sm:space-y-32">
@@ -121,20 +132,32 @@ export default function Home() {
             >
               <div className="relative aspect-[4/3] bg-studio-surface overflow-hidden">
                 <img 
-                  src={painting.thumbnail} 
+                  src={painting.highlightPhoto || painting.photo || painting.originalImage || painting.customImage || painting.thumbnail} 
                   alt={painting.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
-                <div className="absolute top-3 right-3">
-                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-md ${
-                    painting.sold 
-                      ? 'bg-rose-950/80 text-rose-300 border border-rose-500/30' 
-                      : 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/30'
-                  }`}>
-                    {painting.sold ? 'Sold' : 'Available'}
-                  </span>
-                </div>
+                {painting.status ? (
+                  <div className="absolute top-3 right-3">
+                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-md shadow border ${
+                      painting.status === 'Sold' || painting.sold
+                        ? 'bg-rose-950/80 text-rose-300 border-rose-500/30'
+                        : painting.status === 'For Sale'
+                        ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/30'
+                        : painting.status === 'Reserved'
+                        ? 'bg-amber-950/80 text-amber-300 border-amber-500/30'
+                        : 'bg-slate-800 text-slate-300 border-slate-600/30'
+                    }`}>
+                      {painting.status}
+                    </span>
+                  </div>
+                ) : painting.sold ? (
+                  <div className="absolute top-3 right-3">
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-md bg-rose-950/80 text-rose-300 border border-rose-500/30">
+                      Sold
+                    </span>
+                  </div>
+                ) : null}
               </div>
               <div className="p-5 flex-1 flex flex-col justify-between">
                 <div>

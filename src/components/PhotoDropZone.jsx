@@ -48,14 +48,14 @@ export default function PhotoDropZone({
         const results = []
         for (const file of files) {
           const res = await uploadImageFile(file)
-          results.push({ file, ...res })
+          results.push({ file, filename: file.name, ...res })
         }
         onMultipleUpload(results)
       } else {
         const file = files[0]
         const res = await uploadImageFile(file)
         if (res.warning) setWarningMsg(res.warning)
-        onChange(res.url, res.thumbnailUrl)
+        onChange(res.url, res.thumbnailUrl, file.name)
       }
     } catch (err) {
       setErrorMsg(err.message)
@@ -89,7 +89,7 @@ export default function PhotoDropZone({
 
   const handlePastedUrlApply = () => {
     if (pastedUrl.trim()) {
-      onChange(pastedUrl.trim())
+      onChange(pastedUrl.trim(), pastedUrl.trim())
       setPastedUrl('')
       setShowUrlInput(false)
     }
@@ -151,7 +151,7 @@ export default function PhotoDropZone({
 
           <button
             type="button"
-            onClick={() => { onChange(''); setWarningMsg('') }}
+            onClick={() => { onChange('', ''); setWarningMsg('') }}
             className="p-2 rounded-xl bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-300 transition"
             title="Remove photo"
           >

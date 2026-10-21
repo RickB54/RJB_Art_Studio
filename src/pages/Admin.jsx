@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles } from 'lucide-react'
+import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon } from 'lucide-react'
 import siteDataInitial from '../data/site.json'
 import paintingsDataInitial from '../data/paintings.json'
+import PhotoDropZone from '../components/PhotoDropZone'
 
 export default function Admin() {
   const [paintings, setPaintings] = useState(paintingsDataInitial)
   const [site, setSite] = useState(siteDataInitial)
   const [playlists, setPlaylists] = useState([])
   const [activeTab, setActiveTab] = useState('single') // 'single' | 'bulk' | 'manage' | 'playlists' | 'site'
+  const [paintingMode, setPaintingMode] = useState('photo') // 'youtube' | 'photo'
   const [editPageSection, setEditPageSection] = useState('home') // 'home' | 'about' | 'commissions' | 'contact'
   const [siteSaveSuccess, setSiteSaveSuccess] = useState('')
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkStatusValue, setBulkStatusValue] = useState('For Sale')
+  const [quickPhotoId, setQuickPhotoId] = useState(null)
+  const [newExtraCat, setNewExtraCat] = useState('')
   
   // Single painting form state
   const [inputUrl, setInputUrl] = useState('')
@@ -22,16 +28,21 @@ export default function Admin() {
   const [form, setForm] = useState({
     title: '',
     category: 'Landscapes & Seascapes',
+    categories: ['Landscapes & Seascapes'],
     year: new Date().getFullYear().toString(),
     medium: 'Oil on Canvas',
     size: '16x20',
     description: '',
+    status: 'For Sale',
     sold: false,
     price: '',
     youtubeUrl: '',
     videoId: '',
     thumbnail: '',
+    thumbnailUrl: '',
+    photo: '',
     customImage: '',
+    originalImage: '',
     fineArtAmericaUrl: '',
     featured: false
   })
@@ -240,16 +251,56 @@ export default function Admin() {
     }
   }
 
+  const resetForm = () => {
+    setForm({
+      title: '',
+      category: 'Landscapes & Seascapes',
+      categories: ['Landscapes & Seascapes'],
+      year: new Date().getFullYear().toString(),
+      medium: 'Oil on Canvas',
+      size: '16x20',
+      description: '',
+      status: 'For Sale',
+      sold: false,
+      price: '',
+      youtubeUrl: '',
+      videoId: '',
+      thumbnail: '',
+      thumbnailUrl: '',
+      photo: '',
+      customImage: '',
+      originalImage: '',
+      fineArtAmericaUrl: '',
+      featured: false
+    })
+    setEditingId(null)
+    setInputUrl('')
+  }
+
   // Save single painting
   const handleSavePainting = async (e) => {
     e.preventDefault()
     setSaveSuccess('')
 
-    const paintingId = editingId || (form.videoId ? `video-${form.videoId}` : `art-${Date.now()}`)
+    const paintingId = editingId || (form.videoId ? `video-${form.videoId}` : `photo-${Date.now()}`)
+    const primaryCategory = Array.isArray(form.categories) && form.categories.length ? form.categories[0] : (form.category || 'Landscapes & Seascapes')
+    const finalCategories = Array.isArray(form.categories) && form.categories.length ? form.categories : [primaryCategory]
+    const status = form.status || (form.sold ? 'Sold' : (form.price ? 'For Sale' : ''))
+    const sold = status === 'Sold'
+
     const newEntry = {
       id: paintingId,
       ...form,
-      price: form.price ? Number(form.price) : null
+      category: primaryCategory,
+      categories: finalCategories,
+      status: status,
+      sold: sold,
+      price: form.price ? Number(form.price) : null,
+      photo: form.photo || form.customImage || '',
+      customImage: form.photo || form.customImage || '',
+      originalImage: form.photo || form.customImage || '',
+      thumbnail: form.thumbnailUrl || form.thumbnail || form.photo || '',
+      thumbnailUrl: form.thumbnailUrl || form.thumbnail || form.photo || ''
     }
 
     let updatedList
@@ -269,29 +320,181 @@ export default function Admin() {
       if (res.ok) {
         setPaintings(updatedList)
         setSaveSuccess(`Painting "${form.title}" saved successfully!`)
-        // Reset form
-        setEditingId(null)
-        setInputUrl('')
-        setForm({
-          title: '',
-          category: 'Landscapes & Seascapes',
-          year: new Date().getFullYear().toString(),
-          medium: 'Oil on Canvas',
-          size: '16x20',
-          description: '',
-          sold: false,
-          price: '',
-          youtubeUrl: '',
-          videoId: '',
-          thumbnail: '',
-          customImage: '',
-          fineArtAmericaUrl: '',
-          featured: false
-        })
+        resetForm()
       }
     } catch (err) {
       alert('Error saving painting: ' + err.message)
     }
+  }
+
+  // Handle multiple photos upload at once
+  const handleMultiplePhotoUpload = async (results) => {
+    const primaryCategory = Array.isArray(form.categories) && form.categories.length ? form.categories[0] : (form.category || 'Landscapes & Seascapes')
+    const finalCategories = Array.isArray(form.categories) && form.categories.length ? form.categories : [primaryCategory]
+    
+    const newItems = results.map((r, i) => {
+      const raw = r.filename.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ')
+      const title = raw.charAt(0).toUpperCase() + raw.slice(1)
+      const id = `photo-${Date.now()}-${i}`
+      return {
+        id,
+        title,
+        category: primaryCategory,
+        categories: finalCategories,
+        year: form.year || new Date().getFullYear().toString(),
+        medium: form.medium || 'Oil on Canvas',
+        size: form.size || '16x20',
+        description: form.description || '',
+        status: form.status || 'For Sale',
+        sold: form.status === 'Sold',
+        price: form.price ? Number(form.price) : null,
+        photo: r.url,
+        customImage: r.url,
+        originalImage: r.url,
+        thumbnail: r.thumbnailUrl || r.url,
+        thumbnailUrl: r.thumbnailUrl || r.url,
+        youtubeUrl: '',
+        videoId: '',
+        fineArtAmericaUrl: form.fineArtAmericaUrl || '',
+        featured: false
+      }
+    })
+
+    const updatedList = [...newItems, ...paintings]
+    try {
+      const res = await fetch('/__api/paintings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paintings: updatedList })
+      })
+      if (res.ok) {
+        setPaintings(updatedList)
+        setSaveSuccess(`Added ${newItems.length} new photo paintings to catalog!`)
+      }
+    } catch (err) {
+      alert('Error saving paintings: ' + err.message)
+    }
+  }
+
+  // Quick status change from catalog list
+  const handleQuickStatusChange = async (item, newStatus) => {
+    const isSold = newStatus === 'Sold'
+    const updated = paintings.map(p => {
+      if (p.id === item.id || (item.videoId && p.videoId === item.videoId)) {
+        return { ...p, status: newStatus, sold: isSold }
+      }
+      return p
+    })
+    setPaintings(updated)
+    await fetch('/__api/paintings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paintings: updated })
+    })
+  }
+
+  // Quick photo upload directly onto catalog item
+  const handleQuickPhotoUpload = async (item, file) => {
+    try {
+      const { uploadImageFile } = await import('../components/PhotoDropZone')
+      const res = await uploadImageFile(file)
+      const updated = paintings.map(p => {
+        if (p.id === item.id || (item.videoId && p.videoId === item.videoId)) {
+          return {
+            ...p,
+            photo: res.url,
+            customImage: res.url,
+            originalImage: res.url,
+            thumbnail: res.thumbnailUrl || res.url,
+            thumbnailUrl: res.thumbnailUrl || res.url
+          }
+        }
+        return p
+      })
+      setPaintings(updated)
+      await fetch('/__api/paintings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paintings: updated })
+      })
+      alert(`Photo attached to "${item.title}"!`)
+    } catch (e) {
+      alert('Upload failed: ' + e.message)
+    }
+  }
+
+  // Update item photo directly (from PhotoDropZone)
+  const handleUpdateItemPhoto = async (item, url, thumb) => {
+    const updated = paintings.map(p => {
+      if (p.id === item.id || (item.videoId && p.videoId === item.videoId)) {
+        return {
+          ...p,
+          photo: url,
+          customImage: url,
+          originalImage: url,
+          thumbnail: thumb || url,
+          thumbnailUrl: thumb || url
+        }
+      }
+      return p
+    })
+    setPaintings(updated)
+    await fetch('/__api/paintings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paintings: updated })
+    })
+  }
+
+  // Bulk status update
+  const handleApplyBulkStatus = async () => {
+    if (selectedIds.size === 0) return
+    const isSold = bulkStatusValue === 'Sold'
+    const updated = paintings.map(p => {
+      if (selectedIds.has(p.id)) {
+        return { ...p, status: bulkStatusValue, sold: isSold }
+      }
+      return p
+    })
+    setPaintings(updated)
+    await fetch('/__api/paintings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paintings: updated })
+    })
+    alert(`Updated status to "${bulkStatusValue || 'None'}" for ${selectedIds.size} artwork item(s)!`)
+    setSelectedIds(new Set())
+  }
+
+  const toggleSelectId = (id) => {
+    const next = new Set(selectedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelectedIds(next)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paintings.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(paintings.map(p => p.id)))
+    }
+  }
+
+  // Toggle hide / show
+  const handleToggleHide = async (item) => {
+    const updated = paintings.map(p => {
+      if (p.id === item.id) {
+        return { ...p, hide: !p.hide }
+      }
+      return p
+    })
+    setPaintings(updated)
+    await fetch('/__api/paintings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paintings: updated })
+    })
   }
 
   // Delete painting
@@ -313,23 +516,30 @@ export default function Admin() {
   // Edit painting (populate form)
   const handleEditClick = (p) => {
     setEditingId(p.id)
+    const pCats = Array.isArray(p.categories) && p.categories.length ? p.categories : (p.category ? [p.category] : ['Landscapes & Seascapes'])
     setForm({
       title: p.title || '',
-      category: p.category || 'Landscapes & Seascapes',
-      year: p.year || '2020',
+      category: pCats[0] || 'Landscapes & Seascapes',
+      categories: pCats,
+      year: p.year || new Date().getFullYear().toString(),
       medium: p.medium || 'Oil on Canvas',
       size: p.size || '16x20',
       description: p.description || '',
-      sold: !!p.sold,
+      status: p.status || (p.sold ? 'Sold' : (p.price ? 'For Sale' : '')),
+      sold: !!(p.sold || p.status === 'Sold'),
       price: p.price ? p.price.toString() : '',
-      youtubeUrl: p.youtubeUrl || '',
+      youtubeUrl: p.youtubeUrl || (p.videoId ? `https://www.youtube.com/watch?v=${p.videoId}` : ''),
       videoId: p.videoId || '',
       thumbnail: p.thumbnail || '',
-      customImage: p.customImage || '',
+      thumbnailUrl: p.thumbnailUrl || p.thumbnail || '',
+      photo: p.photo || p.customImage || p.originalImage || '',
+      customImage: p.customImage || p.photo || '',
+      originalImage: p.originalImage || p.photo || '',
       fineArtAmericaUrl: p.fineArtAmericaUrl || '',
       featured: !!p.featured
     })
-    setInputUrl(p.youtubeUrl || '')
+    setInputUrl(p.youtubeUrl || (p.videoId ? `https://www.youtube.com/watch?v=${p.videoId}` : ''))
+    setPaintingMode(p.videoId ? 'youtube' : 'photo')
     setActiveTab('single')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -529,51 +739,84 @@ export default function Admin() {
       {/* TAB 1: Single Painting Form */}
       {activeTab === 'single' && (
         <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/10 space-y-6">
-          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/5 pb-4 gap-4">
             <div>
               <h2 className="font-serif text-xl font-bold text-white">
-                {editingId ? `Editing: ${form.title}` : 'Add a Painting from YouTube'}
+                {editingId ? `Editing: ${form.title}` : (paintingMode === 'photo' ? 'Add Photo-Only Painting' : 'Add Painting from YouTube')}
               </h2>
-              <p className="text-xs text-slate-400">
-                Paste any video link from your channel. The title and highest-quality thumbnail will be fetched automatically.
+              <p className="text-xs text-slate-400 mt-0.5">
+                {paintingMode === 'photo'
+                  ? 'Upload high-resolution painting photos. Multiple photos can be uploaded at once to create multiple entries.'
+                  : 'Paste any video link from your channel. The title and highest-quality thumbnail will be fetched automatically.'}
               </p>
             </div>
-            {editingId && (
-              <button
-                type="button"
-                onClick={() => { setEditingId(null); setInputUrl('') }}
-                className="text-xs text-studio-gold hover:underline"
-              >
-                Cancel Edit Mode
-              </button>
-            )}
+            
+            <div className="flex items-center gap-3">
+              {/* Mode switch: From YouTube video / Photo only */}
+              {!editingId && (
+                <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setPaintingMode('photo')}
+                    className={`px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition ${
+                      paintingMode === 'photo' ? 'bg-studio-magenta text-white shadow-glow-magenta' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    <span>Photo only</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaintingMode('youtube')}
+                    className={`px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition ${
+                      paintingMode === 'youtube' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Youtube className="w-3.5 h-3.5" />
+                    <span>From YouTube video</span>
+                  </button>
+                </div>
+              )}
+
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="text-xs text-studio-gold hover:underline whitespace-nowrap"
+                >
+                  Cancel Edit Mode
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Quick URL Fetch Bar */}
-          <div className="space-y-2">
-            <label className="block text-xs font-medium text-slate-300">
-              YouTube Video URL
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="https://www.youtube.com/watch?v=..."
-                value={inputUrl}
-                onChange={e => setInputUrl(e.target.value)}
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-              />
-              <button
-                type="button"
-                onClick={handleFetchUrl}
-                disabled={fetching || !inputUrl.trim()}
-                className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white flex items-center gap-1.5 transition whitespace-nowrap"
-              >
-                {fetching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Youtube className="w-4 h-4" />}
-                <span>Fetch Info</span>
-              </button>
+          {/* Quick URL Fetch Bar for YouTube mode */}
+          {paintingMode === 'youtube' && (
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-slate-300">
+                YouTube Video URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={inputUrl}
+                  onChange={e => setInputUrl(e.target.value)}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+                <button
+                  type="button"
+                  onClick={handleFetchUrl}
+                  disabled={fetching || !inputUrl.trim()}
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white flex items-center gap-1.5 transition whitespace-nowrap"
+                >
+                  {fetching ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Youtube className="w-4 h-4" />}
+                  <span>Fetch Info</span>
+                </button>
+              </div>
+              {fetchError && <p className="text-xs text-rose-400">{fetchError}</p>}
             </div>
-            {fetchError && <p className="text-xs text-rose-400">{fetchError}</p>}
-          </div>
+          )}
 
           {saveSuccess && (
             <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
@@ -585,20 +828,54 @@ export default function Admin() {
           {/* Painting Details Form */}
           <form onSubmit={handleSavePainting} className="space-y-6 pt-2">
             
+            {/* PhotoDropZone Section */}
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-studio-gold uppercase tracking-wider">
+                  {paintingMode === 'photo' ? 'Artwork Photo Upload (Required for Photo Paintings)' : 'High-Resolution Artwork Photo (Optional Override for Thumbnail)'}
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  Resized to 1600px WebP + 500px thumb (JPG, PNG, WebP)
+                </span>
+              </div>
+              <PhotoDropZone
+                value={form.photo || form.customImage || ''}
+                label="Artwork Photo"
+                allowMultiple={!editingId}
+                onChange={(url, thumb, filename) => {
+                  let nextTitle = form.title
+                  if ((!nextTitle || nextTitle.startsWith('Untitled')) && filename) {
+                    const raw = filename.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ')
+                    nextTitle = raw.charAt(0).toUpperCase() + raw.slice(1)
+                  }
+                  setForm(prev => ({
+                    ...prev,
+                    title: nextTitle || prev.title,
+                    photo: url,
+                    customImage: url,
+                    originalImage: url,
+                    thumbnail: thumb || url,
+                    thumbnailUrl: thumb || url
+                  }))
+                }}
+                onMultipleUpload={handleMultiplePhotoUpload}
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              {/* Thumbnail Preview */}
+              {/* Thumbnail / Image Preview */}
               <div className="space-y-2">
-                <span className="block text-xs font-medium text-slate-300">Thumbnail Preview</span>
+                <span className="block text-xs font-medium text-slate-300">Image Preview</span>
                 <div className="aspect-[4/3] rounded-xl bg-studio-surface border border-white/10 overflow-hidden flex items-center justify-center relative">
-                  {form.thumbnail ? (
-                    <img src={form.thumbnail} alt="Preview" className="w-full h-full object-cover" />
+                  {(form.photo || form.customImage || form.thumbnail) ? (
+                    <img src={form.photo || form.customImage || form.thumbnail} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-xs text-slate-500">No thumbnail yet</span>
+                    <span className="text-xs text-slate-500">No image yet</span>
                   )}
                 </div>
                 <p className="text-[11px] text-slate-400">
-                  Video ID: <span className="font-mono text-studio-magenta">{form.videoId || 'none'}</span>
+                  Video ID: <span className="font-mono text-studio-magenta">{form.videoId || 'None (Photo-only)'}</span>
                 </p>
               </div>
 
@@ -610,24 +887,51 @@ export default function Admin() {
                     type="text"
                     required
                     value={form.title}
+                    placeholder="e.g. Autumn Sunrise in the White Mountains"
                     onChange={e => setForm({ ...form, title: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">Category</label>
-                    <select
-                      value={form.category}
-                      onChange={e => setForm({ ...form, category: e.target.value })}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                    >
-                      {site.categories.filter(c => c !== 'All').map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
+                {/* Categories: Multi-select pill checkboxes */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-slate-300">
+                    Categories (Select one or more for gallery pills)
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-white/5 border border-white/10 max-h-36 overflow-y-auto">
+                    {Array.from(new Set([
+                      ...site.categories.filter(c => c !== 'All'),
+                      ...(site.extraCategories || []),
+                      ...playlists.map(p => p.title)
+                    ])).map(cat => {
+                      const selected = (form.categories || []).includes(cat) || form.category === cat
+                      return (
+                        <button
+                          type="button"
+                          key={cat}
+                          onClick={() => {
+                            const cur = form.categories || [form.category].filter(Boolean)
+                            const next = selected
+                              ? cur.filter(c => c !== cat)
+                              : [...cur, cat]
+                            const primary = next[0] || 'Landscapes & Seascapes'
+                            setForm({ ...form, categories: next, category: primary })
+                          }}
+                          className={`px-3 py-1 rounded-lg text-xs font-medium transition flex items-center gap-1 ${
+                            selected
+                              ? 'bg-studio-magenta text-white shadow-glow-magenta'
+                              : 'bg-white/5 hover:bg-white/10 text-slate-400'
+                          }`}
+                        >
+                          <span>{selected ? '✓' : '+'}</span>
+                          <span>{cat}</span>
+                        </button>
+                      )
+                    })}
                   </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">Year Created</label>
                     <input
@@ -637,15 +941,12 @@ export default function Admin() {
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">Medium</label>
                     <input
                       type="text"
                       value={form.medium}
-                      placeholder="e.g. Oil on Canvas, Acrylic on Panel"
+                      placeholder="Oil on Canvas"
                       onChange={e => setForm({ ...form, medium: e.target.value })}
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                     />
@@ -655,7 +956,7 @@ export default function Admin() {
                     <input
                       type="text"
                       value={form.size}
-                      placeholder="e.g. 16x20, 18x24"
+                      placeholder="16x20"
                       onChange={e => setForm({ ...form, size: e.target.value })}
                       className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                     />
@@ -666,18 +967,24 @@ export default function Admin() {
 
             </div>
 
-            {/* Sales & Links */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-white/5">
+            {/* Sales, Status & Links */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t border-white/5">
               
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Availability Status</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Status Badge</label>
                 <select
-                  value={form.sold ? 'sold' : 'available'}
-                  onChange={e => setForm({ ...form, sold: e.target.value === 'sold' })}
+                  value={form.status || (form.sold ? 'Sold' : '')}
+                  onChange={e => {
+                    const val = e.target.value
+                    setForm({ ...form, status: val, sold: val === 'Sold' })
+                  }}
                   className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                 >
-                  <option value="available">Available for Purchase</option>
-                  <option value="sold">Sold / Permanent Collection</option>
+                  <option value="">None (No badge)</option>
+                  <option value="For Sale">For Sale</option>
+                  <option value="Sold">Sold</option>
+                  <option value="Not Available for Sale">Not Available for Sale</option>
+                  <option value="Reserved">Reserved</option>
                 </select>
               </div>
 
@@ -688,6 +995,22 @@ export default function Admin() {
                   placeholder="e.g. 350"
                   value={form.price}
                   onChange={e => setForm({ ...form, price: e.target.value })}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Optional Video URL</label>
+                <input
+                  type="url"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={form.youtubeUrl}
+                  onChange={e => {
+                    const url = e.target.value
+                    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
+                    const vid = match ? match[1] : form.videoId
+                    setForm({ ...form, youtubeUrl: url, videoId: vid })
+                  }}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
                 />
               </div>
@@ -705,38 +1028,24 @@ export default function Admin() {
 
             </div>
 
-            {/* Optional Custom Photo & Featured Toggle */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Optional High-Res Photo (Replaces YouTube Thumbnail)
-                </label>
-                <input
-                  type="text"
-                  placeholder="/images/my-painting.webp or image URL"
-                  value={form.customImage}
-                  onChange={e => setForm({ ...form, customImage: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-              <div className="flex items-center gap-3 pt-6">
-                <input
-                  type="checkbox"
-                  id="featuredToggle"
-                  checked={form.featured}
-                  onChange={e => setForm({ ...form, featured: e.target.checked })}
-                  className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta"
-                />
-                <label htmlFor="featuredToggle" className="text-xs font-medium text-slate-200">
-                  Feature on Home Page showcase
-                </label>
-              </div>
+            {/* Featured on Home Toggle */}
+            <div className="flex items-center gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="featuredToggle"
+                checked={form.featured}
+                onChange={e => setForm({ ...form, featured: e.target.checked })}
+                className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer"
+              />
+              <label htmlFor="featuredToggle" className="text-xs font-medium text-slate-200 cursor-pointer">
+                Feature on Home Page showcase ("Explore Highlighted Paintings")
+              </label>
             </div>
 
             {/* Description (Rich Text preserving line breaks) */}
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">
-                Painting Description & Sales Story (Keeps line breaks and links)
+                Painting Description & Sales Story (Keeps line breaks and clickable links)
               </label>
               <textarea
                 rows={5}
@@ -761,6 +1070,7 @@ export default function Admin() {
 
         </div>
       )}
+
 
       {/* TAB 2: Bulk YouTube Importer */}
       {activeTab === 'bulk' && (
@@ -990,67 +1300,201 @@ export default function Admin() {
       {/* TAB 3: Manage All Paintings */}
       {activeTab === 'manage' && (
         <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/10 space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="font-serif text-xl font-bold text-white">Artwork Catalog ({paintings.length})</h2>
-              <p className="text-xs text-slate-400">Click Edit to modify details or Delete to remove from gallery.</p>
+              <p className="text-xs text-slate-400">Quickly adjust status, attach photos, toggle visibility, or edit details.</p>
             </div>
             <button
               type="button"
-              onClick={() => { setEditingId(null); setActiveTab('single') }}
-              className="px-4 py-2 rounded-lg text-xs font-semibold bg-studio-magenta text-white flex items-center gap-1.5"
+              onClick={() => { setEditingId(null); resetForm(); setActiveTab('single') }}
+              className="px-4 py-2 rounded-lg text-xs font-semibold bg-studio-magenta text-white hover:bg-studio-fuchsia flex items-center gap-1.5 self-start sm:self-auto"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add New</span>
+              <span>Add New Artwork</span>
             </button>
           </div>
 
+          {/* Bulk Action Bar */}
+          <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={paintings.length > 0 && selectedIds.size === paintings.length}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer"
+                />
+                <span>Select All ({paintings.length})</span>
+              </label>
+              {selectedIds.size > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-studio-magenta/20 text-studio-magenta font-semibold">
+                  {selectedIds.size} selected
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Set Status:</span>
+              <select
+                value={bulkStatusValue}
+                onChange={e => setBulkStatusValue(e.target.value)}
+                className="bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+              >
+                <option value="">None (Clear badge)</option>
+                <option value="For Sale">For Sale</option>
+                <option value="Sold">Sold</option>
+                <option value="Not Available for Sale">Not Available for Sale</option>
+                <option value="Reserved">Reserved</option>
+              </select>
+              <button
+                type="button"
+                onClick={handleApplyBulkStatus}
+                disabled={selectedIds.size === 0}
+                className="px-3.5 py-1.5 rounded-lg font-semibold bg-studio-gold text-black hover:bg-studio-gold-light disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                Apply to Selected
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paintings.map(painting => (
-              <div key={painting.id} className="p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col justify-between space-y-3">
-                <div className="flex gap-3">
-                  <img src={painting.thumbnail} alt="" className="w-20 h-16 object-cover rounded-lg bg-black" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] text-studio-magenta uppercase font-semibold block">{painting.category}</span>
-                    <h3 className="text-sm font-bold text-white truncate">{painting.title}</h3>
-                    <p className="text-xs text-slate-400">{painting.medium} • {painting.size}</p>
-                    <span className={`inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                      painting.sold ? 'bg-rose-950/80 text-rose-300' : 'bg-emerald-950/80 text-emerald-300'
-                    }`}>
-                      {painting.sold ? 'Sold' : 'Available'}
-                    </span>
-                  </div>
-                </div>
+            {paintings.map(painting => {
+              const displayImg = painting.photo || painting.customImage || painting.originalImage || painting.thumbnail
+              const isSelected = selectedIds.has(painting.id)
+              return (
+                <div
+                  key={painting.id}
+                  className={`p-4 rounded-xl bg-white/5 border transition flex flex-col justify-between space-y-3 ${
+                    isSelected ? 'border-studio-magenta/60 bg-studio-magenta/5' : 'border-white/5'
+                  }`}
+                >
+                  <div className="flex gap-3">
+                    <div className="relative shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelectId(painting.id)}
+                        className="absolute top-1 left-1 z-10 w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer shadow"
+                      />
+                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-black/60 border border-white/10">
+                        {displayImg ? (
+                          <img src={displayImg} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-500">
+                            <ImageIcon className="w-6 h-6" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
-                  {painting.youtubeUrl && (
-                    <a href={painting.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-red-400 flex items-center gap-1">
-                      <Film className="w-3.5 h-3.5" />
-                      <span>Video</span>
-                    </a>
-                  )}
-                  <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] text-studio-magenta uppercase font-semibold">
+                          {painting.category || (Array.isArray(painting.categories) && painting.categories[0]) || 'Artwork'}
+                        </span>
+                        {painting.hide && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-900/60 text-amber-200">Hidden</span>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-bold text-white truncate" title={painting.title}>{painting.title}</h3>
+                      <p className="text-xs text-slate-400 truncate">{painting.medium} • {painting.size}</p>
+                      
+                      {/* Quick Status Dropdown */}
+                      <div className="mt-1.5">
+                        <select
+                          value={painting.status || (painting.sold ? 'Sold' : '')}
+                          onChange={e => handleQuickStatusChange(painting, e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                        >
+                          <option value="">No Badge</option>
+                          <option value="For Sale">For Sale</option>
+                          <option value="Sold">Sold</option>
+                          <option value="Not Available for Sale">Not Available for Sale</option>
+                          <option value="Reserved">Reserved</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Photo toggle / DropZone */}
+                  <div>
                     <button
                       type="button"
-                      onClick={() => handleEditClick(painting)}
-                      className="px-2.5 py-1 rounded bg-white/10 hover:bg-studio-magenta hover:text-white text-slate-300 transition flex items-center gap-1"
+                      onClick={() => setQuickPhotoId(quickPhotoId === painting.id ? null : painting.id)}
+                      className="text-xs text-studio-gold hover:text-studio-gold-light flex items-center gap-1 transition"
                     >
-                      <Edit3 className="w-3 h-3" />
-                      <span>Edit</span>
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <span>{painting.photo || painting.customImage ? 'Replace Photo' : 'Attach Photo'}</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeletePainting(painting.id, painting.title)}
-                      className="p-1 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 transition"
-                      title="Delete Painting"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {quickPhotoId === painting.id && (
+                      <div className="pt-2">
+                        <PhotoDropZone
+                          value={painting.photo || painting.customImage || ''}
+                          onChange={(url, thumb) => {
+                            handleUpdateItemPhoto(painting, url, thumb)
+                            setQuickPhotoId(null)
+                          }}
+                          label="Upload or Paste Photo"
+                        />
+                      </div>
+                    )}
                   </div>
-                </div>
 
-              </div>
-            ))}
+                  <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+                    <div className="flex items-center gap-2">
+                      {painting.youtubeUrl || painting.videoId ? (
+                        <a
+                          href={painting.youtubeUrl || `https://www.youtube.com/watch?v=${painting.videoId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-slate-400 hover:text-red-400 flex items-center gap-1"
+                          title="Open YouTube Video"
+                        >
+                          <Film className="w-3.5 h-3.5" />
+                          <span>Video</span>
+                        </a>
+                      ) : (
+                        <span className="text-slate-500 text-[11px]">Photo Only</span>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleHide(painting)}
+                        className={`p-1.5 rounded transition ${
+                          painting.hide
+                            ? 'bg-amber-900/40 text-amber-300 hover:bg-amber-900/60'
+                            : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10'
+                        }`}
+                        title={painting.hide ? 'Show in Gallery' : 'Hide from Gallery'}
+                      >
+                        {painting.hide ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleEditClick(painting)}
+                        className="px-2.5 py-1 rounded bg-white/10 hover:bg-studio-magenta hover:text-white text-slate-300 transition flex items-center gap-1"
+                        title="Edit Painting"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePainting(painting.id, painting.title)}
+                        className="p-1.5 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 transition"
+                        title="Delete Painting"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -1136,6 +1580,106 @@ export default function Admin() {
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-studio-magenta"
                 />
               </div>
+
+              {/* Extra Gallery Categories */}
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <label className="block text-xs font-medium text-slate-300">
+                  Extra Gallery Categories (Visible as filter pills in Gallery alongside YouTube playlists)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {(site.extraCategories || []).map((cat, idx) => (
+                    <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-white/10 text-white border border-white/10">
+                      <span>{cat}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = site.extraCategories.filter((_, i) => i !== idx)
+                          setSite({ ...site, extraCategories: updated })
+                        }}
+                        className="hover:text-red-400 font-bold ml-1"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="New category name (e.g. Miniatures, Studies)..."
+                    value={newExtraCat}
+                    onChange={e => setNewExtraCat(e.target.value)}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!newExtraCat.trim()) return
+                      const trimmed = newExtraCat.trim()
+                      if (!(site.extraCategories || []).includes(trimmed)) {
+                        setSite({ ...site, extraCategories: [...(site.extraCategories || []), trimmed] })
+                      }
+                      setNewExtraCat('')
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-studio-magenta text-white hover:bg-studio-fuchsia"
+                  >
+                    Add Category
+                  </button>
+                </div>
+              </div>
+
+              {/* Explore Highlighted Paintings Picker */}
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <div>
+                  <h4 className="text-sm font-bold text-white">Explore Highlighted Paintings (Home Page Showcase)</h4>
+                  <p className="text-xs text-slate-400">
+                    Choose which paintings appear on the Home page showcase and optionally attach a dedicated photo for each.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-2 rounded-xl bg-black/20 border border-white/5">
+                  {paintings.map(p => {
+                    const isHighlighted = !!(p.featured || p.highlighted)
+                    return (
+                      <div key={p.id} className={`p-3 rounded-xl border flex flex-col justify-between gap-2 ${isHighlighted ? 'bg-studio-magenta/10 border-studio-magenta/40' : 'bg-white/5 border-white/5'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer font-medium text-xs text-white truncate">
+                          <input
+                            type="checkbox"
+                            checked={isHighlighted}
+                            onChange={async () => {
+                              const updated = paintings.map(item => item.id === p.id ? { ...item, featured: !isHighlighted, highlighted: !isHighlighted } : item)
+                              setPaintings(updated)
+                              await fetch('/__api/paintings', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ paintings: updated })
+                              })
+                            }}
+                            className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer"
+                          />
+                          <span className="truncate">{p.title}</span>
+                        </label>
+                        {isHighlighted && (
+                          <div className="pt-1 border-t border-white/10">
+                            <PhotoDropZone
+                              value={p.highlightPhoto || p.photo || ''}
+                              onChange={async (url, thumb) => {
+                                const updated = paintings.map(item => item.id === p.id ? { ...item, highlightPhoto: url, photo: p.photo || url } : item)
+                                setPaintings(updated)
+                                await fetch('/__api/paintings', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ paintings: updated })
+                                })
+                              }}
+                              label="Optional Own Photo"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           )}
 
@@ -1154,13 +1698,21 @@ export default function Admin() {
                 />
               </div>
 
+              <div>
+                <PhotoDropZone
+                  value={site.artist.aboutPhoto || ''}
+                  onChange={url => setSite({ ...site, artist: { ...site.artist, aboutPhoto: url } })}
+                  label="Studio / Artist Photo (Shown on About Page)"
+                />
+              </div>
+
               <div className="pt-2 border-t border-white/10 space-y-4">
                 <div className="flex items-center gap-2">
                   <Award className="w-5 h-5 text-studio-gold" />
                   <h4 className="text-sm font-bold text-white">Mayoral Artist of the Month Awards & Photos</h4>
                 </div>
                 <p className="text-xs text-slate-400">
-                  Update the descriptions and attach image URLs (such as the ceremony photo with Mayor James Jajuga and Rick's father).
+                  Update descriptions and upload/attach ceremony photos (such as Mayor James Jajuga and Rick's father).
                 </p>
 
                 {(site.awards || []).map((award, idx) => (
@@ -1195,19 +1747,15 @@ export default function Admin() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Award Photo Image URL</label>
-                      <input
-                        type="text"
-                        placeholder="https://... or /awards/mayor-ceremony.jpg"
+                      <PhotoDropZone
                         value={award.image || ''}
-                        onChange={e => {
+                        onChange={url => {
                           const updated = [...site.awards]
-                          updated[idx] = { ...updated[idx], image: e.target.value }
+                          updated[idx] = { ...updated[idx], image: url }
                           setSite({ ...site, awards: updated })
                         }}
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        label="Award Ceremony Photo"
                       />
-                      <span className="text-[11px] text-slate-400">Paste the URL or local file path to display the award photo</span>
                     </div>
 
                     <div>

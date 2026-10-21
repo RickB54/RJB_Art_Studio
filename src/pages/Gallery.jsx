@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Search, X, ChevronLeft, ChevronRight, Play, ShoppingBag, Eye, ChevronDown } from 'lucide-react'
 import initialPaintings from '../data/paintings.json'
 import initialPlaylists from '../data/playlists.json'
+import initialSite from '../data/site.json'
 import { matchesSearch } from '../utils/search'
 
 const PAGE_SIZE = 24
@@ -11,8 +12,10 @@ const playlistLoaders = import.meta.glob('../data/playlists/*.json')
 export default function Gallery() {
   const [paintings, setPaintings] = useState(initialPaintings)
   const [playlists, setPlaylists] = useState([])
+  const [site, setSite] = useState(initialSite)
   const [selectedCategory, setSelectedCategory] = useState('All')
-  const [selectedStatus, setSelectedStatus] = useState('All') // 'All' | 'Available' | 'Sold'
+  const [selectedStatus, setSelectedStatus] = useState('All') // 'All' | 'For Sale' | 'Sold' | 'Not for Sale'
+  const [selectedMedia, setSelectedMedia] = useState('All') // 'All' | 'With video' | 'Photos only'
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
@@ -51,6 +54,7 @@ export default function Gallery() {
       .then(res => res.json())
       .then(data => {
         if (data.paintings && Array.isArray(data.paintings)) setPaintings(data.paintings)
+        if (data.site) setSite(data.site)
       })
       .catch(() => {})
   }, [])
@@ -62,9 +66,11 @@ export default function Gallery() {
       .sort((a, b) => (a.order || 0) - (b.order || 0))
   }, [playlists])
 
-  // Merge visible playlists' non-hidden videos with paintings.json by videoId
+  // Merge visible playlists' non-hidden videos with paintings.json by videoId, plus photo-only paintings
   const allGalleryItems = useMemo(() => {
     const paintingByVideoId = new Map()
+    const usedPaintingIds = new Set()
+
     for (const pt of paintings) {
       const vid = pt.videoId || (pt.youtubeUrl ? pt.youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)?.[1] : null)
       if (vid) {
@@ -75,11 +81,11 @@ export default function Gallery() {
     const items = []
     const seenVideoIds = new Set()
 
+    // 1. Process visible playlists
     for (const pl of visiblePlaylists) {
       const validVideos = (pl.videos || []).filter(v => !v.hide)
       for (const v of validVideos) {
         if (seenVideoIds.has(v.id)) {
-          // If video appears in multiple playlists, record all playlist titles in categories for filtering
           const existing = items.find(it => it.videoId === v.id)
           if (existing && !existing.categories.includes(pl.title)) {
             existing.categories.push(pl.title)
@@ -89,74 +95,157 @@ export default function Gallery() {
         seenVideoIds.add(v.id)
 
         const matched = paintingByVideoId.get(v.id)
+        if (matched) {
+          usedPaintingIds.add(matched.id)
+        }
+
         const hasRealPaintingData = !!(
           matched && (
             (matched.price !== null && matched.price !== undefined && matched.price !== '') ||
             matched.sold === true ||
+            matched.status ||
+            (matched.photo && matched.photo.trim() !== '') ||
             (matched.originalImage && matched.originalImage.trim() !== '') ||
             (matched.customImage && matched.customImage.trim() !== '')
           )
         )
 
-        // YouTube year from title or description
         let ytYear = null
         const yearMatch = v.title?.match(/\b(19\d\d|20\d\d)\b/) || v.description?.match(/\b(19\d\d|20\d\d)\b/)
-        if (yearMatch) {
-          ytYear = yearMatch[1]
-        }
+        if (yearMatch) ytYear = yearMatch[1]
 
-        const originalImg = matched?.originalImage || matched?.customImage || null
+        const originalImg = matched?.photo || matched?.originalImage || matched?.customImage || null
         const displayImg = originalImg || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`
+        const thumbImg = matched?.thumbnailUrl || matched?.thumbnail || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`
+
+        const extraCats = Array.isArray(matched?.categories) ? matched.categories : (matched?.category ? [matched.category] : [])
+        const allCats = Array.from(new Set([pl.title, ...extraCats]))
+
+        const status = matched?.status || (matched?.sold ? 'Sold' : (matched?.price ? 'For Sale' : ''))
 
         items.push({
           id: matched?.id || `video-${v.id}`,
           videoId: v.id,
-          title: v.title,
+          title: matched?.title || v.title,
           description: matched?.description || v.description,
           category: pl.title,
-          categories: [pl.title],
+          categories: allCats,
           playlistId: pl.playlistId,
           hasPaintingData: hasRealPaintingData,
-          sold: hasRealPaintingData ? !!matched.sold : false,
+          sold: Boolean(matched?.sold || status === 'Sold'),
+          status: status,
           price: hasRealPaintingData ? matched.price : null,
           medium: hasRealPaintingData ? matched.medium : null,
           size: hasRealPaintingData ? matched.size : null,
           year: hasRealPaintingData ? (matched.year || ytYear) : ytYear,
-          thumbnail: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
+          thumbnail: thumbImg,
           displayImage: displayImg,
           originalImage: originalImg,
+          photo: originalImg,
+          hasVideo: true,
           fineArtAmericaUrl: matched?.fineArtAmericaUrl || null,
           youtubeUrl: `https://www.youtube.com/watch?v=${v.id}`
         })
       }
     }
 
+    // 2. Add paintings from paintings.json that were NOT in any visible playlist (e.g. photo-only)
+    for (const pt of paintings) {
+      if (usedPaintingIds.has(pt.id)) continue
+      const vid = pt.videoId || (pt.youtubeUrl ? pt.youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)?.[1] : null)
+      if (vid && seenVideoIds.has(vid)) continue
+
+      usedPaintingIds.add(pt.id)
+      if (vid) seenVideoIds.add(vid)
+
+      const cats = Array.isArray(pt.categories) && pt.categories.length
+        ? pt.categories
+        : (pt.category ? [pt.category] : ['Paintings'])
+
+      const status = pt.status || (pt.sold ? 'Sold' : (pt.price ? 'For Sale' : ''))
+      const photoImg = pt.photo || pt.originalImage || pt.customImage || null
+      const displayImg = photoImg || (vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : pt.thumbnail || '/images/placeholder.webp')
+      const thumbImg = pt.thumbnailUrl || pt.thumbnail || photoImg || displayImg
+
+      items.push({
+        id: pt.id || (vid ? `video-${vid}` : `painting-${Date.now()}`),
+        videoId: vid || null,
+        title: pt.title || 'Untitled',
+        description: pt.description || '',
+        category: cats[0] || 'Paintings',
+        categories: cats,
+        hasPaintingData: true,
+        sold: Boolean(pt.sold || status === 'Sold'),
+        status: status,
+        price: pt.price || null,
+        medium: pt.medium || null,
+        size: pt.size || null,
+        year: pt.year || null,
+        thumbnail: thumbImg,
+        displayImage: displayImg,
+        originalImage: photoImg,
+        photo: photoImg,
+        hasVideo: Boolean(vid || pt.youtubeUrl),
+        fineArtAmericaUrl: pt.fineArtAmericaUrl || null,
+        youtubeUrl: pt.youtubeUrl || (vid ? `https://www.youtube.com/watch?v=${vid}` : null)
+      })
+    }
+
     return items
   }, [visiblePlaylists, paintings])
 
-  // Playlist pills with counts
+  // Category pills: visible playlists PLUS editable extra-categories from site.json
   const categoryPills = useMemo(() => {
     const list = [
       { name: 'All', count: allGalleryItems.length }
     ]
-    for (const pl of visiblePlaylists) {
-      const count = (pl.videos || []).filter(v => !v.hide).length
-      list.push({ name: pl.title, count })
-    }
-    return list
-  }, [visiblePlaylists, allGalleryItems])
+    const addedNames = new Set(['All'])
 
-  // Filtered list strictly by category, status, and matchesSearch on title and description
+    for (const pl of visiblePlaylists) {
+      if (!addedNames.has(pl.title)) {
+        addedNames.add(pl.title)
+        const count = allGalleryItems.filter(item => item.categories.includes(pl.title)).length
+        list.push({ name: pl.title, count })
+      }
+    }
+
+    const extras = site?.extraCategories || []
+    for (const cat of extras) {
+      if (!addedNames.has(cat)) {
+        addedNames.add(cat)
+        const count = allGalleryItems.filter(item => item.categories.includes(cat)).length
+        list.push({ name: cat, count })
+      }
+    }
+
+    return list
+  }, [visiblePlaylists, site?.extraCategories, allGalleryItems])
+
+  // Filtered list by category, status, media, and search query
   const filteredPaintings = useMemo(() => {
     return allGalleryItems.filter(item => {
       if (selectedCategory !== 'All' && !item.categories.includes(selectedCategory)) {
         return false
       }
-      if (selectedStatus === 'Available') {
-        if (!item.hasPaintingData || item.sold) return false
+
+      // Media filter: All | With video | Photos only
+      if (selectedMedia === 'With video' && !item.hasVideo) {
+        return false
+      }
+      if (selectedMedia === 'Photos only' && item.hasVideo) {
+        return false
+      }
+
+      // Status filter: All | For Sale | Sold | Not for Sale
+      if (selectedStatus === 'For Sale') {
+        const isForSale = item.status === 'For Sale' || (item.price && !item.sold && item.status !== 'Sold' && item.status !== 'Not Available for Sale')
+        if (!isForSale) return false
       }
       if (selectedStatus === 'Sold') {
-        if (!item.hasPaintingData || !item.sold) return false
+        if (!item.sold && item.status !== 'Sold') return false
+      }
+      if (selectedStatus === 'Not for Sale') {
+        if (item.status !== 'Not Available for Sale' && item.status !== 'Reserved') return false
       }
 
       if (debouncedQuery.trim()) {
@@ -165,12 +254,12 @@ export default function Gallery() {
 
       return true
     })
-  }, [allGalleryItems, selectedCategory, selectedStatus, debouncedQuery])
+  }, [allGalleryItems, selectedCategory, selectedStatus, selectedMedia, debouncedQuery])
 
   // Reset visibleCount when filters change
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
-  }, [selectedCategory, selectedStatus, debouncedQuery])
+  }, [selectedCategory, selectedStatus, selectedMedia, debouncedQuery])
 
   const visibleItems = useMemo(() => {
     return filteredPaintings.slice(0, visibleCount)
@@ -243,35 +332,80 @@ export default function Gallery() {
             )}
           </div>
 
-          {/* Availability Filter Buttons */}
-          <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
-            <button
-              type="button"
-              onClick={() => setSelectedStatus('All')}
-              className={`px-3 py-1 rounded-lg font-medium transition ${
-                selectedStatus === 'All' ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              All Artwork
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedStatus('Available')}
-              className={`px-3 py-1 rounded-lg font-medium transition ${
-                selectedStatus === 'Available' ? 'bg-emerald-950/80 text-emerald-300' : 'text-slate-400 hover:text-emerald-300'
-              }`}
-            >
-              Available Paintings
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedStatus('Sold')}
-              className={`px-3 py-1 rounded-lg font-medium transition ${
-                selectedStatus === 'Sold' ? 'bg-rose-950/80 text-rose-300' : 'text-slate-400 hover:text-rose-300'
-              }`}
-            >
-              Sold
-            </button>
+          {/* Controls: Media filter + Status filter */}
+          <div className="flex flex-wrap items-center gap-2">
+            
+            {/* Media Filter: All / With video / Photos only */}
+            <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
+              <button
+                type="button"
+                onClick={() => setSelectedMedia('All')}
+                className={`px-3 py-1 rounded-lg font-medium transition ${
+                  selectedMedia === 'All' ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                All Media
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedMedia('With video')}
+                className={`px-3 py-1 rounded-lg font-medium transition ${
+                  selectedMedia === 'With video' ? 'bg-red-950/80 text-red-300' : 'text-slate-400 hover:text-red-300'
+                }`}
+              >
+                With video
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedMedia('Photos only')}
+                className={`px-3 py-1 rounded-lg font-medium transition ${
+                  selectedMedia === 'Photos only' ? 'bg-studio-magenta/80 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Photos only
+              </button>
+            </div>
+
+            {/* Status Filter Buttons: All / For Sale / Sold / Not for Sale */}
+            <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
+              <button
+                type="button"
+                onClick={() => setSelectedStatus('All')}
+                className={`px-3 py-1 rounded-lg font-medium transition ${
+                  selectedStatus === 'All' ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                All Status
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStatus('For Sale')}
+                className={`px-3 py-1 rounded-lg font-medium transition ${
+                  selectedStatus === 'For Sale' ? 'bg-emerald-950/80 text-emerald-300' : 'text-slate-400 hover:text-emerald-300'
+                }`}
+              >
+                For Sale
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStatus('Sold')}
+                className={`px-3 py-1 rounded-lg font-medium transition ${
+                  selectedStatus === 'Sold' ? 'bg-rose-950/80 text-rose-300' : 'text-slate-400 hover:text-rose-300'
+                }`}
+              >
+                Sold
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedStatus('Not for Sale')}
+                className={`px-3 py-1 rounded-lg font-medium transition ${
+                  selectedStatus === 'Not for Sale' ? 'bg-slate-800 text-slate-200' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Not for Sale
+              </button>
+            </div>
+
           </div>
 
         </div>
@@ -294,7 +428,7 @@ export default function Gallery() {
           </div>
         )}
 
-        {/* Category Pills with Counts from Visible Playlists */}
+        {/* Category Pills with Counts from Visible Playlists + extraCategories */}
         <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
           {categoryPills.map((pill) => (
             <button
@@ -333,6 +467,7 @@ export default function Gallery() {
                   setSearchQuery('')
                   setSelectedCategory('All')
                   setSelectedStatus('All')
+                  setSelectedMedia('All')
                 }}
                 className="mt-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-studio-magenta hover:bg-studio-fuchsia text-white transition inline-flex items-center gap-1.5 shadow-glow-magenta"
               >
@@ -347,6 +482,7 @@ export default function Gallery() {
                 onClick={() => {
                   setSelectedCategory('All')
                   setSelectedStatus('All')
+                  setSelectedMedia('All')
                   setSearchQuery('')
                 }}
                 className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition"
@@ -364,6 +500,7 @@ export default function Gallery() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {visibleItems.map((item, index) => {
+              const isForSale = item.status === 'For Sale' || (item.price && !item.sold && item.status !== 'Sold' && item.status !== 'Not Available for Sale')
               return (
                 <div
                   key={item.id}
@@ -379,26 +516,32 @@ export default function Gallery() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     
-                    {/* Status Badge: ONLY shown if real painting data exists, NEVER for synced videos without painting data */}
-                    {item.hasPaintingData && (
+                    {/* Status Badge: ONLY shown when set */}
+                    {item.status && (
                       <div className="absolute top-3 right-3 z-10">
-                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-md shadow ${
-                          item.sold
-                            ? 'bg-rose-950/85 text-rose-300 border border-rose-500/30'
-                            : 'bg-emerald-950/85 text-emerald-300 border border-emerald-500/30'
+                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-md shadow border ${
+                          item.status === 'Sold' || item.sold
+                            ? 'bg-rose-950/85 text-rose-300 border-rose-500/30'
+                            : item.status === 'For Sale'
+                            ? 'bg-emerald-950/85 text-emerald-300 border-emerald-500/30'
+                            : item.status === 'Reserved'
+                            ? 'bg-amber-950/85 text-amber-300 border-amber-500/30'
+                            : 'bg-slate-900/85 text-slate-300 border-slate-600/30'
                         }`}>
-                          {item.sold ? 'Sold' : 'Available'}
+                          {item.status}
                         </span>
                       </div>
                     )}
 
                     {/* Video Tag & Year Indicator */}
                     <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
-                      <span className="px-2 py-1 rounded-md text-[10px] font-semibold bg-black/70 text-red-400 border border-red-500/30 flex items-center gap-1 backdrop-blur-sm">
-                        <Play className="w-3 h-3 fill-red-500 text-red-500" />
-                        <span>Video</span>
-                      </span>
-                      {!item.hasPaintingData && item.year && (
+                      {item.hasVideo && (
+                        <span className="px-2 py-1 rounded-md text-[10px] font-semibold bg-black/70 text-red-400 border border-red-500/30 flex items-center gap-1 backdrop-blur-sm">
+                          <Play className="w-3 h-3 fill-red-500 text-red-500" />
+                          <span>Video</span>
+                        </span>
+                      )}
+                      {item.year && (
                         <span className="px-2 py-1 rounded-md text-[10px] font-semibold bg-black/70 text-slate-300 border border-white/10 backdrop-blur-sm">
                           {item.year}
                         </span>
@@ -416,14 +559,25 @@ export default function Gallery() {
                       >
                         <Eye className="w-5 h-5" />
                       </button>
-                      <Link
-                        to={`/painting/${item.id}`}
-                        className="p-3 rounded-full bg-studio-magenta hover:bg-studio-fuchsia text-white transition transform hover:scale-110 shadow-lg"
-                        title="View Details & Video"
-                        aria-label="View painting details and video"
-                      >
-                        <Play className="w-5 h-5" />
-                      </Link>
+                      {item.hasVideo ? (
+                        <Link
+                          to={`/painting/${item.id}`}
+                          className="p-3 rounded-full bg-studio-magenta hover:bg-studio-fuchsia text-white transition transform hover:scale-110 shadow-lg"
+                          title="Watch Video"
+                          aria-label="Watch video"
+                        >
+                          <Play className="w-5 h-5" />
+                        </Link>
+                      ) : (
+                        <Link
+                          to={`/painting/${item.id}`}
+                          className="p-3 rounded-full bg-white/20 hover:bg-studio-magenta text-white transition transform hover:scale-110 shadow-lg"
+                          title="View Artwork Details"
+                          aria-label="View artwork details"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </Link>
+                      )}
                     </div>
 
                   </div>
@@ -439,45 +593,43 @@ export default function Gallery() {
                           {item.title}
                         </h3>
                       </Link>
-                      {item.hasPaintingData ? (
-                        <p className="text-xs text-slate-400 mt-1 line-clamp-1">
-                          {[item.medium, item.size, item.year ? `(${item.year})` : null].filter(Boolean).join(' • ')}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
-                          <span className="text-slate-400">YouTube Studio Demo</span>
-                          {item.year && <span>• {item.year}</span>}
-                        </p>
-                      )}
+                      <p className="text-xs text-slate-400 mt-1 line-clamp-1">
+                        {[item.medium, item.size, item.year ? `(${item.year})` : null].filter(Boolean).join(' • ') || (item.hasVideo ? 'Painting Demonstration' : 'Original Artwork')}
+                      </p>
                     </div>
 
                     <div className="pt-3 border-t border-white/5 space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
-                        {item.hasPaintingData ? (
-                          item.price && !item.sold ? (
-                            <span className="font-bold text-studio-gold text-sm">${item.price}</span>
-                          ) : (
-                            <span className="text-slate-400">{item.sold ? 'Private Collection' : 'Inquire for Price'}</span>
-                          )
+                        {item.price && isForSale ? (
+                          <span className="font-bold text-studio-gold text-sm">${item.price}</span>
                         ) : (
-                          <span className="text-slate-400 text-xs">Full Video Tutorial</span>
+                          <span className="text-slate-400">{item.status || (item.hasVideo ? 'Video Tutorial' : 'Original Artwork')}</span>
                         )}
                         <Link
                           to={`/painting/${item.id}`}
                           className="text-xs font-semibold text-studio-magenta hover:underline"
                         >
-                          Story & Video →
+                          {item.hasVideo ? 'Story & Video →' : 'Artwork Details →'}
                         </Link>
                       </div>
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 pt-1">
-                        <Link
-                          to={`/contact?inquiry=${encodeURIComponent(item.title)}`}
-                          className="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium text-center bg-white/5 hover:bg-studio-magenta hover:text-white text-slate-200 transition"
-                        >
-                          Inquire / Buy
-                        </Link>
+                        {isForSale ? (
+                          <Link
+                            to={`/contact?inquiry=${encodeURIComponent(item.title)}`}
+                            className="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium text-center bg-white/5 hover:bg-studio-magenta hover:text-white text-slate-200 transition"
+                          >
+                            Inquire / Buy
+                          </Link>
+                        ) : (
+                          <Link
+                            to={`/painting/${item.id}`}
+                            className="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium text-center bg-white/5 hover:bg-white/10 text-slate-300 transition"
+                          >
+                            View Artwork
+                          </Link>
+                        )}
                         {item.fineArtAmericaUrl && (
                           <a
                             href={item.fineArtAmericaUrl}

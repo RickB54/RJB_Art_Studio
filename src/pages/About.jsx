@@ -36,6 +36,11 @@ export default function About() {
           <p>
             {siteData.artist.bioExtended}
           </p>
+          {siteData.artist.aboutPhoto && (
+            <div className="relative aspect-[16/9] sm:aspect-[21/9] rounded-2xl overflow-hidden bg-black/40 border border-white/10 my-4">
+              <img src={siteData.artist.aboutPhoto} alt="Rick J Berube in Studio" className="w-full h-full object-cover" />
+            </div>
+          )}
           <p>
             Over the past decades, I have painted more than 500 original works—capturing the dramatic coastal cliffs of Maine, peaceful New England forests, majestic wildlife, delicate florals, and intimate portraits of loved ones and pets.
           </p>

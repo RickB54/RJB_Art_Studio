@@ -10,7 +10,7 @@
     "email": "rberube54@gmail.com",
     "announcement": "",
     "siteUrl": "https://rjbart.netlify.app",
-    "siteMigrationNotice": "Rick J Berube Art Studio has a new website. My earlier site, rjbartstudio.com, is no longer active."
+    "siteMigrationNotice": "This is Rick J Berube Art Studio's new website. My earlier site, rjbartstudio.com, is no longer active."
   },
   "socials": {
     "youtube": "https://www.youtube.com/@RickJBerubeArtStudio",
@@ -91,7 +91,7 @@
     }
   ],
   "contact": {
-    "email": "rberube54@gmail.com",
+    "email": "rjbartstudio@gmail.com",
     "emailPublic": true,
     "phone": "",
     "phonePublic": false,
