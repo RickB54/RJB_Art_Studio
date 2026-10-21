@@ -10,7 +10,8 @@
     "email": "rberube54@gmail.com",
     "announcement": "",
     "siteUrl": "https://rjbart.netlify.app",
-    "siteMigrationNotice": "This is Rick J Berube Art Studio's new website. My earlier site, rjbartstudio.com, is no longer active."
+    "siteMigrationNotice": "This is Rick J Berube Art Studio's new website. My earlier site, rjbartstudio.com, is no longer active.",
+    "aboutPhoto": "/images/paintings/20180703_103347-280022.webp"
   },
   "socials": {
     "youtube": "https://www.youtube.com/@RickJBerubeArtStudio",
@@ -45,7 +46,7 @@
       "artwork": "Nubble Lighthouse",
       "medium": "Oil painting on canvas",
       "description": "Selected by the Mayor of Methuen to be featured in the Methuen City Hall main rotunda entrance for the month of July 2018.",
-      "image": ""
+      "image": "/images/paintings/20180126_214408-626886.webp"
     },
     {
       "title": "Artist of the Month – December 2018",
@@ -53,7 +54,7 @@
       "artwork": "Christmas Tree Solace",
       "medium": "Acrylic painting",
       "description": "Selected for a second honor to display 'Christmas Tree Solace' in the Methuen City Hall main entrance for December 2018.",
-      "image": ""
+      "image": "/images/paintings/20171115_182219-684862.webp"
     }
   ],
   "services": [

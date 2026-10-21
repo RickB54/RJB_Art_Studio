@@ -105,7 +105,8 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": true,
+    "highlighted": true
   },
   {
     "id": "video-8McB1P8XOF4",
@@ -123,7 +124,8 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": true,
+    "highlighted": true
   },
   {
     "id": "video-15rmv_ScZlQ",

@@ -62,5 +62,29 @@
     "show": true,
     "videoCount": 36,
     "coverVideoId": "iwiq_O-SCt4"
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oJfe0zZF_AmX6lP4fwTCrwp",
+    "title": "Landscape Oil Paintings",
+    "order": 9,
+    "show": true,
+    "videoCount": 36,
+    "coverVideoId": "NgLPeBfiFMM"
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oJFKjsE_GbXTrvRXL-CrQ1J",
+    "title": "Portraits",
+    "order": 10,
+    "show": true,
+    "videoCount": 20,
+    "coverVideoId": "FhMl4amz6fk"
+  },
+  {
+    "playlistId": "PLB-gvtlXq3oJ7jsKWXCwnOfZWwNhkE1sS",
+    "title": "Pet Portrait Drawings",
+    "order": 11,
+    "show": true,
+    "videoCount": 15,
+    "coverVideoId": "r82gYmx6b8U"
   }
 ]

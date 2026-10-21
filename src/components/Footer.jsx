@@ -1,9 +1,82 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Youtube, Facebook, Instagram, Pin, Heart } from 'lucide-react'
+import { Youtube, Facebook, Instagram, Pin, Mail, ExternalLink } from 'lucide-react'
 import siteData from '../data/site.json'
 import { PRICE_LISTS } from '../data/priceLists'
 import PriceListModal from './PriceListModal'
+
+// Reusable email chooser button — shows a small popup with Gmail + default mail options
+function EmailChooser({ email, className = '' }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  // Close on outside click or Escape
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    const onClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('mousedown', onClick)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onClick)
+    }
+  }, [open])
+
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(email)}`
+  const mailtoUrl = `mailto:${email}`
+
+  return (
+    <div ref={ref} className={`relative inline-block ${className}`}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className="text-white hover:text-studio-magenta font-mono transition underline decoration-studio-magenta/40 flex items-center gap-1"
+        title="Click to email Rick"
+      >
+        {email}
+        <Mail className="w-3 h-3 text-studio-magenta opacity-70" />
+      </button>
+
+      {open && (
+        <div className="absolute bottom-full mb-2 left-0 z-50 w-56 rounded-xl bg-[#1a1625] border border-studio-magenta/40 shadow-2xl overflow-hidden animate-fade-in">
+          <div className="px-3 py-2 text-[10px] text-slate-400 border-b border-white/10 font-semibold uppercase tracking-wider">
+            Choose how to send email
+          </div>
+          <a
+            href={gmailUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2.5 text-xs text-white hover:bg-studio-magenta/20 transition group"
+          >
+            <span className="w-5 h-5 rounded bg-red-600/20 flex items-center justify-center text-[10px] font-bold text-red-400 group-hover:bg-red-600 group-hover:text-white transition">G</span>
+            <div>
+              <div className="font-semibold">Open in Gmail</div>
+              <div className="text-[10px] text-slate-400">Opens Gmail in your browser</div>
+            </div>
+            <ExternalLink className="w-3 h-3 text-slate-500 ml-auto" />
+          </a>
+          <a
+            href={mailtoUrl}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2.5 text-xs text-white hover:bg-studio-magenta/20 transition group"
+          >
+            <span className="w-5 h-5 rounded bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600 transition">
+              <Mail className="w-3 h-3 text-blue-400 group-hover:text-white" />
+            </span>
+            <div>
+              <div className="font-semibold">Default Email App</div>
+              <div className="text-[10px] text-slate-400">Outlook, Apple Mail, etc.</div>
+            </div>
+          </a>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export { EmailChooser }
 
 export default function Footer() {
   const [activePriceList, setActivePriceList] = useState(null)
@@ -38,13 +111,7 @@ export default function Footer() {
             {siteData.contact?.email && (
               <div className="inline-flex flex-wrap items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300">
                 <span className="text-studio-gold font-semibold">Artist Direct Email:</span>
-                <a
-                  href={`mailto:${siteData.contact.email}`}
-                  className="text-white hover:text-studio-magenta font-mono transition underline decoration-studio-magenta/40"
-                  title="Click to email Rick directly"
-                >
-                  {siteData.contact.email}
-                </a>
+                <EmailChooser email={siteData.contact.email} />
               </div>
             )}
             {siteData.artist?.announcement && siteData.artist.announcement.trim() !== '' && (

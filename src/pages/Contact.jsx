@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Mail, Send, CheckCircle2, MessageSquare, Youtube, Facebook, Instagram, Pin, ShoppingBag, ShieldCheck } from 'lucide-react'
+import { Mail, Send, CheckCircle2, MessageSquare, Youtube, Facebook, Instagram, Pin, ShoppingBag, ShieldCheck, ExternalLink } from 'lucide-react'
 import siteData from '../data/site.json'
+import { EmailChooser } from '../components/Footer'
 
 export default function Contact() {
   const [searchParams] = useSearchParams()
@@ -106,14 +107,14 @@ export default function Contact() {
               <h3 className="font-serif text-lg font-bold text-white">Direct Email</h3>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Prefer using your email app? Send a message directly to Rick's studio inbox anytime:
+              Prefer to use email directly? Click your address below and choose Gmail or your default email app:
             </p>
-            <a
-              href={`mailto:${siteData.contact?.email || 'rberube54@gmail.com'}?subject=Art Studio Inquiry`}
-              className="block w-full py-2.5 px-3 rounded-xl bg-studio-gold/15 border border-studio-gold/30 hover:bg-studio-gold hover:text-black text-studio-gold text-xs font-mono font-semibold text-center transition"
-            >
-              {siteData.contact?.email || 'rberube54@gmail.com'}
-            </a>
+            <div className="flex items-center justify-center w-full py-2.5 px-3 rounded-xl bg-studio-gold/15 border border-studio-gold/30">
+              <EmailChooser
+                email={siteData.contact?.email || 'rberube54@gmail.com'}
+                className="text-studio-gold text-xs font-semibold"
+              />
+            </div>
           </div>
 
           <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
