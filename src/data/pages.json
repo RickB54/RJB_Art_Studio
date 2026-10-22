@@ -1,5 +1,6 @@
 {
   "home": {
+    "heroVisible": true,
     "pillBadge": "Original Fine Art • Methuen, Massachusetts",
     "headline": "Rick J Berube",
     "tagline": "Beauty & Nature inspire me...",
@@ -7,15 +8,37 @@
     "primaryBtn": "Explore The Gallery",
     "faaBtn": "Prints on Fine Art America",
     "commissionBtn": "Request A Commission",
+    "highlightsVisible": true,
     "highlights": [
       { "stat": "500+", "label": "Paintings Created →", "link": "/gallery" },
       { "stat": "2x", "label": "Artist of the Month →", "link": "/about#awards" },
       { "stat": "Oil & Acrylic", "label": "Fine Art Mediums →", "link": "/gallery" },
       { "stat": "YouTube", "label": "Video Tutorials →", "link": "/videos" }
     ],
+    "featuredVisible": true,
     "featuredHeading": "Featured Works",
     "featuredTitle": "Explore Highlighted Paintings",
-    "featuredLink": "View All Categories"
+    "featuredLink": "View All Categories",
+    "inquireBtn": "Inquire / Buy",
+    "faaPrintBtn": "FAA Print",
+    "teaserVisible": true,
+    "teaserBadge": "Custom Art Orders",
+    "teaserTitle": "Looking for a custom portrait of family or a beloved pet?",
+    "teaserText": "I create one-of-a-kind original painted and charcoal portraits from your photo references, signed and accompanied by a Certificate of Authenticity. Archival prints of original works are also available directly on Fine Art America.",
+    "teaserPrimaryBtn": "Learn About Commissions & Sizing",
+    "teaserSecondaryBtn": "Visit Fine Art America Shop",
+    "artShowsVisible": true,
+    "artShowsBadge": "Art Shows & In-Person Appearances",
+    "artShows": [
+      {
+        "title": "Nevins Memorial Library Art Exhibit",
+        "date": "Annual Featured Exhibition",
+        "location": "Methuen, Massachusetts"
+      }
+    ],
+    "artShowsBtn": "Inquire About Future Booths",
+    "artShowsLink": "/contact",
+    "extraBlocks": []
   },
   "gallery": {
     "badge": "Original Art & YouTube Tutorials",

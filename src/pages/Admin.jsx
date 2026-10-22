@@ -1553,132 +1553,403 @@ export default function Admin() {
 
           {/* SECTION: HOME PAGE */}
           {editPageSection === 'home' && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Home Page Text & Hero Content</h3>
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Tagline (Under Rick J Berube)</label>
-                <input
-                  type="text"
-                  value={site.artist.tagline}
-                  onChange={e => setSite({ ...site, artist: { ...site.artist, tagline: e.target.value } })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Short Bio (Hero Intro)</label>
-                <textarea
-                  rows={3}
-                  value={site.artist.bioShort}
-                  onChange={e => setSite({ ...site, artist: { ...site.artist, bioShort: e.target.value } })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Site Migration Notice Banner</label>
-                <input
-                  type="text"
-                  value={site.artist.siteMigrationNotice || ''}
-                  onChange={e => setSite({ ...site, artist: { ...site.artist, siteMigrationNotice: e.target.value } })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-
-              <div className="pt-2">
-                <label className="block text-xs font-medium text-slate-300 mb-1">Fine Art America Profile URL</label>
-                <input
-                  type="url"
-                  value={site.socials.fineArtAmerica}
-                  onChange={e => setSite({ ...site, socials: { ...site.socials, fineArtAmerica: e.target.value } })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-
-              {/* Extra Gallery Categories */}
-              <div className="pt-4 border-t border-white/10 space-y-3">
-                <label className="block text-xs font-medium text-slate-300">
-                  Extra Gallery Categories (Visible as filter pills in Gallery alongside YouTube playlists)
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {(site.extraCategories || []).map((cat, idx) => (
-                    <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-white/10 text-white border border-white/10">
-                      <span>{cat}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = site.extraCategories.filter((_, i) => i !== idx)
-                          setSite({ ...site, extraCategories: updated })
-                        }}
-                        className="hover:text-red-400 font-bold ml-1"
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span className="text-studio-gold">🏠</span>
+                    <span>Home Page Editor</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Control every visible string, button, highlight, showcase item, art show date, and extra block on the Home page.
+                  </p>
                 </div>
-                <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Restore all default text and settings for Home Page? Any unsaved edits will be replaced with defaults.')) {
+                      setPages(prev => ({ ...prev, home: JSON.parse(JSON.stringify(pagesDefaultInitial.home)) }))
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
+              </div>
+
+              {/* 1. Section Visibility Toggles */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Page Section Visibility
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-300">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.home?.heroVisible !== false}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), heroVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Hero Section</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.home?.highlightsVisible !== false}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), highlightsVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Highlights Bar</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.home?.featuredVisible !== false}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), featuredVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Featured Showcase</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.home?.teaserVisible !== false}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Commissions Teaser</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.home?.artShowsVisible !== false}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), artShowsVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Art Shows & Events</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* 2. Hero Content */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Hero Header & Action Buttons
+                </span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Top Pill Badge</label>
+                    <input
+                      type="text"
+                      value={pages.home?.pillBadge || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), pillBadge: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Primary Headline</label>
+                    <input
+                      type="text"
+                      value={pages.home?.headline || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), headline: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Tagline (Italic under name)</label>
                   <input
                     type="text"
-                    placeholder="New category name (e.g. Miniatures, Studies)..."
-                    value={newExtraCat}
-                    onChange={e => setNewExtraCat(e.target.value)}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    value={pages.home?.tagline || site.artist.tagline}
+                    onChange={e => {
+                      setPages({ ...pages, home: { ...(pages.home || {}), tagline: e.target.value } })
+                      setSite({ ...site, artist: { ...site.artist, tagline: e.target.value } })
+                    }}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Short Bio (Hero Intro - line breaks kept)</label>
+                  <textarea
+                    rows={3}
+                    value={pages.home?.bioShort || site.artist.bioShort}
+                    onChange={e => {
+                      setPages({ ...pages, home: { ...(pages.home || {}), bioShort: e.target.value } })
+                      setSite({ ...site, artist: { ...site.artist, bioShort: e.target.value } })
+                    }}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-3 text-xs text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Primary Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.primaryBtn || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), primaryBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">FAA Prints Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.faaBtn || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), faaBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Commission Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.commissionBtn || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), commissionBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Studio Highlights Bar (Add / remove / reorder) */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                      Studio Highlights Cards
+                    </span>
+                    <p className="text-xs text-slate-400">Reorder, add, or remove stat cards displayed in the hero section.</p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
-                      if (!newExtraCat.trim()) return
-                      const trimmed = newExtraCat.trim()
-                      if (!(site.extraCategories || []).includes(trimmed)) {
-                        setSite({ ...site, extraCategories: [...(site.extraCategories || []), trimmed] })
-                      }
-                      setNewExtraCat('')
+                      const cur = pages.home?.highlights || []
+                      setPages({
+                        ...pages,
+                        home: {
+                          ...(pages.home || {}),
+                          highlights: [...cur, { stat: "New Stat", label: "Description →", link: "/gallery" }]
+                        }
+                      })
                     }}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-studio-magenta text-white hover:bg-studio-fuchsia"
+                    className="px-3 py-1.5 rounded-lg bg-studio-magenta text-white hover:bg-studio-fuchsia text-xs font-semibold flex items-center gap-1"
                   >
-                    Add Category
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Stat</span>
                   </button>
+                </div>
+
+                <div className="space-y-2">
+                  {(pages.home?.highlights || []).map((h, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row items-center gap-2 p-2.5 rounded-xl bg-black/30 border border-white/5">
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (idx === 0) return
+                            const cur = [...(pages.home?.highlights || [])]
+                            const temp = cur[idx]
+                            cur[idx] = cur[idx - 1]
+                            cur[idx - 1] = temp
+                            setPages({ ...pages, home: { ...(pages.home || {}), highlights: cur } })
+                          }}
+                          disabled={idx === 0}
+                          className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cur = [...(pages.home?.highlights || [])]
+                            if (idx === cur.length - 1) return
+                            const temp = cur[idx]
+                            cur[idx] = cur[idx + 1]
+                            cur[idx + 1] = temp
+                            setPages({ ...pages, home: { ...(pages.home || {}), highlights: cur } })
+                          }}
+                          disabled={idx === (pages.home?.highlights || []).length - 1}
+                          className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={h.stat}
+                        onChange={e => {
+                          const cur = [...(pages.home?.highlights || [])]
+                          cur[idx] = { ...cur[idx], stat: e.target.value }
+                          setPages({ ...pages, home: { ...(pages.home || {}), highlights: cur } })
+                        }}
+                        placeholder="Stat (e.g. 500+)"
+                        className="w-full sm:w-28 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-bold"
+                      />
+                      <input
+                        type="text"
+                        value={h.label}
+                        onChange={e => {
+                          const cur = [...(pages.home?.highlights || [])]
+                          cur[idx] = { ...cur[idx], label: e.target.value }
+                          setPages({ ...pages, home: { ...(pages.home || {}), highlights: cur } })
+                        }}
+                        placeholder="Label"
+                        className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                      />
+                      <input
+                        type="text"
+                        value={h.link || ''}
+                        onChange={e => {
+                          const cur = [...(pages.home?.highlights || [])]
+                          cur[idx] = { ...cur[idx], link: e.target.value }
+                          setPages({ ...pages, home: { ...(pages.home || {}), highlights: cur } })
+                        }}
+                        placeholder="Link (e.g. /gallery)"
+                        className="w-full sm:w-36 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = (pages.home?.highlights || []).filter((_, i) => i !== idx)
+                          setPages({ ...pages, home: { ...(pages.home || {}), highlights: cur } })
+                        }}
+                        className="p-1.5 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300"
+                        title="Delete highlight"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Explore Highlighted Paintings Picker */}
-              <div className="pt-4 border-t border-white/10 space-y-3">
-                <div>
-                  <h4 className="text-sm font-bold text-white">Explore Highlighted Paintings (Home Page Showcase)</h4>
-                  <p className="text-xs text-slate-400">
-                    Choose which paintings appear on the Home page showcase and optionally attach a dedicated photo for each.
-                  </p>
+              {/* 4. Featured Showcase Settings */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Featured Paintings Showcase
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Section Heading</label>
+                    <input
+                      type="text"
+                      value={pages.home?.featuredHeading || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), featuredHeading: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Section Title</label>
+                    <input
+                      type="text"
+                      value={pages.home?.featuredTitle || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), featuredTitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">View All Link Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.featuredLink || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), featuredLink: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-2 rounded-xl bg-black/20 border border-white/5">
-                  {paintings.map(p => {
-                    const isHighlighted = !!(p.featured || p.highlighted)
-                    return (
-                      <div key={p.id} className={`p-3 rounded-xl border flex flex-col justify-between gap-2 ${isHighlighted ? 'bg-studio-magenta/10 border-studio-magenta/40' : 'bg-white/5 border-white/5'}`}>
-                        <label className="flex items-center gap-2 cursor-pointer font-medium text-xs text-white truncate">
-                          <input
-                            type="checkbox"
-                            checked={isHighlighted}
-                            onChange={async () => {
-                              const updated = paintings.map(item => item.id === p.id ? { ...item, featured: !isHighlighted, highlighted: !isHighlighted } : item)
-                              setPaintings(updated)
-                              await fetch('/__api/paintings', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ paintings: updated })
-                              })
-                            }}
-                            className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer"
-                          />
-                          <span className="truncate">{p.title}</span>
-                        </label>
-                        {isHighlighted && (
-                          <div className="pt-1 border-t border-white/10">
-                            <PhotoDropZone
-                              value={p.highlightPhoto || p.photo || ''}
-                              onChange={async (url, thumb) => {
-                                const updated = paintings.map(item => item.id === p.id ? { ...item, highlightPhoto: url, photo: p.photo || url } : item)
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Inquire / Buy Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.inquireBtn || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), inquireBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">FAA Print Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.faaPrintBtn || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), faaPrintBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Extra Categories */}
+                <div className="pt-2 border-t border-white/10 space-y-2">
+                  <label className="block text-xs font-medium text-slate-300">
+                    Extra Gallery Categories (Filter pills in Gallery)
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {(site.extraCategories || []).map((cat, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-white/10 text-white border border-white/10">
+                        <span>{cat}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = site.extraCategories.filter((_, i) => i !== idx)
+                            setSite({ ...site, extraCategories: updated })
+                          }}
+                          className="hover:text-red-400 font-bold ml-1"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="New category name (e.g. Miniatures, Studies)..."
+                      value={newExtraCat}
+                      onChange={e => setNewExtraCat(e.target.value)}
+                      className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!newExtraCat.trim()) return
+                        const trimmed = newExtraCat.trim()
+                        if (!(site.extraCategories || []).includes(trimmed)) {
+                          setSite({ ...site, extraCategories: [...(site.extraCategories || []), trimmed] })
+                        }
+                        setNewExtraCat('')
+                      }}
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-studio-magenta text-white hover:bg-studio-fuchsia"
+                    >
+                      Add Category
+                    </button>
+                  </div>
+                </div>
+
+                {/* Explore Highlighted Paintings Picker */}
+                <div className="pt-2 border-t border-white/10 space-y-2">
+                  <div>
+                    <h4 className="text-xs font-bold text-white">Select Paintings to Showcase on Home Page</h4>
+                    <p className="text-[11px] text-slate-400">
+                      Check which paintings appear in the top 4 showcase slots.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto p-2 rounded-xl bg-black/20 border border-white/5">
+                    {paintings.map(p => {
+                      const isHighlighted = !!(p.featured || p.highlighted)
+                      return (
+                        <div key={p.id} className={`p-2.5 rounded-xl border flex flex-col justify-between gap-2 ${isHighlighted ? 'bg-studio-magenta/10 border-studio-magenta/40' : 'bg-white/5 border-white/5'}`}>
+                          <label className="flex items-center gap-2 cursor-pointer font-medium text-xs text-white truncate">
+                            <input
+                              type="checkbox"
+                              checked={isHighlighted}
+                              onChange={async () => {
+                                const updated = paintings.map(item => item.id === p.id ? { ...item, featured: !isHighlighted, highlighted: !isHighlighted } : item)
                                 setPaintings(updated)
                                 await fetch('/__api/paintings', {
                                   method: 'POST',
@@ -1686,15 +1957,238 @@ export default function Admin() {
                                   body: JSON.stringify({ paintings: updated })
                                 })
                               }}
-                              label="Optional Own Photo"
+                              className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer"
                             />
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
+                            <span className="truncate">{p.title}</span>
+                          </label>
+                          {isHighlighted && (
+                            <div className="pt-1 border-t border-white/10">
+                              <PhotoDropZone
+                                value={p.highlightPhoto || p.photo || ''}
+                                onChange={async (url, thumb) => {
+                                  const updated = paintings.map(item => item.id === p.id ? { ...item, highlightPhoto: url, photo: p.photo || url } : item)
+                                  setPaintings(updated)
+                                  await fetch('/__api/paintings', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ paintings: updated })
+                                  })
+                                }}
+                                label="Optional Own Photo"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
+
+              {/* 5. Commissions Teaser Banner */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Commissions & Prints Teaser Banner
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Badge Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.teaserBadge || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserBadge: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Banner Headline</label>
+                    <input
+                      type="text"
+                      value={pages.home?.teaserTitle || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserTitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Banner Description Text (line breaks kept)</label>
+                  <textarea
+                    rows={2}
+                    value={pages.home?.teaserText || ''}
+                    onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserText: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Primary Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.teaserPrimaryBtn || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserPrimaryBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">FAA Shop Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.teaserSecondaryBtn || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserSecondaryBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 6. Art Shows & In-Person Appearances (Add / remove / reorder) */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                      Art Shows & Appearances List
+                    </span>
+                    <p className="text-xs text-slate-400">Add, reorder, or edit in-person booth announcements.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = pages.home?.artShows || []
+                      setPages({
+                        ...pages,
+                        home: {
+                          ...(pages.home || {}),
+                          artShows: [...cur, { title: "New Art Show Exhibit", date: "Date or Season", location: "City, State" }]
+                        }
+                      })
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-studio-magenta text-white hover:bg-studio-fuchsia text-xs font-semibold flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Show</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Section Badge</label>
+                    <input
+                      type="text"
+                      value={pages.home?.artShowsBadge || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), artShowsBadge: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Inquire Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.home?.artShowsBtn || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), artShowsBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Button Link</label>
+                    <input
+                      type="text"
+                      value={pages.home?.artShowsLink || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), artShowsLink: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {(pages.home?.artShows || []).map((sh, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row items-center gap-2 p-2.5 rounded-xl bg-black/30 border border-white/5">
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (idx === 0) return
+                            const cur = [...(pages.home?.artShows || [])]
+                            const temp = cur[idx]
+                            cur[idx] = cur[idx - 1]
+                            cur[idx - 1] = temp
+                            setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                          }}
+                          disabled={idx === 0}
+                          className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cur = [...(pages.home?.artShows || [])]
+                            if (idx === cur.length - 1) return
+                            const temp = cur[idx]
+                            cur[idx] = cur[idx + 1]
+                            cur[idx + 1] = temp
+                            setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                          }}
+                          disabled={idx === (pages.home?.artShows || []).length - 1}
+                          className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={sh.title}
+                        onChange={e => {
+                          const cur = [...(pages.home?.artShows || [])]
+                          cur[idx] = { ...cur[idx], title: e.target.value }
+                          setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                        }}
+                        placeholder="Exhibit Name / Event Title"
+                        className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                      />
+                      <input
+                        type="text"
+                        value={sh.date}
+                        onChange={e => {
+                          const cur = [...(pages.home?.artShows || [])]
+                          cur[idx] = { ...cur[idx], date: e.target.value }
+                          setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                        }}
+                        placeholder="Date / Schedule"
+                        className="w-full sm:w-44 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                      />
+                      <input
+                        type="text"
+                        value={sh.location}
+                        onChange={e => {
+                          const cur = [...(pages.home?.artShows || [])]
+                          cur[idx] = { ...cur[idx], location: e.target.value }
+                          setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                        }}
+                        placeholder="Location"
+                        className="w-full sm:w-48 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = (pages.home?.artShows || []).filter((_, i) => i !== idx)
+                          setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                        }}
+                        className="p-1.5 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300"
+                        title="Delete show"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 7. Extra Page Blocks */}
+              <AdminBlockEditor
+                blocks={pages.home?.extraBlocks || []}
+                onChange={newBlocks => setPages({ ...pages, home: { ...(pages.home || {}), extraBlocks: newBlocks } })}
+                title="Home Page Extra Blocks"
+              />
             </div>
           )}
 
