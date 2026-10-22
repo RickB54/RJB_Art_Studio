@@ -290,12 +290,29 @@
     "tagline": "Beauty & Nature inspire me...",
     "bioShort": "Self-taught fine artist specializing in oil and acrylic landscapes, seascapes, wildlife, florals, and commissioned portraits. Over 500 original paintings created with passion and dedication.",
     "emailLabel": "Artist Direct Email:",
+    "directEmailLabel": "Artist Direct Email:",
     "exploreTitle": "Explore",
+    "exploreLinks": [
+      { "label": "Original Art Gallery", "target": "/gallery" },
+      { "label": "About the Artist & Studio", "target": "/about" },
+      { "label": "Commissions & Pricing", "target": "/commissions" },
+      { "label": "YouTube Painting Tutorials", "target": "/videos" },
+      { "label": "Contact Rick", "target": "/contact" }
+    ],
     "connectTitle": "Connect",
     "priceListsTitle": "Official Price Lists",
     "priceListsSubtitle": "Click any price list to view full screen, download PDF, or print",
     "copyrightNotice": "Rick J Berube Art Studio. All rights reserved.",
     "originText": "Fine Art from Methuen, MA"
+  },
+  "header": {
+    "navHome": "Home",
+    "navGallery": "Gallery",
+    "navAbout": "About",
+    "navCommissions": "Commissions & Prints",
+    "navVideos": "Videos",
+    "navContact": "Contact",
+    "youtubeBtn": "YouTube"
   },
   "paintingDetail": {
     "backButtonText": "Back to All Artworks",

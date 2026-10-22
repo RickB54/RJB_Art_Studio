@@ -124,7 +124,7 @@ export default function Footer() {
             </p>
             {siteData.contact?.email && (
               <div className="inline-flex flex-wrap items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300">
-                <span className="text-studio-gold font-semibold">Artist Direct Email:</span>
+                <span className="text-studio-gold font-semibold">{ft.directEmailLabel || ft.emailLabel || 'Artist Direct Email:'}</span>
                 <EmailChooser email={siteData.contact.email} />
               </div>
             )}
@@ -138,13 +138,27 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="space-y-3">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-200">Explore</h4>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-200">{ft.exploreTitle || 'Explore'}</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><Link to="/gallery" className="hover:text-studio-magenta transition">Original Art Gallery</Link></li>
-              <li><Link to="/about" className="hover:text-studio-magenta transition">About the Artist & Studio</Link></li>
-              <li><Link to="/commissions" className="hover:text-studio-magenta transition">Commissions & Pricing</Link></li>
-              <li><Link to="/videos" className="hover:text-studio-magenta transition">YouTube Painting Tutorials</Link></li>
-              <li><Link to="/contact" className="hover:text-studio-magenta transition">Contact Rick</Link></li>
+              {(ft.exploreLinks || [
+                { label: 'Original Art Gallery', target: '/gallery' },
+                { label: 'About the Artist & Studio', target: '/about' },
+                { label: 'Commissions & Pricing', target: '/commissions' },
+                { label: 'YouTube Painting Tutorials', target: '/videos' },
+                { label: 'Contact Rick', target: '/contact' }
+              ]).map((link, idx) => (
+                <li key={idx}>
+                  {link.target && (link.target.startsWith('http://') || link.target.startsWith('https://')) ? (
+                    <a href={link.target} target="_blank" rel="noopener noreferrer" className="hover:text-studio-magenta transition">
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link to={link.target || '/'} className="hover:text-studio-magenta transition">
+                      {link.label}
+                    </Link>
+                  )}
+                </li>
+              ))}
             </ul>
           </div>
 

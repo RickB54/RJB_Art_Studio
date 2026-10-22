@@ -1,19 +1,30 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, Youtube, Palette } from 'lucide-react'
 import siteData from '../data/site.json'
+import initialPages from '../data/pages.json'
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [pages, setPages] = useState(initialPages)
   const location = useLocation()
 
+  useEffect(() => {
+    fetch('/__api/data')
+      .then(res => res.json())
+      .then(data => { if (data.pages) setPages(data.pages) })
+      .catch(() => {})
+  }, [])
+
+  const hd = pages.header || {}
+
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Gallery', path: '/gallery' },
-    { name: 'About', path: '/about' },
-    { name: 'Commissions & Prints', path: '/commissions' },
-    { name: 'Videos', path: '/videos' },
-    { name: 'Contact', path: '/contact' },
+    { name: hd.navHome || 'Home', path: '/' },
+    { name: hd.navGallery || 'Gallery', path: '/gallery' },
+    { name: hd.navAbout || 'About', path: '/about' },
+    { name: hd.navCommissions || 'Commissions & Prints', path: '/commissions' },
+    { name: hd.navVideos || 'Videos', path: '/videos' },
+    { name: hd.navContact || 'Contact', path: '/contact' },
   ]
 
   const isActive = (path) => {
@@ -78,7 +89,7 @@ export default function Navbar() {
               className="flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600 hover:text-white transition-all shadow-sm"
             >
               <Youtube className="w-4 h-4" />
-              <span>YouTube</span>
+              <span>{hd.youtubeBtn || 'YouTube'}</span>
             </a>
           </div>
 

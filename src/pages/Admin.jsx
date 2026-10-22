@@ -670,6 +670,13 @@ export default function Admin() {
   const hasUnsavedChangesForSection = (sectionKey) => {
     try {
       const snap = JSON.parse(savedPagesSnapshot)
+      if (sectionKey === 'footerHeader') {
+        const currentF = pages.footer || {}
+        const savedF = snap.footer || {}
+        const currentH = pages.header || {}
+        const savedH = snap.header || {}
+        return JSON.stringify(currentF) !== JSON.stringify(savedF) || JSON.stringify(currentH) !== JSON.stringify(savedH)
+      }
       const current = pages[sectionKey] || {}
       const saved = snap[sectionKey] || {}
       return JSON.stringify(current) !== JSON.stringify(saved)
@@ -703,7 +710,13 @@ export default function Admin() {
 
   const restoreDefaultSection = (sectionKey, sectionName) => {
     if (window.confirm(`Restore original shipped text for ${sectionName}? Any unsaved changes on this page will be replaced with defaults.`)) {
-      if (pagesDefaultInitial[sectionKey]) {
+      if (sectionKey === 'footerHeader' || sectionKey === 'footer') {
+        setPages(prev => ({
+          ...prev,
+          footer: JSON.parse(JSON.stringify(pagesDefaultInitial.footer || {})),
+          header: JSON.parse(JSON.stringify(pagesDefaultInitial.header || {}))
+        }))
+      } else if (pagesDefaultInitial[sectionKey]) {
         setPages(prev => ({
           ...prev,
           [sectionKey]: JSON.parse(JSON.stringify(pagesDefaultInitial[sectionKey]))
@@ -4299,11 +4312,11 @@ export default function Admin() {
                     <span className="text-studio-gold">⚓</span>
                     <span>Header, Footer & Notice Banner Editor</span>
                   </h3>
-                  <p className="text-xs text-slate-400">Control site-wide notice banner, studio credentials, and footer links.</p>
+                  <p className="text-xs text-slate-400">Control header navigation links, YouTube button text, site-wide notice banner, footer explore links, and studio info.</p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => restoreDefaultSection('footer', 'Footer & Notice Banner')}
+                  onClick={() => restoreDefaultSection('footerHeader', 'Header, Footer & Notice Banner')}
                   className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
                 >
                   <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
@@ -4311,7 +4324,52 @@ export default function Admin() {
                 </button>
               </div>
 
-              {/* Site Migration Notice Banner */}
+              {/* 1. Header Navigation & Action Buttons */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                <div>
+                  <p className="text-xs font-semibold text-studio-gold uppercase tracking-wider">Header Navigation & Button Text</p>
+                  <p className="text-xs text-slate-400">Customize labels for the top navigation menu links and the YouTube call-to-action button.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {[
+                    ['navHome', 'Home Nav Link', 'Home'],
+                    ['navGallery', 'Gallery Nav Link', 'Gallery'],
+                    ['navAbout', 'About Nav Link', 'About'],
+                    ['navCommissions', 'Commissions & Prints Nav Link', 'Commissions & Prints'],
+                    ['navVideos', 'Videos Nav Link', 'Videos'],
+                    ['navContact', 'Contact Nav Link', 'Contact'],
+                  ].map(([key, label, placeholder]) => (
+                    <div key={key}>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                      <input
+                        type="text"
+                        placeholder={placeholder}
+                        value={pages.header?.[key] || ''}
+                        onChange={e => setPages({
+                          ...pages,
+                          header: { ...(pages.header || {}), [key]: e.target.value }
+                        })}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                      />
+                    </div>
+                  ))}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">YouTube Header Button Text</label>
+                    <input
+                      type="text"
+                      placeholder="YouTube"
+                      value={pages.header?.youtubeBtn || ''}
+                      onChange={e => setPages({
+                        ...pages,
+                        header: { ...(pages.header || {}), youtubeBtn: e.target.value }
+                      })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Site Migration Notice Banner */}
               <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Site Migration Notice Banner</p>
@@ -4345,9 +4403,26 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* Footer Studio Info */}
+              {/* 3. Footer Studio Info & Email Label */}
               <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Footer Studio Information</p>
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Footer Studio Information & Direct Email</p>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Artist Direct Email Label</label>
+                  <input
+                    type="text"
+                    placeholder="Artist Direct Email:"
+                    value={pages.footer?.directEmailLabel || pages.footer?.emailLabel || ''}
+                    onChange={e => setPages({
+                      ...pages,
+                      footer: {
+                        ...(pages.footer || {}),
+                        directEmailLabel: e.target.value,
+                        emailLabel: e.target.value
+                      }
+                    })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                  />
+                </div>
                 {[
                   ['studioName', 'Studio Name'],
                   ['location', 'Location'],
@@ -4368,6 +4443,143 @@ export default function Admin() {
                     />
                   </div>
                 ))}
+              </div>
+
+              {/* 4. Footer Explore Quick Links Manager */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold text-studio-gold uppercase tracking-wider">Footer "Explore" Quick Links</p>
+                    <p className="text-xs text-slate-400">Add, remove, reorder, or edit the navigation links shown under "Explore" in the footer.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = pages.footer?.exploreLinks || [
+                        { label: 'Original Art Gallery', target: '/gallery' },
+                        { label: 'About the Artist & Studio', target: '/about' },
+                        { label: 'Commissions & Pricing', target: '/commissions' },
+                        { label: 'YouTube Painting Tutorials', target: '/videos' },
+                        { label: 'Contact Rick', target: '/contact' }
+                      ]
+                      setPages({
+                        ...pages,
+                        footer: {
+                          ...(pages.footer || {}),
+                          exploreLinks: [...cur, { label: 'New Link', target: '/gallery' }]
+                        }
+                      })
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-studio-magenta text-white hover:bg-studio-fuchsia text-xs font-semibold flex items-center gap-1 self-start sm:self-auto"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Link</span>
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Section Title</label>
+                  <input
+                    type="text"
+                    placeholder="Explore"
+                    value={pages.footer?.exploreTitle || ''}
+                    onChange={e => setPages({
+                      ...pages,
+                      footer: { ...(pages.footer || {}), exploreTitle: e.target.value }
+                    })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta max-w-xs"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  {(pages.footer?.exploreLinks || [
+                    { label: 'Original Art Gallery', target: '/gallery' },
+                    { label: 'About the Artist & Studio', target: '/about' },
+                    { label: 'Commissions & Pricing', target: '/commissions' },
+                    { label: 'YouTube Painting Tutorials', target: '/videos' },
+                    { label: 'Contact Rick', target: '/contact' }
+                  ]).map((item, idx, arr) => (
+                    <div key={idx} className="flex flex-col sm:flex-row items-center gap-2 p-2.5 rounded-xl bg-black/30 border border-white/5">
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => {
+                            if (idx === 0) return
+                            const cur = [...arr]
+                            const tmp = cur[idx]
+                            cur[idx] = cur[idx - 1]
+                            cur[idx - 1] = tmp
+                            setPages({ ...pages, footer: { ...(pages.footer || {}), exploreLinks: cur } })
+                          }}
+                          className={`p-1.5 rounded bg-white/5 ${idx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 text-slate-300'}`}
+                          title="Move up"
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === arr.length - 1}
+                          onClick={() => {
+                            if (idx === arr.length - 1) return
+                            const cur = [...arr]
+                            const tmp = cur[idx]
+                            cur[idx] = cur[idx + 1]
+                            cur[idx + 1] = tmp
+                            setPages({ ...pages, footer: { ...(pages.footer || {}), exploreLinks: cur } })
+                          }}
+                          className={`p-1.5 rounded bg-white/5 ${idx === arr.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10 text-slate-300'}`}
+                          title="Move down"
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-0.5">Link Text</label>
+                          <input
+                            type="text"
+                            value={item.label || ''}
+                            onChange={e => {
+                              const cur = [...arr]
+                              cur[idx] = { ...cur[idx], label: e.target.value }
+                              setPages({ ...pages, footer: { ...(pages.footer || {}), exploreLinks: cur } })
+                            }}
+                            className="w-full bg-[#13111c] border border-white/10 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                            placeholder="e.g. Original Art Gallery"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-0.5">Target URL / Path</label>
+                          <input
+                            type="text"
+                            value={item.target || ''}
+                            onChange={e => {
+                              const cur = [...arr]
+                              cur[idx] = { ...cur[idx], target: e.target.value }
+                              setPages({ ...pages, footer: { ...(pages.footer || {}), exploreLinks: cur } })
+                            }}
+                            className="w-full bg-[#13111c] border border-white/10 rounded px-2.5 py-1 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                            placeholder="e.g. /gallery or https://..."
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const cur = arr.filter((_, i) => i !== idx)
+                          setPages({ ...pages, footer: { ...(pages.footer || {}), exploreLinks: cur } })
+                        }}
+                        className="p-1.5 rounded bg-red-600/20 hover:bg-red-600/40 text-red-400 transition shrink-0"
+                        title="Remove link"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
