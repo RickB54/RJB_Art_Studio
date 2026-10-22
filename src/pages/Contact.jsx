@@ -6,7 +6,23 @@ import { EmailChooser } from '../components/Footer'
 
 export default function Contact() {
   const [searchParams] = useSearchParams()
-  const inquiryParam = searchParams.get('inquiry')
+  const inquiryParam = searchParams.get('inquiry') || ''
+  const messageParam = searchParams.get('message') || ''
+  const subjectParam = searchParams.get('subject') || ''
+
+  const getInitialSubject = () => {
+    if (subjectParam) return subjectParam
+    if (!inquiryParam) return 'General Art Inquiry'
+    if (inquiryParam.toLowerCase().includes('inquiry') || inquiryParam.toLowerCase().includes('commission')) return inquiryParam
+    return `Inquiry regarding "${inquiryParam}"`
+  }
+
+  const getInitialMessage = () => {
+    if (messageParam) return messageParam
+    if (!inquiryParam) return ''
+    if (inquiryParam === 'Watercolor commission inquiry') return 'Watercolor commission inquiry'
+    return `Hi Rick, I am interested in your artwork "${inquiryParam}" and would like to learn more about its availability and details.`
+  }
 
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -15,20 +31,20 @@ export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    subject: inquiryParam ? `Inquiry regarding "${inquiryParam}"` : 'General Art Inquiry',
-    message: inquiryParam ? `Hi Rick, I am interested in your artwork "${inquiryParam}" and would like to learn more about its availability and details.` : '',
+    subject: getInitialSubject(),
+    message: getInitialMessage(),
     'bot-field': ''
   })
 
   useEffect(() => {
-    if (inquiryParam) {
+    if (inquiryParam || messageParam || subjectParam) {
       setFormData(prev => ({
         ...prev,
-        subject: `Inquiry regarding "${inquiryParam}"`,
-        message: `Hi Rick, I am interested in your artwork "${inquiryParam}" and would like to learn more about its availability and details.`
+        subject: getInitialSubject(),
+        message: getInitialMessage()
       }))
     }
-  }, [inquiryParam])
+  }, [inquiryParam, messageParam, subjectParam])
 
   const handleChange = (e) => {
     const { name, value } = e.target

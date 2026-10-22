@@ -59,8 +59,16 @@
       { "num": "4", "title": "Signed & Delivered", "desc": "Your painting is signed, accompanied by a Certificate of Authenticity, and carefully packaged." }
     ],
     "pricingPolicyTitle": "Pricing Policy Notice",
-    "pricingPolicy": "Commission pricing varies based on medium, canvas dimensions, and subject complexity (e.g. single subject vs multiple subjects). Historical estimates start around $130 for 8x10 portrait panels and scale by dimension. All quotes are personalized and confirmed before painting begins.",
-    "watercolorNote": "I also paint watercolors. Originals are shown in the Gallery; I don't take watercolor commissions.",
+    "pricingPolicy": "Pricing follows my price lists: choose the size price, then add the commission fee for each extra subject. Watercolor commissions are quoted individually. Every quote is confirmed before painting begins.",
+    "pricingPolicyVisible": true,
+    "watercolorNotice": {
+      "visible": true,
+      "prefix": "Watercolor Note: ",
+      "text": "Watercolor commissions are also available. If interested, please ",
+      "linkText": "contact me for details",
+      "linkUrl": "/contact?inquiry=Watercolor%20commission%20inquiry",
+      "suffix": "."
+    },
     "formBadge": "Interactive Request",
     "formTitle": "Commission Request Form",
     "formSubtitle": "Fill out the details below to receive a personalized quote and timeline directly from Rick."

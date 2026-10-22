@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom'
 import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon } from 'lucide-react'
 import siteDataInitial from '../data/site.json'
 import paintingsDataInitial from '../data/paintings.json'
+import pagesDataInitial from '../data/pages.json'
 import PhotoDropZone from '../components/PhotoDropZone'
 
 export default function Admin() {
   const [paintings, setPaintings] = useState(paintingsDataInitial)
   const [site, setSite] = useState(siteDataInitial)
+  const [pages, setPages] = useState(pagesDataInitial)
   const [playlists, setPlaylists] = useState([])
   const [activeTab, setActiveTab] = useState('single') // 'single' | 'bulk' | 'manage' | 'playlists' | 'site'
   const [paintingMode, setPaintingMode] = useState('photo') // 'youtube' | 'photo'
@@ -69,6 +71,7 @@ export default function Admin() {
         if (data.paintings) setPaintings(data.paintings)
         if (data.site) setSite(data.site)
         if (data.playlists) setPlaylists(data.playlists)
+        if (data.pages) setPages(data.pages)
       })
       .catch(() => {})
   }, [])
@@ -628,24 +631,31 @@ export default function Admin() {
     setBulkProcessing(false)
   }
 
-  // Save Site Settings
+  // Save Site Settings & Page Content
   const handleSaveSite = async (e) => {
     e.preventDefault()
     setSiteSaveSuccess('')
     try {
-      const res = await fetch('/__api/site', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ site })
-      })
-      if (res.ok) {
-        setSiteSaveSuccess('✓ Site content successfully updated and saved to src/data/site.json!')
+      const [resSite, resPages] = await Promise.all([
+        fetch('/__api/site', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ site })
+        }),
+        fetch('/__api/pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pages })
+        })
+      ])
+      if (resSite.ok && resPages.ok) {
+        setSiteSaveSuccess('✓ Site content and page text successfully saved to src/data/site.json and src/data/pages.json!')
         setTimeout(() => setSiteSaveSuccess(''), 6000)
       } else {
         throw new Error('Save failed')
       }
     } catch (e) {
-      alert('Failed to save site data: ' + e.message)
+      alert('Failed to save data: ' + e.message)
     }
   }
 
@@ -1831,6 +1841,157 @@ export default function Admin() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Pricing Policy Notice */}
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Pricing Policy Notice</h4>
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.commissions?.pricingPolicyVisible !== false}
+                      onChange={e => setPages({
+                        ...pages,
+                        commissions: {
+                          ...(pages.commissions || {}),
+                          pricingPolicyVisible: e.target.checked
+                        }
+                      })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Show Notice</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Notice Title</label>
+                  <input
+                    type="text"
+                    value={pages.commissions?.pricingPolicyTitle || ''}
+                    onChange={e => setPages({
+                      ...pages,
+                      commissions: {
+                        ...(pages.commissions || {}),
+                        pricingPolicyTitle: e.target.value
+                      }
+                    })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Notice Text</label>
+                  <textarea
+                    rows={3}
+                    value={pages.commissions?.pricingPolicy || ''}
+                    onChange={e => setPages({
+                      ...pages,
+                      commissions: {
+                        ...(pages.commissions || {}),
+                        pricingPolicy: e.target.value
+                      }
+                    })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Watercolor Commission Notice */}
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Watercolor Notice Banner</h4>
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.commissions?.watercolorNotice?.visible !== false}
+                      onChange={e => setPages({
+                        ...pages,
+                        commissions: {
+                          ...(pages.commissions || {}),
+                          watercolorNotice: {
+                            ...(pages.commissions?.watercolorNotice || {}),
+                            visible: e.target.checked
+                          }
+                        }
+                      })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Show Notice</span>
+                  </label>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Prefix / Label</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.watercolorNotice?.prefix || ''}
+                      onChange={e => setPages({
+                        ...pages,
+                        commissions: {
+                          ...(pages.commissions || {}),
+                          watercolorNotice: {
+                            ...(pages.commissions?.watercolorNotice || {}),
+                            prefix: e.target.value
+                          }
+                        }
+                      })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Main Notice Text</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.watercolorNotice?.text || ''}
+                      onChange={e => setPages({
+                        ...pages,
+                        commissions: {
+                          ...(pages.commissions || {}),
+                          watercolorNotice: {
+                            ...(pages.commissions?.watercolorNotice || {}),
+                            text: e.target.value
+                          }
+                        }
+                      })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Link Text</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.watercolorNotice?.linkText || ''}
+                      onChange={e => setPages({
+                        ...pages,
+                        commissions: {
+                          ...(pages.commissions || {}),
+                          watercolorNotice: {
+                            ...(pages.commissions?.watercolorNotice || {}),
+                            linkText: e.target.value
+                          }
+                        }
+                      })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Link Target URL</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.watercolorNotice?.linkUrl || ''}
+                      onChange={e => setPages({
+                        ...pages,
+                        commissions: {
+                          ...(pages.commissions || {}),
+                          watercolorNotice: {
+                            ...(pages.commissions?.watercolorNotice || {}),
+                            linkUrl: e.target.value
+                          }
+                        }
+                      })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}

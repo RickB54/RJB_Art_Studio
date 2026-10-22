@@ -1,14 +1,26 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { Brush, CheckCircle2, ShieldCheck, ShoppingBag, Send, AlertCircle, ArrowRight, HeartHandshake, FileText, Info } from 'lucide-react'
 import siteData from '../data/site.json'
+import pagesData from '../data/pages.json'
 import { PRICE_LISTS } from '../data/priceLists'
 import PriceListModal from '../components/PriceListModal'
 
 export default function Commissions() {
+  const [pageText, setPageText] = useState(pagesData.commissions || {})
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
   const [activePriceList, setActivePriceList] = useState(null)
+
+  useEffect(() => {
+    fetch('/__api/data')
+      .then(res => res.json())
+      .then(data => {
+        if (data.pages?.commissions) setPageText(data.pages.commissions)
+      })
+      .catch(() => {})
+  }, [])
 
   const [formData, setFormData] = useState({
     itemType: 'Painted Portrait',
@@ -147,13 +159,24 @@ export default function Commissions() {
       </div>
 
       {/* Watercolor Note */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-studio-purple/15 border border-studio-purple/30 flex items-start sm:items-center gap-3 text-xs sm:text-sm text-slate-200">
-        <Info className="w-5 h-5 text-studio-gold shrink-0 mt-0.5 sm:mt-0" />
-        <p className="leading-relaxed">
-          <strong className="text-studio-gold font-semibold">Watercolor Note: </strong>
-          I also paint watercolors. Originals are shown in the Gallery; I don't take watercolor commissions.
-        </p>
-      </div>
+      {(pageText.watercolorNotice?.visible !== false) && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-studio-purple/15 border border-studio-purple/30 flex items-start sm:items-center gap-3 text-xs sm:text-sm text-slate-200">
+          <Info className="w-5 h-5 text-studio-gold shrink-0 mt-0.5 sm:mt-0" />
+          <p className="leading-relaxed">
+            <strong className="text-studio-gold font-semibold">
+              {pageText.watercolorNotice?.prefix ?? 'Watercolor Note: '}
+            </strong>
+            {pageText.watercolorNotice?.text ?? 'Watercolor commissions are also available. If interested, please '}
+            <Link
+              to={pageText.watercolorNotice?.linkUrl || '/contact?inquiry=Watercolor%20commission%20inquiry'}
+              className="text-studio-gold underline hover:text-white font-medium transition"
+            >
+              {pageText.watercolorNotice?.linkText || 'contact me for details'}
+            </Link>
+            {pageText.watercolorNotice?.suffix ?? '.'}
+          </p>
+        </div>
+      )}
 
       {/* The 4-Step Commission Process */}
       <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-8">
@@ -186,58 +209,18 @@ export default function Commissions() {
         </div>
       </div>
 
-      {/* Pricing Estimates / Draft Notice */}
-      <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-studio-gold/30 space-y-3">
-        <div className="flex items-center gap-2 text-studio-gold font-semibold text-xs sm:text-sm">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>Pricing Policy Notice</span>
-        </div>
-        <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-          Commission pricing varies based on medium, canvas dimensions, and subject complexity (e.g. single subject vs multiple subjects). Historical estimates start around $130 for 8x10 portrait panels and scale by dimension. All quotes are personalized and confirmed before painting begins.
-        </p>
-      </div>
-
-      {/* Dedicated Price Lists Section Above Commission Form */}
-      <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <span className="text-xs uppercase tracking-widest font-semibold text-studio-gold">
-              Source of Truth
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mt-1">
-              Price Lists
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-              Click any price list thumbnail to open full screen, download the original PDF, or print directly.
-            </p>
+      {/* Pricing Policy Notice */}
+      {(pageText.pricingPolicyVisible !== false) && (
+        <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-studio-gold/30 space-y-3">
+          <div className="flex items-center gap-2 text-studio-gold font-semibold text-xs sm:text-sm">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{pageText.pricingPolicyTitle || 'Pricing Policy Notice'}</span>
           </div>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line">
+            {pageText.pricingPolicy || 'Pricing follows my price lists: choose the size price, then add the commission fee for each extra subject. Watercolor commissions are quoted individually. Every quote is confirmed before painting begins.'}
+          </p>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {PRICE_LISTS.map((pl) => (
-            <button
-              type="button"
-              key={pl.id}
-              onClick={() => setActivePriceList(pl)}
-              className="group p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-studio-gold/50 transition flex flex-col items-center text-center focus:outline-none focus:ring-2 focus:ring-studio-gold"
-            >
-              <div className="w-full aspect-[4/3] rounded-xl overflow-hidden bg-black/60 border border-white/10 mb-3 relative">
-                <img
-                  src={pl.thumb}
-                  alt={pl.alt}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-              </div>
-              <span className="text-xs sm:text-sm font-serif font-bold text-white group-hover:text-studio-gold transition line-clamp-1">
-                {pl.title}
-              </span>
-              <span className="text-[11px] text-slate-400 mt-1">View / Print / PDF →</span>
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Commission Request Form */}
       <div className="glass-panel p-8 sm:p-12 rounded-3xl border border-studio-magenta/30 shadow-glow-magenta space-y-8">
