@@ -34,11 +34,7 @@
     "Watercolor Paintings",
     "Holiday"
   ],
-  "extraCategories": [
-    "Portraits & Pet Portraits",
-    "Scenery",
-    "Holiday"
-  ],
+  "extraCategories": [],
   "awards": [
     {
       "title": "Artist of the Month – July 2018",
@@ -97,7 +93,7 @@
     "phone": "",
     "phonePublic": false,
     "addressPublic": false,
-    "instructions": "Inquire about available paintings, fine art prints, custom portrait commissions, or reach out directly at rberube54@gmail.com.",
+    "instructions": "Inquire about available paintings, fine art prints, custom portrait commissions, or reach out directly at rjbartstudio@gmail.com",
     "googleContactFormUrl": "",
     "googleCommissionFormUrl": ""
   }

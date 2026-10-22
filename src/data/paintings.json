@@ -1,5 +1,104 @@
 [
   {
+    "id": "video-T6Ycxx0jqr8",
+    "title": "Bringing Home The Christmas Tree Acrylic Painting",
+    "category": "Landscapes & Seascapes",
+    "categories": [
+      "Landscapes & Seascapes"
+    ],
+    "year": "2018",
+    "medium": "Acrylic on Canvas Board",
+    "size": "11x14",
+    "description": "Bringing Home The Christmas Tree Acrylic Painting",
+    "status": "For Sale",
+    "sold": false,
+    "price": 154,
+    "youtubeUrl": "https://www.youtube.com/watch?v=T6Ycxx0jqr8",
+    "videoId": "T6Ycxx0jqr8",
+    "thumbnail": "https://img.youtube.com/vi/T6Ycxx0jqr8/maxresdefault.jpg",
+    "thumbnailUrl": "https://img.youtube.com/vi/T6Ycxx0jqr8/maxresdefault.jpg",
+    "photo": "",
+    "customImage": "",
+    "originalImage": "",
+    "fineArtAmericaUrl": "",
+    "featured": true
+  },
+  {
+    "id": "photo-1792627694858",
+    "title": "Bringing Home The Christmas Tree acrylic painting",
+    "category": "Landscapes & Seascapes",
+    "categories": [
+      "Landscapes & Seascapes"
+    ],
+    "year": "2026",
+    "medium": "Oil on Canvas",
+    "size": "16x20",
+    "description": "Bringing Home The Christmas Tree acrylic painting",
+    "status": "For Sale",
+    "sold": false,
+    "price": null,
+    "youtubeUrl": "",
+    "videoId": "",
+    "thumbnail": "https://youtu.be/T6Ycxx0jqr8",
+    "thumbnailUrl": "https://youtu.be/T6Ycxx0jqr8",
+    "photo": "https://youtu.be/T6Ycxx0jqr8",
+    "customImage": "https://youtu.be/T6Ycxx0jqr8",
+    "originalImage": "https://youtu.be/T6Ycxx0jqr8",
+    "fineArtAmericaUrl": "",
+    "featured": false,
+    "highlightPhoto": "",
+    "highlighted": false
+  },
+  {
+    "id": "photo-1792627497575",
+    "title": "Image",
+    "category": "Landscapes & Seascapes",
+    "categories": [
+      "Landscapes & Seascapes"
+    ],
+    "year": "2026",
+    "medium": "Oil on Canvas",
+    "size": "16x20",
+    "description": "",
+    "status": "For Sale",
+    "sold": false,
+    "price": null,
+    "youtubeUrl": "",
+    "videoId": "",
+    "thumbnail": "/images/paintings/image-492882-thumb.webp",
+    "thumbnailUrl": "/images/paintings/image-492882-thumb.webp",
+    "photo": "/images/paintings/image-492882.webp",
+    "customImage": "/images/paintings/image-492882.webp",
+    "originalImage": "/images/paintings/image-492882.webp",
+    "fineArtAmericaUrl": "",
+    "featured": false
+  },
+  {
+    "id": "photo-1792627440846",
+    "title": "20201214 165949",
+    "category": "Landscapes & Seascapes",
+    "categories": [
+      "Landscapes & Seascapes",
+      "Holiday Paintings"
+    ],
+    "year": "2018",
+    "medium": "Acrylics on Canvas Board",
+    "size": "9 x 12",
+    "description": "",
+    "status": "For Sale",
+    "sold": false,
+    "price": null,
+    "youtubeUrl": "",
+    "videoId": "",
+    "thumbnail": "/images/paintings/image-047911-thumb.webp",
+    "thumbnailUrl": "/images/paintings/image-047911-thumb.webp",
+    "photo": "/images/paintings/image-047911.webp",
+    "customImage": "/images/paintings/image-047911.webp",
+    "originalImage": "/images/paintings/image-047911.webp",
+    "fineArtAmericaUrl": "",
+    "featured": false
+  },
+  {
     "id": "video-l8pWROfd1c4",
     "title": "Taking little sis for a sled ride acrylic painting",
     "category": "Christmas Paintings",
@@ -15,7 +114,8 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "highlighted": false
   },
   {
     "id": "video-uP1hbprwVpQ",
@@ -30,24 +130,6 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=uP1hbprwVpQ",
     "videoId": "uP1hbprwVpQ",
     "thumbnail": "https://img.youtube.com/vi/uP1hbprwVpQ/hqdefault.jpg",
-    "customImage": "",
-    "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
-    "draft": true,
-    "featured": false
-  },
-  {
-    "id": "video-iraQTQmmpBE",
-    "title": "Gone Sledding Acrylic Painting",
-    "category": "Christmas Paintings",
-    "year": "2026",
-    "medium": "Oil or Acrylic on Canvas",
-    "size": "Custom",
-    "description": "Original artwork created by Rick J Berube. Watch the complete painting demonstration in the video.",
-    "sold": false,
-    "price": null,
-    "youtubeUrl": "https://www.youtube.com/watch?v=iraQTQmmpBE",
-    "videoId": "iraQTQmmpBE",
-    "thumbnail": "https://img.youtube.com/vi/iraQTQmmpBE/hqdefault.jpg",
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
@@ -124,8 +206,8 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": true,
-    "highlighted": true
+    "featured": false,
+    "highlighted": false
   },
   {
     "id": "video-15rmv_ScZlQ",
