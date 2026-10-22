@@ -17,6 +17,7 @@ export default function Admin() {
   const [paintingMode, setPaintingMode] = useState('photo') // 'youtube' | 'photo'
   const [editPageSection, setEditPageSection] = useState('home') // 'home' | 'about' | 'commissions' | 'contact'
   const [siteSaveSuccess, setSiteSaveSuccess] = useState('')
+  const [savedPagesSnapshot, setSavedPagesSnapshot] = useState(() => JSON.stringify(pagesDataInitial))
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkStatusValue, setBulkStatusValue] = useState('For Sale')
   const [quickPhotoId, setQuickPhotoId] = useState(null)
@@ -73,7 +74,10 @@ export default function Admin() {
         if (data.paintings) setPaintings(data.paintings)
         if (data.site) setSite(data.site)
         if (data.playlists) setPlaylists(data.playlists)
-        if (data.pages) setPages(data.pages)
+        if (data.pages) {
+          setPages(data.pages)
+          setSavedPagesSnapshot(JSON.stringify(data.pages))
+        }
       })
       .catch(() => {})
   }, [])
@@ -651,7 +655,8 @@ export default function Admin() {
         })
       ])
       if (resSite.ok && resPages.ok) {
-        setSiteSaveSuccess('✓ Site content and page text successfully saved to src/data/site.json and src/data/pages.json!')
+        setSavedPagesSnapshot(JSON.stringify(pages))
+        setSiteSaveSuccess('✓ Site content and page text successfully saved to src/data/pages.json!')
         setTimeout(() => setSiteSaveSuccess(''), 6000)
       } else {
         throw new Error('Save failed')
@@ -659,6 +664,40 @@ export default function Admin() {
     } catch (e) {
       alert('Failed to save data: ' + e.message)
     }
+  }
+
+  const hasUnsavedChangesForSection = (sectionKey) => {
+    try {
+      const snap = JSON.parse(savedPagesSnapshot)
+      const current = pages[sectionKey] || {}
+      const saved = snap[sectionKey] || {}
+      return JSON.stringify(current) !== JSON.stringify(saved)
+    } catch (_) {
+      return false
+    }
+  }
+
+  const handleSwitchPageSection = (nextSection) => {
+    if (nextSection === editPageSection) return
+    if (hasUnsavedChangesForSection(editPageSection)) {
+      const proceed = window.confirm(
+        `You have unsaved changes on "${editPageSection.toUpperCase()}" page. Do you want to switch pages without saving?`
+      )
+      if (!proceed) return
+    }
+    setEditPageSection(nextSection)
+  }
+
+  const handleSwitchTab = (nextTab) => {
+    if (activeTab === 'site' && nextTab !== 'site') {
+      if (hasUnsavedChangesForSection(editPageSection)) {
+        const proceed = window.confirm(
+          `You have unsaved changes on "${editPageSection.toUpperCase()}" page. Do you want to leave without saving?`
+        )
+        if (!proceed) return
+      }
+    }
+    setActiveTab(nextTab)
   }
 
   return (
@@ -706,36 +745,6 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Quick Page Content Selector Bar - user requested dropdown to stay in Admin while picking pages */}
-      <div className="glass-panel p-4 rounded-xl border border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/5">
-        <div className="flex items-center gap-2 text-xs">
-          <Sparkles className="w-4 h-4 text-studio-gold shrink-0" />
-          <span className="text-studio-gold font-semibold uppercase tracking-wider">Quick Page Editor:</span>
-          <span className="text-slate-300">Select any page to modify its text directly:</span>
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select
-            value={activeTab === 'site' ? editPageSection : ''}
-            onChange={(e) => {
-              setActiveTab('site')
-              setEditPageSection(e.target.value)
-            }}
-            className="w-full sm:w-auto bg-[#13111c] border border-studio-magenta/50 text-white text-xs font-medium rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-studio-magenta cursor-pointer shadow-sm"
-          >
-            <option value="" disabled>-- Select Page to Edit Text --</option>
-            <option value="home">🏠 Home Page Text & Bio</option>
-            <option value="about">🎨 About & Studio Page (Awards & Photos)</option>
-            <option value="commissions">✍ Commissions & Prints Services</option>
-            <option value="gallery">🖼 Gallery Page Text & Filters</option>
-            <option value="videos">🎬 Videos & Tutorials Page</option>
-            <option value="contact">✉ Contact & Direct Email / Google Forms</option>
-            <option value="paintingDetail">🔍 Painting & Playlist Detail Pages</option>
-            <option value="notFound">🚫 404 Not Found Page</option>
-            <option value="footerHeader">⚓ Header, Footer & Notice Banner</option>
-          </select>
-        </div>
-      </div>
-
       {/* Navigation Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
         {[['single', editingId ? 'Edit Painting' : 'Add Single Painting'],
@@ -745,7 +754,7 @@ export default function Admin() {
           ['site', 'Page Text & Content'],
           ['help', '? Help']
         ].map(([key, label]) => (
-          <button key={key} type="button" onClick={() => setActiveTab(key)}
+          <button key={key} type="button" onClick={() => handleSwitchTab(key)}
             className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
               activeTab === key
                 ? (key === 'help' ? 'bg-studio-gold text-black shadow' : 'bg-studio-magenta text-white shadow-glow-magenta')
@@ -1529,7 +1538,7 @@ export default function Admin() {
                 <span>Page Text & Content Editor</span>
               </h2>
               <p className="text-xs text-slate-400">
-                Modify only the text, awards, photos, and links on any page. Changes are saved to <code className="text-slate-300">src/data/site.json</code>.
+                Modify only the text, awards, photos, and links on any page. Changes are saved to <code className="text-slate-300">src/data/pages.json</code>.
               </p>
             </div>
             
@@ -1538,7 +1547,7 @@ export default function Admin() {
               <label className="text-xs text-slate-300 font-semibold whitespace-nowrap">Editing Page:</label>
               <select
                 value={editPageSection}
-                onChange={e => setEditPageSection(e.target.value)}
+                onChange={e => handleSwitchPageSection(e.target.value)}
                 className="bg-[#13111c] border border-studio-magenta/40 text-white text-xs font-semibold rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-studio-magenta"
               >
                 <option value="home">🏠 Home Page</option>
@@ -4172,11 +4181,22 @@ export default function Admin() {
             </div>
           )}
 
-          {/* Save Button */}
-          <div className="pt-4 border-t border-white/10 flex items-center justify-between">
-            <span className="text-xs text-slate-400">
-              Editing: <span className="text-studio-gold font-semibold uppercase">{editPageSection}</span>
-            </span>
+          {/* Sticky Save Button */}
+          <div className="sticky bottom-4 z-30 p-4 rounded-2xl bg-studio-surface/95 backdrop-blur-md border border-studio-gold/40 shadow-2xl flex items-center justify-between gap-4 mt-6">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-300">
+                Editing: <span className="text-studio-gold font-bold uppercase">{editPageSection}</span>
+              </span>
+              {hasUnsavedChangesForSection(editPageSection) ? (
+                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
+                  ● Unsaved changes
+                </span>
+              ) : (
+                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
+                  ✓ Saved
+                </span>
+              )}
+            </div>
             <button
               type="submit"
               className="px-7 py-2.5 rounded-xl text-sm font-semibold bg-studio-gold text-black hover:bg-studio-gold-light transition flex items-center gap-1.5 shadow-md"
