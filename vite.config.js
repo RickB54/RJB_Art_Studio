@@ -112,9 +112,7 @@ function adminApiPlugin() {
         if (req.method === 'POST' && req.url === '/__api/pages') {
           const { pages } = await readBody()
           if (pages && typeof pages === 'object') {
-            const pagesDefaultPath = path.resolve(__dirname, 'src/data/pages.default.json')
             fs.writeFileSync(pagesPath, JSON.stringify(pages, null, 2), 'utf-8')
-            fs.writeFileSync(pagesDefaultPath, JSON.stringify(pages, null, 2), 'utf-8')
             res.end(JSON.stringify({ success: true }))
           } else { res.statusCode = 400; res.end(JSON.stringify({ error: 'Expected pages object' })) }
           return
