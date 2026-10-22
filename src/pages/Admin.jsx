@@ -2195,94 +2195,572 @@ export default function Admin() {
           {/* SECTION: ABOUT & STUDIO (AWARDS & PHOTOS) */}
           {editPageSection === 'about' && (
             <div className="space-y-6">
-              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">About Page, Studio Bio & Mayoral Awards</h3>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Extended Artistic Bio</label>
-                <textarea
-                  rows={4}
-                  value={site.artist.bioExtended}
-                  onChange={e => setSite({ ...site, artist: { ...site.artist, bioExtended: e.target.value } })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-
-              <div>
-                <PhotoDropZone
-                  value={site.artist.aboutPhoto || ''}
-                  onChange={url => setSite({ ...site, artist: { ...site.artist, aboutPhoto: url } })}
-                  label="Studio / Artist Photo (Shown on About Page)"
-                />
-              </div>
-
-              <div className="pt-2 border-t border-white/10 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Award className="w-5 h-5 text-studio-gold" />
-                  <h4 className="text-sm font-bold text-white">Mayoral Artist of the Month Awards & Photos</h4>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span className="text-studio-gold">🎨</span>
+                    <span>About & Studio Page Editor</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Control every visible string, photo, award, studio stat, and extra block on the About page.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-400">
-                  Update descriptions and upload/attach ceremony photos (such as Mayor James Jajuga and Rick's father).
-                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Restore all default text and settings for About Page? Any unsaved edits will be replaced with defaults.')) {
+                      setPages(prev => ({ ...prev, about: JSON.parse(JSON.stringify(pagesDefaultInitial.about)) }))
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
+              </div>
 
-                {(site.awards || []).map((award, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1">Award Title</label>
-                        <input
-                          type="text"
-                          value={award.title}
-                          onChange={e => {
-                            const updated = [...site.awards]
-                            updated[idx] = { ...updated[idx], title: e.target.value }
-                            setSite({ ...site, awards: updated })
-                          }}
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1">Artwork Featured</label>
-                        <input
-                          type="text"
-                          value={award.artwork}
-                          onChange={e => {
-                            const updated = [...site.awards]
-                            updated[idx] = { ...updated[idx], artwork: e.target.value }
-                            setSite({ ...site, awards: updated })
-                          }}
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                      </div>
-                    </div>
+              {/* 1. Section Visibility Toggles */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Page Section Visibility
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-300">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.about?.headerVisible !== false}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), headerVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Header Banner</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.about?.journeyVisible !== false}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), journeyVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Artistic Journey</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.about?.awardsVisible !== false}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), awardsVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Awards & Recognition</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.about?.studioVisible !== false}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), studioVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>The Studio Story</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.about?.ctaVisible !== false}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), ctaVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Call to Action Bar</span>
+                  </label>
+                </div>
+              </div>
 
+              {/* 2. Header Content */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Header Content
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Badge Text</label>
+                    <input
+                      type="text"
+                      value={pages.about?.badge || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), badge: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Title</label>
+                    <input
+                      type="text"
+                      value={pages.about?.title || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), title: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Tagline</label>
+                  <input
+                    type="text"
+                    value={pages.about?.tagline || ''}
+                    onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), tagline: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              {/* 3. Artistic Journey */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Artistic Journey Content
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Section Title</label>
+                    <input
+                      type="text"
+                      value={pages.about?.journeyTitle || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), journeyTitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Subtitle</label>
+                    <input
+                      type="text"
+                      value={pages.about?.journeySubtitle || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), journeySubtitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Extended Bio (Paragraph 1 - line breaks kept)</label>
+                  <textarea
+                    rows={4}
+                    value={pages.about?.bioExtended || site.artist.bioExtended}
+                    onChange={e => {
+                      setPages({ ...pages, about: { ...(pages.about || {}), bioExtended: e.target.value } })
+                      setSite({ ...site, artist: { ...site.artist, bioExtended: e.target.value } })
+                    }}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-3 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <PhotoDropZone
+                    value={pages.about?.aboutPhoto || site.artist.aboutPhoto || ''}
+                    onChange={url => {
+                      setPages({ ...pages, about: { ...(pages.about || {}), aboutPhoto: url } })
+                      setSite({ ...site, artist: { ...site.artist, aboutPhoto: url } })
+                    }}
+                    label="Studio / Artist Photo (Shown on About Page)"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Bio Story (Paragraph 2 - line breaks kept)</label>
+                  <textarea
+                    rows={3}
+                    value={pages.about?.storyParagraph2 || ''}
+                    onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), storyParagraph2: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-3 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              {/* 4. Awards & Recognition (Add / remove / reorder) */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-studio-gold" />
                     <div>
-                      <PhotoDropZone
-                        value={award.image || ''}
-                        onChange={url => {
-                          const updated = [...site.awards]
-                          updated[idx] = { ...updated[idx], image: url }
-                          setSite({ ...site, awards: updated })
-                        }}
-                        label="Award Ceremony Photo"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Description</label>
-                      <textarea
-                        rows={2}
-                        value={award.description}
-                        onChange={e => {
-                          const updated = [...site.awards]
-                          updated[idx] = { ...updated[idx], description: e.target.value }
-                          setSite({ ...site, awards: updated })
-                        }}
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
-                      />
+                      <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                        Mayoral Awards & Recognition
+                      </span>
+                      <p className="text-xs text-slate-400">Add, reorder, or edit ceremony photos and descriptions.</p>
                     </div>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = pages.about?.awards || site.awards || []
+                      const newAward = {
+                        title: "New Honor or Award",
+                        conferredBy: "Organization / Mayor",
+                        artwork: "Artwork Title",
+                        medium: "Oil on canvas",
+                        description: "Award description...",
+                        image: ""
+                      }
+                      setPages({ ...pages, about: { ...(pages.about || {}), awards: [...cur, newAward] } })
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-studio-magenta text-white hover:bg-studio-fuchsia text-xs font-semibold flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Award</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Section Title</label>
+                    <input
+                      type="text"
+                      value={pages.about?.awardsTitle || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), awardsTitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Subtitle</label>
+                    <input
+                      type="text"
+                      value={pages.about?.awardsSubtitle || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), awardsSubtitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Footer / Location Note</label>
+                    <input
+                      type="text"
+                      value={pages.about?.awardsFooter || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), awardsFooter: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {(pages.about?.awards || site.awards || []).map((award, idx) => (
+                    <div key={idx} className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                        <span className="text-xs font-bold text-studio-gold">Award #{idx + 1}: {award.title}</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (idx === 0) return
+                              const cur = [...(pages.about?.awards || site.awards || [])]
+                              const temp = cur[idx]
+                              cur[idx] = cur[idx - 1]
+                              cur[idx - 1] = temp
+                              setPages({ ...pages, about: { ...(pages.about || {}), awards: cur } })
+                            }}
+                            disabled={idx === 0}
+                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = [...(pages.about?.awards || site.awards || [])]
+                              if (idx === cur.length - 1) return
+                              const temp = cur[idx]
+                              cur[idx] = cur[idx + 1]
+                              cur[idx + 1] = temp
+                              setPages({ ...pages, about: { ...(pages.about || {}), awards: cur } })
+                            }}
+                            disabled={idx === (pages.about?.awards || site.awards || []).length - 1}
+                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = (pages.about?.awards || site.awards || []).filter((_, i) => i !== idx)
+                              setPages({ ...pages, about: { ...(pages.about || {}), awards: cur } })
+                            }}
+                            className="p-1 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300 ml-2"
+                            title="Delete award"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-300 mb-1">Award Title</label>
+                          <input
+                            type="text"
+                            value={award.title}
+                            onChange={e => {
+                              const cur = [...(pages.about?.awards || site.awards || [])]
+                              cur[idx] = { ...cur[idx], title: e.target.value }
+                              setPages({ ...pages, about: { ...(pages.about || {}), awards: cur } })
+                            }}
+                            className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-300 mb-1">Artwork Featured</label>
+                          <input
+                            type="text"
+                            value={award.artwork}
+                            onChange={e => {
+                              const cur = [...(pages.about?.awards || site.awards || [])]
+                              cur[idx] = { ...cur[idx], artwork: e.target.value }
+                              setPages({ ...pages, about: { ...(pages.about || {}), awards: cur } })
+                            }}
+                            className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-300 mb-1">Conferred By</label>
+                          <input
+                            type="text"
+                            value={award.conferredBy}
+                            onChange={e => {
+                              const cur = [...(pages.about?.awards || site.awards || [])]
+                              cur[idx] = { ...cur[idx], conferredBy: e.target.value }
+                              setPages({ ...pages, about: { ...(pages.about || {}), awards: cur } })
+                            }}
+                            className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-300 mb-1">Medium</label>
+                          <input
+                            type="text"
+                            value={award.medium}
+                            onChange={e => {
+                              const cur = [...(pages.about?.awards || site.awards || [])]
+                              cur[idx] = { ...cur[idx], medium: e.target.value }
+                              setPages({ ...pages, about: { ...(pages.about || {}), awards: cur } })
+                            }}
+                            className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <PhotoDropZone
+                          value={award.image || ''}
+                          onChange={url => {
+                            const cur = [...(pages.about?.awards || site.awards || [])]
+                            cur[idx] = { ...cur[idx], image: url }
+                            setPages({ ...pages, about: { ...(pages.about || {}), awards: cur } })
+                          }}
+                          label="Award Ceremony Photo"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Description (line breaks kept)</label>
+                        <textarea
+                          rows={2}
+                          value={award.description}
+                          onChange={e => {
+                            const cur = [...(pages.about?.awards || site.awards || [])]
+                            cur[idx] = { ...cur[idx], description: e.target.value }
+                            setPages({ ...pages, about: { ...(pages.about || {}), awards: cur } })
+                          }}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {/* 5. The Studio Story & Stats (Add / remove / reorder) */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  The Studio Story & Stats
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Studio Title</label>
+                    <input
+                      type="text"
+                      value={pages.about?.studioTitle || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), studioTitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Subtitle</label>
+                    <input
+                      type="text"
+                      value={pages.about?.studioSubtitle || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), studioSubtitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Studio Story Description (line breaks kept)</label>
+                  <textarea
+                    rows={3}
+                    value={pages.about?.studioDescription || ''}
+                    onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), studioDescription: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-3 text-xs text-white"
+                  />
+                </div>
+
+                <div className="pt-2 border-t border-white/10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">Studio Feature Cards</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cur = pages.about?.studioStats || []
+                        setPages({
+                          ...pages,
+                          about: {
+                            ...(pages.about || {}),
+                            studioStats: [...cur, { value: "New Stat", label: "Description", link: "" }]
+                          }
+                        })
+                      }}
+                      className="px-3 py-1 rounded-lg bg-studio-magenta text-white hover:bg-studio-fuchsia text-xs font-semibold flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Card</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {(pages.about?.studioStats || []).map((st, idx) => (
+                      <div key={idx} className="flex flex-col sm:flex-row items-center gap-2 p-2.5 rounded-xl bg-black/30 border border-white/5">
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (idx === 0) return
+                              const cur = [...(pages.about?.studioStats || [])]
+                              const temp = cur[idx]
+                              cur[idx] = cur[idx - 1]
+                              cur[idx - 1] = temp
+                              setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                            }}
+                            disabled={idx === 0}
+                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = [...(pages.about?.studioStats || [])]
+                              if (idx === cur.length - 1) return
+                              const temp = cur[idx]
+                              cur[idx] = cur[idx + 1]
+                              cur[idx + 1] = temp
+                              setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                            }}
+                            disabled={idx === (pages.about?.studioStats || []).length - 1}
+                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={st.value}
+                          onChange={e => {
+                            const cur = [...(pages.about?.studioStats || [])]
+                            cur[idx] = { ...cur[idx], value: e.target.value }
+                            setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                          }}
+                          placeholder="Value / Title (e.g. 33' × 17')"
+                          className="w-full sm:w-32 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-bold"
+                        />
+                        <input
+                          type="text"
+                          value={st.label}
+                          onChange={e => {
+                            const cur = [...(pages.about?.studioStats || [])]
+                            cur[idx] = { ...cur[idx], label: e.target.value }
+                            setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                          }}
+                          placeholder="Description Label"
+                          className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                        />
+                        <input
+                          type="text"
+                          value={st.link || ''}
+                          onChange={e => {
+                            const cur = [...(pages.about?.studioStats || [])]
+                            cur[idx] = { ...cur[idx], link: e.target.value }
+                            setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                          }}
+                          placeholder="Optional Link (e.g. /gallery)"
+                          className="w-full sm:w-36 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cur = (pages.about?.studioStats || []).filter((_, i) => i !== idx)
+                            setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                          }}
+                          className="p-1.5 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300"
+                          title="Delete card"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 6. Call to Action Bar */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Bottom Call to Action Bar
+                </span>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Headline</label>
+                  <input
+                    type="text"
+                    value={pages.about?.ctaTitle || ''}
+                    onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), ctaTitle: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Description (line breaks kept)</label>
+                  <textarea
+                    rows={2}
+                    value={pages.about?.ctaDescription || ''}
+                    onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), ctaDescription: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Gallery Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.about?.ctaGalleryBtn || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), ctaGalleryBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Contact Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.about?.ctaContactBtn || ''}
+                      onChange={e => setPages({ ...pages, about: { ...(pages.about || {}), ctaContactBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 7. Extra Page Blocks */}
+              <AdminBlockEditor
+                blocks={pages.about?.extraBlocks || []}
+                onChange={newBlocks => setPages({ ...pages, about: { ...(pages.about || {}), extraBlocks: newBlocks } })}
+                title="About Page Extra Blocks"
+              />
             </div>
           )}
 

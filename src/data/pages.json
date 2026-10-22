@@ -46,16 +46,39 @@
     "description": "Explore original paintings, demonstrations, and tutorials from Rick J Berube Art Studio. Click any piece to watch the creation video, view details, or inquire."
   },
   "about": {
+    "headerVisible": true,
     "badge": "The Artist & Studio",
     "title": "About Rick J Berube",
     "tagline": "Beauty & Nature inspire me...",
+    "journeyVisible": true,
     "journeyTitle": "Artistic Journey",
     "journeySubtitle": "Methuen, Massachusetts • Self-Taught Painter",
     "bioExtended": "I became interested in landscape oil painting in the early 1990s, heavily inspired by the great television artist Bob Ross. Watching him every Saturday morning inspired me to paint using the wet-on-wet technique, which remained my primary style for many years. In 2017, I expanded into acrylics, colored pencils, and charcoal, which opened exciting new doors for custom commissions, portraits, wildlife, 3D art, and fan art.",
+    "aboutPhoto": "/images/paintings/20180703_103347-280022.webp",
     "storyParagraph2": "Over the past decades, I have painted more than 500 original works—capturing the dramatic coastal cliffs of Maine, peaceful New England forests, majestic wildlife, delicate florals, and intimate portraits of loved ones and pets.",
+    "awardsVisible": true,
     "awardsTitle": "Awards & Recognition",
     "awardsSubtitle": "Honors bestowed by the City of Methuen Mayor's Office",
     "awardsFooter": "Display Location: Methuen City Hall Rotunda",
+    "awards": [
+      {
+        "title": "Artist of the Month – July 2018",
+        "conferredBy": "City of Methuen Mayor's Office (Mayor James Jajuga)",
+        "artwork": "Nubble Lighthouse",
+        "medium": "Oil painting on canvas",
+        "description": "Selected by the Mayor of Methuen to be featured in the Methuen City Hall main rotunda entrance for the month of July 2018.",
+        "image": "/images/paintings/20180126_214408-626886.webp"
+      },
+      {
+        "title": "Artist of the Month – December 2018",
+        "conferredBy": "City of Methuen Mayor's Office (Mayor James Jajuga)",
+        "artwork": "Christmas Tree Solace",
+        "medium": "Acrylic painting",
+        "description": "Selected for a second honor to display 'Christmas Tree Solace' in the Methuen City Hall main entrance for December 2018.",
+        "image": "/images/paintings/20171115_182219-684862.webp"
+      }
+    ],
+    "studioVisible": true,
     "studioTitle": "The Studio (\"Where The Magic Happens\")",
     "studioSubtitle": "Dedicated Art & Video Recording Facility",
     "studioDescription": "In 2019, I designed and custom-built my own dedicated 33' x 17' painting and video recording studio in Methuen. Equipped with natural lighting, multiple DSLR overhead video angles, and specialized wet-on-wet easels, this studio is where every painting comes to life and where each YouTube demonstration video is produced.",
@@ -64,10 +87,12 @@
       { "value": "4K DSLR", "label": "Video Capture Setup →", "link": "/videos" },
       { "value": "Oil & Acrylic", "label": "Custom Easel Stations →", "link": "/gallery" }
     ],
+    "ctaVisible": true,
     "ctaTitle": "Interested in working together or purchasing art?",
     "ctaDescription": "Browse the gallery of paintings, inquire about custom portrait commissions, or reach out with any questions.",
     "ctaGalleryBtn": "Browse The Gallery",
-    "ctaContactBtn": "Contact Rick Directly"
+    "ctaContactBtn": "Contact Rick Directly",
+    "extraBlocks": []
   },
   "commissions": {
     "heroVisible": true,
