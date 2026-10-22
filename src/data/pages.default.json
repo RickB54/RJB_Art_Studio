@@ -258,25 +258,33 @@
     "extraBlocks": []
   },
   "videos": {
+    "headerVisible": true,
     "badge": "YouTube Studio Playlists",
     "title": "Video Gallery & Playlists",
     "intro": "Select any collection below to browse full-length demonstrations, time lapses, and painting techniques categorized directly from my YouTube channel.",
+    "bannerVisible": true,
     "bannerTitle": "Rick J Berube Art Studio",
     "bannerSubtitle": "Subscribe on YouTube for weekly tutorials, techniques, and studio demonstrations.",
     "bannerBtn": "Subscribe on YouTube",
-    "playlistsHeader": "Featured Playlists"
+    "playlistsHeader": "Featured Playlists",
+    "browsePlaylists": "Browse Playlist",
+    "viewVideosBtn": "View Videos"
   },
   "contact": {
+    "headerVisible": true,
     "badge": "Studio Inquiries",
     "title": "Contact Rick",
     "intro": "Inquire about available paintings, fine art prints, upcoming exhibitions, or general artistic collaborations.",
     "directEmailTitle": "Direct Email",
-    "directEmailDesc": "Prefer using your email app? Send a message directly to Rick's studio inbox anytime:",
+    "directEmailDesc": "Prefer to use email directly? Click your address below and choose Gmail or your default email app:",
     "channelsTitle": "Studio Channels",
     "formTitle": "Send a Message",
     "formSubtitle": "Fill out the form below and Rick will reply to your inquiry as soon as possible."
   },
   "footer": {
+    "noticeVisible": true,
+    "noticePrefix": "Notice:",
+    "noticeText": "This is Rick J Berube Art Studio's new website. My earlier site, rjbartstudio.com, is no longer active.",
     "studioName": "Rick J Berube Art Studio",
     "location": "Methuen, Massachusetts",
     "tagline": "Beauty & Nature inspire me...",
@@ -288,6 +296,30 @@
     "priceListsSubtitle": "Click any price list to view full screen, download PDF, or print",
     "copyrightNotice": "Rick J Berube Art Studio. All rights reserved.",
     "originText": "Fine Art from Methuen, MA"
+  },
+  "paintingDetail": {
+    "backButtonText": "Back to All Artworks",
+    "prevButtonText": "← Previous",
+    "nextButtonText": "Next →",
+    "watchVideoPrompt": "Click to Watch Creation Video",
+    "aboutDemoHeading": "About This Demonstration",
+    "aboutArtworkHeading": "About This Artwork",
+    "statusLabel": "Current Status",
+    "inquirePromptSold": "Inquire for similar custom commission",
+    "inquirePromptAvailable": "Contact for purchase inquiry and shipping details.",
+    "inquirePromptVideo": "Watch full video demonstration above. You can contact Rick for custom commissions or prints.",
+    "inquirePromptOriginal": "Original artwork by Rick J Berube. Inquire below for purchase details or custom commissions.",
+    "buyButtonText": "Buy / Inquire About This Piece",
+    "inquireButtonText": "Inquire / Contact Studio",
+    "printsButtonText": "Order Prints on Fine Art America",
+    "packagingNotice": "All original paintings are packaged with archival care directly from Rick's Methuen studio."
+  },
+  "notFound": {
+    "badge": "404",
+    "title": "Page Not Found",
+    "intro": "The easel is empty here. The page you are looking for might have been moved, renamed, or does not exist.",
+    "homeButtonText": "Return to Home",
+    "galleryButtonText": "Explore The Gallery"
   },
   "artShows": [
     {

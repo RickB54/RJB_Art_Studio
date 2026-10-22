@@ -3795,9 +3795,151 @@ export default function Admin() {
             </div>
           )}
 
-          {/* SECTION: CONTACT & GOOGLE FORMS */}
+          {/* SECTION: VIDEOS PAGE */}
+          {editPageSection === 'videos' && (
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Videos & Playlists Page</h3>
+
+              {/* Visibility Toggles */}
+              <div className="flex flex-wrap gap-3">
+                {[
+                  ['headerVisible', 'Show Page Header'],
+                  ['bannerVisible', 'Show Channel Banner'],
+                ].map(([key, label]) => (
+                  <label key={key} className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 bg-white/5 px-3 py-2 rounded-lg border border-white/10 hover:border-studio-magenta/40">
+                    <input
+                      type="checkbox"
+                      checked={pages.videos?.[key] !== false}
+                      onChange={e => setPages({ ...pages, videos: { ...(pages.videos || {}), [key]: e.target.checked } })}
+                      className="accent-studio-magenta"
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+
+              {/* Page Header */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Page Header</p>
+                {[
+                  ['badge', 'Badge / Eyebrow Label'],
+                  ['title', 'Page Title'],
+                  ['intro', 'Intro Description'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={pages.videos?.[key] || ''}
+                      onChange={e => setPages({ ...pages, videos: { ...(pages.videos || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Channel Banner */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">YouTube Channel Banner</p>
+                {[
+                  ['bannerTitle', 'Channel Name'],
+                  ['bannerSubtitle', 'Banner Subtitle'],
+                  ['bannerBtn', 'Subscribe Button Label'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={pages.videos?.[key] || ''}
+                      onChange={e => setPages({ ...pages, videos: { ...(pages.videos || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Playlists UI Labels */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Playlists UI Labels</p>
+                {[
+                  ['playlistsHeader', 'Section Heading'],
+                  ['browsePlaylists', 'Browse Playlist Hover Text'],
+                  ['viewVideosBtn', 'Card View Videos Label'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={pages.videos?.[key] || ''}
+                      onChange={e => setPages({ ...pages, videos: { ...(pages.videos || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SECTION: CONTACT PAGE TEXT */}
           {editPageSection === 'contact' && (
             <div className="space-y-6">
+              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Contact Page Text</h3>
+
+              {/* Visibility Toggle */}
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 bg-white/5 px-3 py-2 rounded-lg border border-white/10 hover:border-studio-magenta/40 w-fit">
+                <input
+                  type="checkbox"
+                  checked={pages.contact?.headerVisible !== false}
+                  onChange={e => setPages({ ...pages, contact: { ...(pages.contact || {}), headerVisible: e.target.checked } })}
+                  className="accent-studio-magenta"
+                />
+                Show Page Header
+              </label>
+
+              {/* Page Header Fields */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Page Header</p>
+                {[
+                  ['badge', 'Badge / Eyebrow Label'],
+                  ['title', 'Page Title'],
+                  ['intro', 'Intro Paragraph'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={pages.contact?.[key] || ''}
+                      onChange={e => setPages({ ...pages, contact: { ...(pages.contact || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Left Column Labels */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Sidebar Labels</p>
+                {[
+                  ['directEmailTitle', 'Direct Email Card Title'],
+                  ['directEmailDesc', 'Direct Email Card Description'],
+                  ['channelsTitle', 'Studio Channels Card Title'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <textarea
+                      rows={2}
+                      value={pages.contact?.[key] || ''}
+                      onChange={e => setPages({ ...pages, contact: { ...(pages.contact || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <hr className="border-white/10" />
+
+              {/* Contact Form — Google Forms setup */}
               <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Contact & Direct Email Setup</h3>
 
               <div>
@@ -3863,6 +4005,169 @@ export default function Admin() {
                     />
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* SECTION: PAINTING DETAIL PAGE */}
+          {editPageSection === 'paintingDetail' && (
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Painting & Artwork Detail Page</h3>
+
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Navigation & Video Buttons</p>
+                {[
+                  ['backButtonText', 'Back Button Label'],
+                  ['prevButtonText', 'Previous Item Label'],
+                  ['nextButtonText', 'Next Item Label'],
+                  ['watchVideoPrompt', 'Video Player Overlay Prompt'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={pages.paintingDetail?.[key] || ''}
+                      onChange={e => setPages({ ...pages, paintingDetail: { ...(pages.paintingDetail || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Section Headings & Status</p>
+                {[
+                  ['aboutArtworkHeading', 'Artwork Story Heading (Photo-Only)'],
+                  ['aboutDemoHeading', 'Demonstration Story Heading (Videos)'],
+                  ['statusLabel', 'Status Section Label'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={pages.paintingDetail?.[key] || ''}
+                      onChange={e => setPages({ ...pages, paintingDetail: { ...(pages.paintingDetail || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Purchase & Inquiry Prompts</p>
+                {[
+                  ['inquirePromptAvailable', 'Prompt When Available (No Price)'],
+                  ['inquirePromptSold', 'Prompt When Sold'],
+                  ['inquirePromptVideo', 'Prompt For Video Demonstrations'],
+                  ['inquirePromptOriginal', 'Prompt For Non-Video Originals'],
+                  ['buyButtonText', 'Buy / Inquire Button Label'],
+                  ['inquireButtonText', 'General Inquire Button Label'],
+                  ['printsButtonText', 'Prints (Fine Art America) Button Label'],
+                  ['packagingNotice', 'Archival Packaging Notice (Bottom)'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={pages.paintingDetail?.[key] || ''}
+                      onChange={e => setPages({ ...pages, paintingDetail: { ...(pages.paintingDetail || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SECTION: 404 NOT FOUND PAGE */}
+          {editPageSection === 'notFound' && (
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">404 Not Found Page</h3>
+
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                {[
+                  ['badge', 'Error Code / Badge'],
+                  ['title', 'Page Title'],
+                  ['intro', 'Intro / Explanation Message'],
+                  ['homeButtonText', 'Return to Home Button Label'],
+                  ['galleryButtonText', 'Explore Gallery Button Label'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={pages.notFound?.[key] || ''}
+                      onChange={e => setPages({ ...pages, notFound: { ...(pages.notFound || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SECTION: FOOTER, HEADER & NOTICE BANNER */}
+          {editPageSection === 'footerHeader' && (
+            <div className="space-y-6">
+              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Header, Footer & Site Notice Banner</h3>
+
+              {/* Site Migration Notice Banner */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Site Migration Notice Banner</p>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={pages.footer?.noticeVisible !== false}
+                      onChange={e => setPages({ ...pages, footer: { ...(pages.footer || {}), noticeVisible: e.target.checked } })}
+                      className="accent-studio-magenta"
+                    />
+                    Show Notice Banner
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Notice Prefix / Label</label>
+                  <input
+                    type="text"
+                    value={pages.footer?.noticePrefix || ''}
+                    onChange={e => setPages({ ...pages, footer: { ...(pages.footer || {}), noticePrefix: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Notice Message Text</label>
+                  <textarea
+                    rows={2}
+                    value={pages.footer?.noticeText || ''}
+                    onChange={e => setPages({ ...pages, footer: { ...(pages.footer || {}), noticeText: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                  />
+                </div>
+              </div>
+
+              {/* Footer Studio Info */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Footer Studio Information</p>
+                {[
+                  ['studioName', 'Studio Name'],
+                  ['location', 'Location'],
+                  ['tagline', 'Tagline'],
+                  ['bioShort', 'Short Bio Paragraph'],
+                  ['priceListsTitle', 'Official Price Lists Title'],
+                  ['priceListsSubtitle', 'Official Price Lists Subtitle'],
+                  ['copyrightNotice', 'Copyright Notice'],
+                  ['originText', 'Origin / Location Badge'],
+                ].map(([key, label]) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>
+                    <input
+                      type="text"
+                      value={pages.footer?.[key] || ''}
+                      onChange={e => setPages({ ...pages, footer: { ...(pages.footer || {}), [key]: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           )}

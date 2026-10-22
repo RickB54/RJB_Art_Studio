@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { Play, ArrowLeft, ArrowRight, ShoppingBag, MessageSquare, Sparkles } from 'lucide-react'
 import initialPaintings from '../data/paintings.json'
 import initialPlaylists from '../data/playlists.json'
+import initialPages from '../data/pages.json'
 
 // Helper function to turn URLs in text into clickable links while preserving whitespace
 function renderDescriptionWithLinks(text) {
@@ -34,6 +35,7 @@ export default function PaintingDetail() {
   const { id } = useParams()
   const [paintings, setPaintings] = useState(initialPaintings)
   const [playlists, setPlaylists] = useState([])
+  const [pages, setPages] = useState(initialPages)
   const [videoPlaying, setVideoPlaying] = useState(false)
 
   // Lazy-load playlists and sync latest paintings
@@ -56,6 +58,7 @@ export default function PaintingDetail() {
       .then(res => res.json())
       .then(data => {
         if (data.paintings && Array.isArray(data.paintings)) setPaintings(data.paintings)
+        if (data.pages) setPages(data.pages)
       })
       .catch(() => {})
   }, [])
@@ -187,6 +190,8 @@ export default function PaintingDetail() {
   const prevPainting = unifiedItems[(currentIndex - 1 + unifiedItems.length) % unifiedItems.length]
   const nextPainting = unifiedItems[(currentIndex + 1) % unifiedItems.length]
 
+  const pd = pages.paintingDetail || {}
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
       
@@ -197,7 +202,7 @@ export default function PaintingDetail() {
           className="hover:text-white flex items-center gap-1.5 transition"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to All Artworks</span>
+          <span>{pd.backButtonText || 'Back to All Artworks'}</span>
         </Link>
         <div className="flex items-center gap-4">
           <Link
@@ -205,7 +210,7 @@ export default function PaintingDetail() {
             className="hover:text-studio-magenta flex items-center gap-1 transition"
             title={`Previous: ${prevPainting.title}`}
           >
-            <span>← Previous</span>
+            <span>{pd.prevButtonText || '← Previous'}</span>
           </Link>
           <span className="text-white/20">|</span>
           <Link
@@ -213,7 +218,7 @@ export default function PaintingDetail() {
             className="hover:text-studio-magenta flex items-center gap-1 transition"
             title={`Next: ${nextPainting.title}`}
           >
-            <span>Next →</span>
+            <span>{pd.nextButtonText || 'Next →'}</span>
           </Link>
         </div>
       </div>
@@ -245,7 +250,7 @@ export default function PaintingDetail() {
                     <Play className="w-9 h-9 fill-white translate-x-0.5" />
                   </div>
                   <span className="mt-4 px-4 py-1.5 rounded-full text-xs font-semibold bg-black/70 text-white backdrop-blur-md border border-white/10">
-                    Click to Watch Creation Video
+                    {pd.watchVideoPrompt || 'Click to Watch Creation Video'}
                   </span>
                 </div>
               )}
@@ -281,7 +286,7 @@ export default function PaintingDetail() {
           <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/10 space-y-4">
             <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-studio-gold" />
-              <span>{painting.hasVideo ? 'About This Demonstration' : 'About This Artwork'}</span>
+              <span>{painting.hasVideo ? (pd.aboutDemoHeading || 'About This Demonstration') : (pd.aboutArtworkHeading || 'About This Artwork')}</span>
             </h2>
             <div className="text-sm sm:text-base text-slate-300 leading-relaxed whitespace-pre-line font-sans">
               {renderDescriptionWithLinks(painting.description)}
@@ -315,7 +320,7 @@ export default function PaintingDetail() {
           {painting.status || painting.hasPaintingData ? (
             <div className="border-b border-white/10 pb-5">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-slate-400">Current Status</span>
+                <span className="text-xs font-medium text-slate-400">{pd.statusLabel || 'Current Status'}</span>
                 {painting.status ? (
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                     painting.status === 'Sold' || painting.sold
@@ -345,7 +350,7 @@ export default function PaintingDetail() {
                 </div>
               ) : (
                 <p className="text-xs text-slate-400 mt-2">
-                  {painting.sold || painting.status === 'Sold' ? 'Inquire for similar custom commission' : 'Contact for purchase inquiry and shipping details.'}
+                  {painting.sold || painting.status === 'Sold' ? (pd.inquirePromptSold || 'Inquire for similar custom commission') : (pd.inquirePromptAvailable || 'Contact for purchase inquiry and shipping details.')}
                 </p>
               )}
             </div>
@@ -358,12 +363,12 @@ export default function PaintingDetail() {
                     <span>Painting Demonstration</span>
                   </span>
                   <p className="text-xs text-slate-400 mt-3">
-                    Watch full video demonstration above. You can contact Rick for custom commissions or prints.
+                    {pd.inquirePromptVideo || 'Watch full video demonstration above. You can contact Rick for custom commissions or prints.'}
                   </p>
                 </>
               ) : (
                 <p className="text-xs text-slate-400">
-                  Original artwork by Rick J Berube. Inquire below for purchase details or custom commissions.
+                  {pd.inquirePromptOriginal || 'Original artwork by Rick J Berube. Inquire below for purchase details or custom commissions.'}
                 </p>
               )}
             </div>
@@ -402,7 +407,7 @@ export default function PaintingDetail() {
               className="w-full py-3 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 transition flex items-center justify-center gap-2"
             >
               <MessageSquare className="w-4 h-4" />
-              <span>{painting.hasPaintingData && !painting.sold ? 'Buy / Inquire About This Piece' : 'Inquire / Contact Studio'}</span>
+              <span>{painting.hasPaintingData && !painting.sold ? (pd.buyButtonText || 'Buy / Inquire About This Piece') : (pd.inquireButtonText || 'Inquire / Contact Studio')}</span>
             </Link>
 
             {painting.fineArtAmericaUrl && (
@@ -413,13 +418,13 @@ export default function PaintingDetail() {
                 className="w-full py-3 rounded-xl text-xs sm:text-sm font-semibold bg-studio-gold/15 border border-studio-gold/40 text-studio-gold hover:bg-studio-gold hover:text-black transition flex items-center justify-center gap-2 shadow-sm"
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>Order Prints on Fine Art America</span>
+                <span>{pd.printsButtonText || 'Order Prints on Fine Art America'}</span>
               </a>
             )}
           </div>
 
           <p className="text-[11px] text-slate-400 text-center leading-relaxed">
-            All original paintings are packaged with archival care directly from Rick's Methuen studio.
+            {pd.packagingNotice || "All original paintings are packaged with archival care directly from Rick's Methuen studio."}
           </p>
 
         </div>

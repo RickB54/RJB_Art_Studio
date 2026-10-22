@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Mail, Send, CheckCircle2, MessageSquare, Youtube, Facebook, Instagram, Pin, ShoppingBag, ShieldCheck, ExternalLink } from 'lucide-react'
 import siteData from '../data/site.json'
 import { EmailChooser } from '../components/Footer'
+import initialPages from '../data/pages.json'
 
 export default function Contact() {
   const [searchParams] = useSearchParams()
@@ -27,6 +28,7 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState('')
+  const [pages, setPages] = useState(initialPages)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -44,6 +46,10 @@ export default function Contact() {
         message: getInitialMessage()
       }))
     }
+    fetch('/__api/data')
+      .then(res => res.json())
+      .then(data => { if (data.pages) setPages(data.pages) })
+      .catch(() => {})
   }, [inquiryParam, messageParam, subjectParam])
 
   const handleChange = (e) => {
@@ -95,21 +101,25 @@ export default function Contact() {
     }
   }
 
+  const ct = pages.contact || {}
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       
       {/* Header */}
-      <div className="text-center max-w-2xl mx-auto space-y-3">
-        <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
-          Studio Inquiries
-        </span>
-        <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight">
-          Contact Rick
-        </h1>
-        <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-          Inquire about available paintings, fine art prints, upcoming exhibitions, or general artistic collaborations.
-        </p>
-      </div>
+      {ct.headerVisible !== false && (
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
+            {ct.badge || 'Studio Inquiries'}
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight">
+            {ct.title || 'Contact Rick'}
+          </h1>
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+            {ct.intro || 'Inquire about available paintings, fine art prints, upcoming exhibitions, or general artistic collaborations.'}
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
@@ -120,10 +130,10 @@ export default function Contact() {
           <div className="glass-panel p-6 rounded-2xl border border-studio-gold/30 bg-gradient-to-br from-studio-card to-studio-surface space-y-3">
             <div className="flex items-center gap-2 text-studio-gold">
               <Mail className="w-5 h-5" />
-              <h3 className="font-serif text-lg font-bold text-white">Direct Email</h3>
+              <h3 className="font-serif text-lg font-bold text-white">{ct.directEmailTitle || 'Direct Email'}</h3>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Prefer to use email directly? Click your address below and choose Gmail or your default email app:
+              {ct.directEmailDesc || 'Prefer to use email directly? Click your address below and choose Gmail or your default email app:'}
             </p>
             <div className="flex items-center justify-center w-full py-2.5 px-3 rounded-xl bg-studio-gold/15 border border-studio-gold/30">
               <EmailChooser
@@ -134,7 +144,7 @@ export default function Contact() {
           </div>
 
           <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
-            <h3 className="font-serif text-lg font-bold text-white">Studio Channels</h3>
+            <h3 className="font-serif text-lg font-bold text-white">{ct.channelsTitle || 'Studio Channels'}</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
               For public inquiries and video questions, feel free to reach out via my official studio channels:
             </p>

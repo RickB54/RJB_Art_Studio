@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom'
 import { Youtube, ExternalLink, PlaySquare, Layers, AlertCircle, ArrowRight } from 'lucide-react'
 import siteData from '../data/site.json'
 import initialPlaylists from '../data/playlists.json'
+import initialPages from '../data/pages.json'
 
 export default function Videos() {
   const [playlists, setPlaylists] = useState(initialPlaylists)
+  const [pages, setPages] = useState(initialPages)
 
   // Sync with dev API if running
   useEffect(() => {
@@ -15,6 +17,7 @@ export default function Videos() {
         if (data.playlists && Array.isArray(data.playlists)) {
           setPlaylists(data.playlists)
         }
+        if (data.pages) setPages(data.pages)
       })
       .catch(() => {})
   }, [])
@@ -24,53 +27,59 @@ export default function Videos() {
     .filter(p => p.show !== false)
     .sort((a, b) => (a.order || 0) - (b.order || 0))
 
+  const vt = pages.videos || {}
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       
       {/* Page Header */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <span className="text-xs uppercase tracking-widest font-semibold text-red-500 flex items-center justify-center gap-1.5">
-          <Youtube className="w-4 h-4" />
-          <span>YouTube Studio Playlists</span>
-        </span>
-        <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight">
-          Video Gallery & Playlists
-        </h1>
-        <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-          Select any collection below to browse full-length demonstrations, time lapses, and painting techniques categorized directly from my YouTube channel.
-        </p>
-      </div>
+      {vt.headerVisible !== false && (
+        <div className="text-center max-w-3xl mx-auto space-y-3">
+          <span className="text-xs uppercase tracking-widest font-semibold text-red-500 flex items-center justify-center gap-1.5">
+            <Youtube className="w-4 h-4" />
+            <span>{vt.badge || 'YouTube Studio Playlists'}</span>
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight">
+            {vt.title || 'Video Gallery & Playlists'}
+          </h1>
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+            {vt.intro || 'Select any collection below to browse full-length demonstrations, time lapses, and painting techniques categorized directly from my YouTube channel.'}
+          </p>
+        </div>
+      )}
 
       {/* Featured Channel Banner */}
-      <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-red-500/20 bg-gradient-to-r from-red-950/30 via-studio-card to-studio-surface flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-red-600 flex items-center justify-center text-white shadow-lg shrink-0">
-            <Youtube className="w-8 h-8" />
+      {vt.bannerVisible !== false && (
+        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-red-500/20 bg-gradient-to-r from-red-950/30 via-studio-card to-studio-surface flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-red-600 flex items-center justify-center text-white shadow-lg shrink-0">
+              <Youtube className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-white">{vt.bannerTitle || 'Rick J Berube Art Studio'}</h2>
+              <p className="text-xs text-slate-300 mt-0.5">
+                {vt.bannerSubtitle || 'Subscribe on YouTube for weekly tutorials, techniques, and studio demonstrations.'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-white">Rick J Berube Art Studio</h2>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Subscribe on YouTube for weekly tutorials, techniques, and studio demonstrations.
-            </p>
-          </div>
+          <a
+            href={siteData.socials.youtube}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-6 py-3 rounded-full text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition flex items-center gap-2 shadow-sm whitespace-nowrap"
+          >
+            <span>{vt.bannerBtn || 'Subscribe on YouTube'}</span>
+            <ExternalLink className="w-4 h-4" />
+          </a>
         </div>
-        <a
-          href={siteData.socials.youtube}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-6 py-3 rounded-full text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition flex items-center gap-2 shadow-sm whitespace-nowrap"
-        >
-          <span>Subscribe on YouTube</span>
-          <ExternalLink className="w-4 h-4" />
-        </a>
-      </div>
+      )}
 
       {/* Playlists Grid: EXACTLY ONE CARD PER PLAYLIST */}
       <div className="space-y-6">
         <div className="flex items-center justify-between border-b border-white/5 pb-3">
           <h3 className="font-serif text-xl font-bold text-white flex items-center gap-2">
             <Layers className="w-5 h-5 text-studio-magenta" />
-            <span>Featured Playlists</span>
+            <span>{vt.playlistsHeader || 'Featured Playlists'}</span>
           </h3>
           <span className="text-xs text-slate-400">{visiblePlaylists.length} Playlists</span>
         </div>
@@ -127,7 +136,7 @@ export default function Videos() {
                   {/* Hover overlay */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
                     <span className="px-4 py-1.5 rounded-full text-xs font-semibold bg-studio-magenta text-white shadow-glow-magenta flex items-center gap-1.5 transform group-hover:scale-105 transition-transform">
-                      <span>Browse Playlist</span>
+                      <span>{vt.browsePlaylists || 'Browse Playlist'}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
@@ -144,7 +153,7 @@ export default function Videos() {
                     </p>
                   </div>
                   <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs text-studio-magenta font-semibold">
-                    <span>View Videos</span>
+                    <span>{vt.viewVideosBtn || 'View Videos'}</span>
                     <span>→</span>
                   </div>
                 </div>

@@ -4,6 +4,7 @@ import { Youtube, Facebook, Instagram, Pin, Mail, ExternalLink } from 'lucide-re
 import siteData from '../data/site.json'
 import { PRICE_LISTS } from '../data/priceLists'
 import PriceListModal from './PriceListModal'
+import initialPages from '../data/pages.json'
 
 // Reusable email chooser button — shows a small popup with Gmail + default mail options
 function EmailChooser({ email, className = '' }) {
@@ -80,16 +81,29 @@ export { EmailChooser }
 
 export default function Footer() {
   const [activePriceList, setActivePriceList] = useState(null)
+  const [pages, setPages] = useState(initialPages)
+
+  useEffect(() => {
+    fetch('/__api/data')
+      .then(res => res.json())
+      .then(data => { if (data.pages) setPages(data.pages) })
+      .catch(() => {})
+  }, [])
+
+  const ft = pages.footer || {}
+
   return (
     <footer className="mt-24 border-t border-white/5 bg-studio-surface/80 backdrop-blur-md">
       
       {/* Site Migration Notice Bar */}
-      <div className="border-b border-white/5 bg-studio-purple/10 py-3.5 px-4 text-center">
-        <p className="text-xs sm:text-sm text-slate-300">
-          <span className="font-semibold text-studio-gold mr-1.5">Notice:</span>
-          {siteData.artist.siteMigrationNotice}
-        </p>
-      </div>
+      {ft.noticeVisible !== false && (ft.noticeText || siteData.artist.siteMigrationNotice) && (
+        <div className="border-b border-white/5 bg-studio-purple/10 py-3.5 px-4 text-center">
+          <p className="text-xs sm:text-sm text-slate-300">
+            <span className="font-semibold text-studio-gold mr-1.5">{ft.noticePrefix || 'Notice:'}</span>
+            {ft.noticeText || siteData.artist.siteMigrationNotice}
+          </p>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
@@ -206,9 +220,6 @@ export default function Footer() {
               <span>Prints on Fine Art America</span>
               <span className="text-[10px] text-slate-400">↗</span>
             </a>
-            <p className="text-xs text-slate-500 pt-2">
-              All links can be edited in <code className="text-slate-400">src/data/site.json</code>.
-            </p>
           </div>
 
         </div>
