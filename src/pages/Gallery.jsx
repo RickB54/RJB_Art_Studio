@@ -4,6 +4,8 @@ import { Search, X, ChevronLeft, ChevronRight, Play, ShoppingBag, Eye, ChevronDo
 import initialPaintings from '../data/paintings.json'
 import initialPlaylists from '../data/playlists.json'
 import initialSite from '../data/site.json'
+import pagesData from '../data/pages.json'
+import PageBlocks from '../components/PageBlocks'
 import { matchesSearch } from '../utils/search'
 
 const PAGE_SIZE = 24
@@ -13,6 +15,7 @@ export default function Gallery() {
   const [paintings, setPaintings] = useState(initialPaintings)
   const [playlists, setPlaylists] = useState([])
   const [site, setSite] = useState(initialSite)
+  const [galleryText, setGalleryText] = useState(pagesData.gallery || {})
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [selectedStatus, setSelectedStatus] = useState('All') // 'All' | 'For Sale' | 'Sold' | 'Not for Sale'
   const [selectedMedia, setSelectedMedia] = useState('All') // 'All' | 'With video' | 'Photos only'
@@ -55,6 +58,7 @@ export default function Gallery() {
       .then(data => {
         if (data.paintings && Array.isArray(data.paintings)) setPaintings(data.paintings)
         if (data.site) setSite(data.site)
+        if (data.pages?.gallery) setGalleryText(data.pages.gallery)
       })
       .catch(() => {})
   }, [])
@@ -291,124 +295,127 @@ export default function Gallery() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       
       {/* Page Header */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
-          Original Fine Art Collection & Demos
-        </span>
-        <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight">
-          Artwork Gallery
-        </h1>
-        <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-          Explore original paintings, demonstrations, and tutorials from Rick J Berube Art Studio. Click any piece to watch the creation video, view details, or inquire.
-        </p>
-      </div>
+      {galleryText.headerVisible !== false && (
+        <div className="text-center max-w-3xl mx-auto space-y-3">
+          <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
+            {galleryText.badge || "Original Fine Art Collection & Demos"}
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight">
+            {galleryText.title || "Artwork Gallery"}
+          </h1>
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed whitespace-pre-line">
+            {galleryText.description || "Explore original paintings, demonstrations, and tutorials from Rick J Berube Art Studio. Click any piece to watch the creation video, view details, or inquire."}
+          </p>
+        </div>
+      )}
 
       {/* Filter and Search Bar */}
-      <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-5">
-        
-        {/* Search & Status Controls */}
-        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+      {galleryText.filtersVisible !== false && (
+        <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-5">
           
-          {/* Search Box */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search by title, playlist or keywords..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-studio-magenta transition"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/15 transition focus:outline-none focus:ring-1 focus:ring-studio-magenta"
-                title="Clear search"
-                aria-label="Clear search"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          {/* Controls: Media filter + Status filter */}
-          <div className="flex flex-wrap items-center gap-2">
+          {/* Search & Status Controls */}
+          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
             
-            {/* Media Filter: All / With video / Photos only */}
-            <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
-              <button
-                type="button"
-                onClick={() => setSelectedMedia('All')}
-                className={`px-3 py-1 rounded-lg font-medium transition ${
-                  selectedMedia === 'All' ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                All Media
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedMedia('With video')}
-                className={`px-3 py-1 rounded-lg font-medium transition ${
-                  selectedMedia === 'With video' ? 'bg-red-950/80 text-red-300' : 'text-slate-400 hover:text-red-300'
-                }`}
-              >
-                With video
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedMedia('Photos only')}
-                className={`px-3 py-1 rounded-lg font-medium transition ${
-                  selectedMedia === 'Photos only' ? 'bg-studio-magenta/80 text-white' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Photos only
-              </button>
+            {/* Search Box */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder={galleryText.searchPlaceholder || "Search by title, playlist or keywords..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-studio-magenta transition"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-300 hover:text-white hover:bg-white/15 transition focus:outline-none focus:ring-1 focus:ring-studio-magenta"
+                  title="Clear search"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
-            {/* Status Filter Buttons: All / For Sale / Sold / Not for Sale */}
-            <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
-              <button
-                type="button"
-                onClick={() => setSelectedStatus('All')}
-                className={`px-3 py-1 rounded-lg font-medium transition ${
-                  selectedStatus === 'All' ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                All Status
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedStatus('For Sale')}
-                className={`px-3 py-1 rounded-lg font-medium transition ${
-                  selectedStatus === 'For Sale' ? 'bg-emerald-950/80 text-emerald-300' : 'text-slate-400 hover:text-emerald-300'
-                }`}
-              >
-                For Sale
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedStatus('Sold')}
-                className={`px-3 py-1 rounded-lg font-medium transition ${
-                  selectedStatus === 'Sold' ? 'bg-rose-950/80 text-rose-300' : 'text-slate-400 hover:text-rose-300'
-                }`}
-              >
-                Sold
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedStatus('Not for Sale')}
-                className={`px-3 py-1 rounded-lg font-medium transition ${
-                  selectedStatus === 'Not for Sale' ? 'bg-slate-800 text-slate-200' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Not for Sale
-              </button>
+            {/* Controls: Media filter + Status filter */}
+            <div className="flex flex-wrap items-center gap-2">
+              
+              {/* Media Filter: All / With video / Photos only */}
+              <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMedia('All')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${
+                    selectedMedia === 'All' ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {galleryText.allMediaBtn || "All Media"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMedia('With video')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${
+                    selectedMedia === 'With video' ? 'bg-red-950/80 text-red-300' : 'text-slate-400 hover:text-red-300'
+                  }`}
+                >
+                  {galleryText.withVideoBtn || "With video"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMedia('Photos only')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${
+                    selectedMedia === 'Photos only' ? 'bg-studio-magenta/80 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {galleryText.photosOnlyBtn || "Photos only"}
+                </button>
+              </div>
+
+              {/* Status Filter Buttons: All / For Sale / Sold / Not for Sale */}
+              <div className="flex items-center p-1 rounded-xl bg-white/5 border border-white/10 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSelectedStatus('All')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${
+                    selectedStatus === 'All' ? 'bg-white/15 text-white' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {galleryText.allStatusBtn || "All Status"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedStatus('For Sale')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${
+                    selectedStatus === 'For Sale' ? 'bg-emerald-950/80 text-emerald-300' : 'text-slate-400 hover:text-emerald-300'
+                  }`}
+                >
+                  {galleryText.forSaleBtn || "For Sale"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedStatus('Sold')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${
+                    selectedStatus === 'Sold' ? 'bg-rose-950/80 text-rose-300' : 'text-slate-400 hover:text-rose-300'
+                  }`}
+                >
+                  {galleryText.soldBtn || "Sold"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedStatus('Not for Sale')}
+                  className={`px-3 py-1 rounded-lg font-medium transition ${
+                    selectedStatus === 'Not for Sale' ? 'bg-slate-800 text-slate-200' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {galleryText.notForSaleBtn || "Not for Sale"}
+                </button>
+              </div>
+
             </div>
 
           </div>
-
-        </div>
 
         {/* Active Search / Match indicator */}
         {searchQuery.trim() && (
@@ -451,7 +458,8 @@ export default function Gallery() {
           ))}
         </div>
 
-      </div>
+        </div>
+      )}
 
       {/* Gallery Grid */}
       {filteredPaintings.length === 0 ? (
@@ -476,7 +484,7 @@ export default function Gallery() {
             </>
           ) : (
             <>
-              <p className="text-base text-slate-400">No artwork matches your current filters.</p>
+              <p className="text-base text-slate-400">{galleryText.noResultsText || "No artwork matches your current filters."}</p>
               <button
                 type="button"
                 onClick={() => {
@@ -487,7 +495,7 @@ export default function Gallery() {
                 }}
                 className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition"
               >
-                Reset All Filters
+                {galleryText.resetFiltersBtn || "Reset All Filters"}
               </button>
             </>
           )}
@@ -620,14 +628,14 @@ export default function Gallery() {
                             to={`/contact?inquiry=${encodeURIComponent(item.title)}`}
                             className="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium text-center bg-white/5 hover:bg-studio-magenta hover:text-white text-slate-200 transition"
                           >
-                            Inquire / Buy
+                            {galleryText.inquireBuyBtn || "Inquire / Buy"}
                           </Link>
                         ) : (
                           <Link
                             to={`/painting/${item.id}`}
                             className="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium text-center bg-white/5 hover:bg-white/10 text-slate-300 transition"
                           >
-                            View Artwork
+                            {galleryText.viewArtworkBtn || "View Artwork"}
                           </Link>
                         )}
                         {item.fineArtAmericaUrl && (
@@ -639,7 +647,7 @@ export default function Gallery() {
                             title="Prints on Fine Art America"
                           >
                             <ShoppingBag className="w-3 h-3" />
-                            <span>FAA Prints</span>
+                            <span>{galleryText.faaPrintsBtn || "FAA Prints"}</span>
                           </a>
                         )}
                       </div>
@@ -662,7 +670,7 @@ export default function Gallery() {
                 className="px-8 py-3 rounded-xl text-xs font-semibold bg-white/10 hover:bg-studio-magenta text-white transition inline-flex items-center gap-2 mx-auto shadow-md"
               >
                 <ChevronDown className="w-4 h-4" />
-                <span>Load More Artwork ({filteredPaintings.length - visibleCount} remaining)</span>
+                <span>{galleryText.loadMoreBtn || "Load More Artwork"} ({filteredPaintings.length - visibleCount} remaining)</span>
               </button>
             </div>
           )}
@@ -754,6 +762,11 @@ export default function Gallery() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Dynamic Extra Page Blocks */}
+      {galleryText.extraBlocks && galleryText.extraBlocks.length > 0 && (
+        <PageBlocks blocks={galleryText.extraBlocks} />
       )}
 
     </div>

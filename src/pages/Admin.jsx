@@ -726,7 +726,12 @@ export default function Admin() {
             <option value="home">🏠 Home Page Text & Bio</option>
             <option value="about">🎨 About & Studio Page (Awards & Photos)</option>
             <option value="commissions">✍ Commissions & Prints Services</option>
+            <option value="gallery">🖼 Gallery Page Text & Filters</option>
+            <option value="videos">🎬 Videos & Tutorials Page</option>
             <option value="contact">✉ Contact & Direct Email / Google Forms</option>
+            <option value="paintingDetail">🔍 Painting & Playlist Detail Pages</option>
+            <option value="notFound">🚫 404 Not Found Page</option>
+            <option value="footerHeader">⚓ Header, Footer & Notice Banner</option>
           </select>
         </div>
       </div>
@@ -1539,7 +1544,12 @@ export default function Admin() {
                 <option value="home">🏠 Home Page</option>
                 <option value="about">🎨 About & Studio (Awards & Photos)</option>
                 <option value="commissions">✍ Commissions & Prints</option>
+                <option value="gallery">🖼 Gallery Page Text & Filters</option>
+                <option value="videos">🎬 Videos & Tutorials Page</option>
                 <option value="contact">✉ Contact & Email / Google Forms</option>
+                <option value="paintingDetail">🔍 Painting & Playlist Detail</option>
+                <option value="notFound">🚫 404 Not Found Page</option>
+                <option value="footerHeader">⚓ Header, Footer & Notice Banner</option>
               </select>
             </div>
           </div>
@@ -3534,6 +3544,253 @@ export default function Admin() {
               <AdminBlockEditor
                 blocks={pages.commissions?.extraBlocks || []}
                 onChange={newBlocks => setPages({ ...pages, commissions: { ...(pages.commissions || {}), extraBlocks: newBlocks } })}
+              />
+            </div>
+          )}
+
+          {/* SECTION: GALLERY PAGE */}
+          {editPageSection === 'gallery' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span className="text-studio-gold">🖼</span>
+                    <span>Gallery Page Editor</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Control visible headers, filter labels, search placeholder, card button texts, and extra blocks on the Gallery page.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Restore all default text and settings for Gallery Page? Any unsaved edits will be replaced with defaults.')) {
+                      setPages(prev => ({ ...prev, gallery: JSON.parse(JSON.stringify(pagesDefaultInitial.gallery)) }))
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
+              </div>
+
+              {/* 1. Section Visibility Toggles */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Page Section Visibility
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-300">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.gallery?.headerVisible !== false}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), headerVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Header Banner</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.gallery?.filtersVisible !== false}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), filtersVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Filter & Search Bar</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* 2. Header Content */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Header Content
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Badge Text</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.badge || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), badge: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Page Title</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.title || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), title: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Description (line breaks kept)</label>
+                  <textarea
+                    rows={2}
+                    value={pages.gallery?.description || ''}
+                    onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), description: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              {/* 3. Search and Filter Buttons */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Search & Filter Labels
+                </span>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Search Placeholder</label>
+                  <input
+                    type="text"
+                    value={pages.gallery?.searchPlaceholder || ''}
+                    onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), searchPlaceholder: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">All Media Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.allMediaBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), allMediaBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">With Video Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.withVideoBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), withVideoBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Photos Only Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.photosOnlyBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), photosOnlyBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">All Status Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.allStatusBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), allStatusBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">For Sale Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.forSaleBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), forSaleBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Sold Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.soldBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), soldBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Not for Sale Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.notForSaleBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), notForSaleBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Card Buttons & Empty States */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Artwork Card Buttons & Empty States
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Inquire / Buy Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.inquireBuyBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), inquireBuyBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">View Artwork Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.viewArtworkBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), viewArtworkBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">FAA Prints Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.faaPrintsBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), faaPrintsBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Load More Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.loadMoreBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), loadMoreBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">No Results Message</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.noResultsText || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), noResultsText: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Reset Filters Button</label>
+                    <input
+                      type="text"
+                      value={pages.gallery?.resetFiltersBtn || ''}
+                      onChange={e => setPages({ ...pages, gallery: { ...(pages.gallery || {}), resetFiltersBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 5. Extra Page Blocks */}
+              <AdminBlockEditor
+                blocks={pages.gallery?.extraBlocks || []}
+                onChange={newBlocks => setPages({ ...pages, gallery: { ...(pages.gallery || {}), extraBlocks: newBlocks } })}
+                title="Gallery Page Extra Blocks"
               />
             </div>
           )}

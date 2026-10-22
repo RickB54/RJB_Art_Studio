@@ -41,9 +41,26 @@
     "extraBlocks": []
   },
   "gallery": {
-    "badge": "Original Art & YouTube Tutorials",
-    "title": "Painting Gallery",
-    "description": "Explore original paintings, demonstrations, and tutorials from Rick J Berube Art Studio. Click any piece to watch the creation video, view details, or inquire."
+    "headerVisible": true,
+    "badge": "Original Fine Art Collection & Demos",
+    "title": "Artwork Gallery",
+    "description": "Explore original paintings, demonstrations, and tutorials from Rick J Berube Art Studio. Click any piece to watch the creation video, view details, or inquire.",
+    "filtersVisible": true,
+    "searchPlaceholder": "Search by title, playlist or keywords...",
+    "allMediaBtn": "All Media",
+    "withVideoBtn": "With video",
+    "photosOnlyBtn": "Photos only",
+    "allStatusBtn": "All Status",
+    "forSaleBtn": "For Sale",
+    "soldBtn": "Sold",
+    "notForSaleBtn": "Not for Sale",
+    "inquireBuyBtn": "Inquire / Buy",
+    "viewArtworkBtn": "View Artwork",
+    "faaPrintsBtn": "FAA Prints",
+    "loadMoreBtn": "Load More Artwork",
+    "noResultsText": "No artwork matches your current filters.",
+    "resetFiltersBtn": "Reset All Filters",
+    "extraBlocks": []
   },
   "about": {
     "headerVisible": true,
