@@ -3424,10 +3424,10 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* 7. Commission Form Fields & Dropdowns */}
+              {/* 7. Commission Form Settings */}
               <div className="pt-4 border-t border-white/10 space-y-4">
                 <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
-                  Commission Form Settings, Labels & Options
+                  Commission Google Form Embed & Labels
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
@@ -3459,104 +3459,40 @@ export default function Admin() {
                   </div>
                 </div>
 
-                {/* Option Lists */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Item Types Dropdown Options (Comma-separated)
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={(pages.commissions?.formItemTypeOptions || []).map(o => typeof o === 'object' ? o.label : o).join(', ')}
-                      onChange={e => {
-                        const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                        setPages({ ...pages, commissions: { ...(pages.commissions || {}), formItemTypeOptions: arr } })
-                      }}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white font-mono"
-                    />
+                <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                  <p className="text-xs font-semibold text-studio-gold uppercase tracking-wider">
+                    Google Form Embed (Commissions)
+                  </p>
+                  <p className="text-xs text-slate-300">
+                    Paste either the embed URL or the full embed HTML (from Google Forms &gt; Send &gt; &lt;&gt; Embed):
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div className="sm:col-span-3">
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1">Embed URL / HTML snippet</label>
+                      <input
+                        type="text"
+                        placeholder="https://docs.google.com/forms/d/e/.../viewform?embedded=true"
+                        value={site.contact?.googleCommissionEmbedUrl || ''}
+                        onChange={e => {
+                          let val = e.target.value.trim()
+                          const match = val.match(/src=["'](.*?)["']/)
+                          if (match && match[1]) val = match[1]
+                          setSite({ ...site, contact: { ...(site.contact || {}), googleCommissionEmbedUrl: val } })
+                        }}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1">Embed Height (px)</label>
+                      <input
+                        type="number"
+                        placeholder="1100"
+                        value={site.contact?.googleCommissionEmbedHeight || 1100}
+                        onChange={e => setSite({ ...site, contact: { ...(site.contact || {}), googleCommissionEmbedHeight: parseInt(e.target.value) || 1100 } })}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Size Preferred Options (Comma-separated)
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={(pages.commissions?.formSizeOptions || []).map(o => typeof o === 'object' ? o.label : o).join(', ')}
-                      onChange={e => {
-                        const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                        setPages({ ...pages, commissions: { ...(pages.commissions || {}), formSizeOptions: arr } })
-                      }}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Mediums Options (Comma-separated)
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={(pages.commissions?.formMediumOptions || []).map(o => typeof o === 'object' ? o.label : o).join(', ')}
-                      onChange={e => {
-                        const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                        setPages({ ...pages, commissions: { ...(pages.commissions || {}), formMediumOptions: arr } })
-                      }}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Orientation Options (Comma-separated)
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={(pages.commissions?.formOrientationOptions || []).map(o => typeof o === 'object' ? o.label : o).join(', ')}
-                      onChange={e => {
-                        const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                        setPages({ ...pages, commissions: { ...(pages.commissions || {}), formOrientationOptions: arr } })
-                      }}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Thank You & Buttons */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Submit Button Text</label>
-                    <input
-                      type="text"
-                      value={pages.commissions?.formSubmitBtn || ''}
-                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), formSubmitBtn: e.target.value } })}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Thank You Title</label>
-                    <input
-                      type="text"
-                      value={pages.commissions?.thankYouTitle || ''}
-                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), thankYouTitle: e.target.value } })}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Reset / New Inquiry Button</label>
-                    <input
-                      type="text"
-                      value={pages.commissions?.thankYouResetBtn || ''}
-                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), thankYouResetBtn: e.target.value } })}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-300 mb-1">Thank You Message</label>
-                  <textarea
-                    rows={2}
-                    value={pages.commissions?.thankYouMessage || ''}
-                    onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), thankYouMessage: e.target.value } })}
-                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white"
-                  />
                 </div>
               </div>
 
@@ -4006,14 +3942,41 @@ export default function Admin() {
                 <span className="text-[11px] text-slate-400">This email is shown in the footer and contact page for direct buyer inquiries.</span>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Contact Page Intro Instructions</label>
-                <textarea
-                  rows={2}
-                  value={site.contact?.instructions || ''}
-                  onChange={e => setSite({ ...site, contact: { ...site.contact, instructions: e.target.value } })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
+              {/* Google Form Embed Setup */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-studio-gold uppercase tracking-wider">
+                  Google Form Embed (Contact Page)
+                </p>
+                <p className="text-xs text-slate-300">
+                  Paste either the embed URL or the full embed HTML (from Google Forms &gt; Send &gt; &lt;&gt; Embed):
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="sm:col-span-3">
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Embed URL / HTML snippet</label>
+                    <input
+                      type="text"
+                      placeholder="https://docs.google.com/forms/d/e/.../viewform?embedded=true"
+                      value={site.contact?.googleContactEmbedUrl || ''}
+                      onChange={e => {
+                        let val = e.target.value.trim()
+                        const match = val.match(/src=["'](.*?)["']/)
+                        if (match && match[1]) val = match[1]
+                        setSite({ ...site, contact: { ...(site.contact || {}), googleContactEmbedUrl: val } })
+                      }}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Embed Height (px)</label>
+                    <input
+                      type="number"
+                      placeholder="850"
+                      value={site.contact?.googleContactEmbedHeight || 850}
+                      onChange={e => setSite({ ...site, contact: { ...(site.contact || {}), googleContactEmbedHeight: parseInt(e.target.value) || 850 } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Free Google Forms Notification Setup Card */}
@@ -4034,30 +3997,13 @@ export default function Admin() {
                 <p className="text-[11px] text-studio-gold font-medium">
                   That's it! Google will immediately email you for every response for free forever.
                 </p>
-
-                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-studio-gold/20">
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Google Contact Form Response URL (Optional)</label>
-                    <input
-                      type="url"
-                      placeholder="https://docs.google.com/forms/d/e/.../formResponse"
-                      value={site.contact?.googleContactFormUrl || ''}
-                      onChange={e => setSite({ ...site, contact: { ...site.contact, googleContactFormUrl: e.target.value } })}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Google Commission Form Response URL (Optional)</label>
-                    <input
-                      type="url"
-                      placeholder="https://docs.google.com/forms/d/e/.../formResponse"
-                      value={site.contact?.googleCommissionFormUrl || ''}
-                      onChange={e => setSite({ ...site, contact: { ...site.contact, googleCommissionFormUrl: e.target.value } })}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                    />
-                  </div>
-                </div>
               </div>
+
+              {/* Extra Page Blocks */}
+              <AdminBlockEditor
+                blocks={pages.contact?.blocks || []}
+                onChange={newBlocks => setPages({ ...pages, contact: { ...(pages.contact || {}), blocks: newBlocks } })}
+              />
             </div>
           )}
 

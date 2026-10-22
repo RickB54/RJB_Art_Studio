@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Info, ArrowRight, ExternalLink, Sparkles } from 'lucide-react'
+import GoogleFormEmbed from './GoogleFormEmbed'
 
 export default function PageBlocks({ blocks }) {
   if (!blocks || !Array.isArray(blocks) || blocks.length === 0) return null
@@ -225,6 +226,79 @@ export default function PageBlocks({ blocks }) {
               )}
               {block.subtitle && (
                 <p className="text-xs text-slate-400 mt-2">{block.subtitle}</p>
+              )}
+            </div>
+          )
+        }
+
+        // 6. Embed Block (URL + height for Google Forms, etc.)
+        if (block.type === 'embed') {
+          return (
+            <div key={key} className="glass-panel p-4 sm:p-8 rounded-3xl border border-white/10 space-y-4">
+              {(block.heading || block.subtitle) && (
+                <div className="space-y-1">
+                  {block.subtitle && (
+                    <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta block">
+                      {block.subtitle}
+                    </span>
+                  )}
+                  {block.heading && (
+                    <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                      {block.heading}
+                    </h3>
+                  )}
+                </div>
+              )}
+              {block.text && (
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{block.text}</p>
+              )}
+              <GoogleFormEmbed
+                url={block.url || block.embedUrl}
+                height={parseInt(block.height, 10) || 850}
+                title={block.heading || 'Embedded Form'}
+              />
+            </div>
+          )
+        }
+
+        // 7. Video Block (YouTube responsive)
+        if (block.type === 'video') {
+          const rawUrl = block.url || block.youtubeUrl || ''
+          const vidMatch = rawUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
+          const videoId = vidMatch ? vidMatch[1] : (block.videoId || '')
+          return (
+            <div key={key} className="glass-panel p-4 sm:p-8 rounded-3xl border border-white/10 space-y-4">
+              {(block.heading || block.subtitle) && (
+                <div className="space-y-1">
+                  {block.subtitle && (
+                    <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta block">
+                      {block.subtitle}
+                    </span>
+                  )}
+                  {block.heading && (
+                    <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                      {block.heading}
+                    </h3>
+                  )}
+                </div>
+              )}
+              {block.text && (
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{block.text}</p>
+              )}
+              {videoId ? (
+                <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0`}
+                    title={block.heading || 'Video'}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full border-0"
+                  />
+                </div>
+              ) : (
+                <div className="p-8 text-center text-xs text-slate-400 bg-white/5 rounded-2xl border border-white/10">
+                  Please enter a valid YouTube video URL to display this video block.
+                </div>
               )}
             </div>
           )

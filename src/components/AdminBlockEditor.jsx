@@ -31,6 +31,10 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
       newBlock = { ...newBlock, title: 'Important Announcement', text: 'Notice details or update message.', linkText: '', linkUrl: '' }
     } else if (type === 'button') {
       newBlock = { ...newBlock, text: 'Explore Now', url: '/gallery', subtitle: '', align: 'center' }
+    } else if (type === 'embed') {
+      newBlock = { ...newBlock, heading: 'Online Form / Embedded Document', subtitle: 'Direct Submission', text: '', url: '', height: 850 }
+    } else if (type === 'video') {
+      newBlock = { ...newBlock, heading: 'Featured Video Demonstration', subtitle: 'Studio Video', text: '', url: '' }
     }
 
     updateBlocks([...blocks, newBlock])
@@ -121,6 +125,8 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
             <option value="cards">🗂 Cards Row</option>
             <option value="notice">🔔 Notice Box</option>
             <option value="button">🔘 Button Link</option>
+            <option value="embed">📋 Embed (Google Forms / URL)</option>
+            <option value="video">🎬 Video (YouTube)</option>
           </select>
           <button
             type="button"
@@ -501,6 +507,116 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                         value={block.subtitle || ''}
                         onChange={e => handleUpdateField(idx, 'subtitle', e.target.value)}
                         placeholder="e.g. Opens in new tab"
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. Embed Block Form */}
+                {block.type === 'embed' && (
+                  <div className="space-y-3 pt-3 border-t border-white/5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Heading</label>
+                        <input
+                          type="text"
+                          value={block.heading || ''}
+                          onChange={e => handleUpdateField(idx, 'heading', e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Subtitle / Eyebrow</label>
+                        <input
+                          type="text"
+                          value={block.subtitle || ''}
+                          onChange={e => handleUpdateField(idx, 'subtitle', e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1">Intro / Instructions (Optional)</label>
+                      <textarea
+                        rows={2}
+                        value={block.text || ''}
+                        onChange={e => handleUpdateField(idx, 'text', e.target.value)}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                          Embed URL or &lt;iframe&gt; code
+                        </label>
+                        <input
+                          type="text"
+                          value={block.url || ''}
+                          onChange={e => {
+                            const val = e.target.value
+                            const match = val.match(/src=["']([^"']+)["']/i)
+                            handleUpdateField(idx, 'url', match ? match[1] : val.trim())
+                          }}
+                          placeholder="https://docs.google.com/forms/d/e/.../viewform?embedded=true"
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Height (px)</label>
+                        <input
+                          type="number"
+                          value={block.height || 850}
+                          onChange={e => handleUpdateField(idx, 'height', parseInt(e.target.value, 10) || 850)}
+                          placeholder="850"
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 7. Video Block Form */}
+                {block.type === 'video' && (
+                  <div className="space-y-3 pt-3 border-t border-white/5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Heading</label>
+                        <input
+                          type="text"
+                          value={block.heading || ''}
+                          onChange={e => handleUpdateField(idx, 'heading', e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Subtitle / Eyebrow</label>
+                        <input
+                          type="text"
+                          value={block.subtitle || ''}
+                          onChange={e => handleUpdateField(idx, 'subtitle', e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1">Description (Optional)</label>
+                      <textarea
+                        rows={2}
+                        value={block.text || ''}
+                        onChange={e => handleUpdateField(idx, 'text', e.target.value)}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                        YouTube Video URL
+                      </label>
+                      <input
+                        type="url"
+                        value={block.url || ''}
+                        onChange={e => handleUpdateField(idx, 'url', e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=..."
                         className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                       />
                     </div>

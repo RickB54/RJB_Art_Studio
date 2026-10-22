@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Brush, CheckCircle2, ShieldCheck, ShoppingBag, Send, AlertCircle, ArrowRight, HeartHandshake, FileText, Info } from 'lucide-react'
+import { Brush, CheckCircle2, ShieldCheck, AlertCircle, FileText, Info } from 'lucide-react'
 import siteData from '../data/site.json'
 import pagesData from '../data/pages.json'
 import { PRICE_LISTS } from '../data/priceLists'
 import PriceListModal from '../components/PriceListModal'
 import PageBlocks from '../components/PageBlocks'
+import GoogleFormEmbed from '../components/GoogleFormEmbed'
 
 export default function Commissions() {
   const [pageText, setPageText] = useState(pagesData.commissions || {})
-  const [submitted, setSubmitted] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [formError, setFormError] = useState('')
+  const [site, setSite] = useState(siteData)
   const [activePriceList, setActivePriceList] = useState(null)
 
   useEffect(() => {
@@ -19,73 +18,10 @@ export default function Commissions() {
       .then(res => res.json())
       .then(data => {
         if (data.pages?.commissions) setPageText(data.pages.commissions)
+        if (data.site) setSite(data.site)
       })
       .catch(() => {})
   }, [])
-
-  const [formData, setFormData] = useState({
-    itemType: pageText.formItemTypeOptions?.[0] || 'Painted Portrait',
-    size: pageText.formSizeOptions?.[2] || '11x14',
-    numberOfSubjects: '1',
-    medium: 'Oil',
-    orientation: 'Landscape (Horizontal)',
-    sceneryDescription: '',
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    imageTitle: '',
-    comments: '',
-    'bot-field': ''
-  })
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setSubmitting(true)
-    setFormError('')
-
-    const encode = (data) => {
-      return Object.keys(data)
-        .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key]))
-        .join('&')
-    }
-
-    try {
-      if (siteData.contact?.googleCommissionFormUrl) {
-        // Send to Rick's Google Form response endpoint silently
-        const gfData = new FormData()
-        Object.entries(formData).forEach(([k, v]) => {
-          if (k !== 'bot-field') gfData.append(k, v)
-        })
-        await fetch(siteData.contact.googleCommissionFormUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          body: gfData
-        }).catch(() => {})
-      }
-
-      // Also submit via Netlify static form
-      await fetch('/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: encode({
-          'form-name': 'commission',
-          ...formData
-        })
-      }).catch(() => {})
-
-      setSubmitted(true)
-    } catch (err) {
-      setSubmitted(true)
-    } finally {
-      setSubmitting(false)
-    }
-  }
 
   // Map service card ID or priceListId to corresponding PRICE_LIST item
   const getServicePriceList = (card) => {
@@ -102,7 +38,9 @@ export default function Commissions() {
     return null
   }
 
-  const cardsList = pageText.cards || siteData.services || []
+  const cardsList = pageText.cards || site.services || []
+  const formEmbedUrl = site.contact?.googleCommissionEmbedUrl || site.contact?.googleCommissionFormUrl || ''
+  const formHeight = site.contact?.googleCommissionEmbedHeight || 1100
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
@@ -239,10 +177,9 @@ export default function Commissions() {
         </div>
       )}
 
-      {/* Commission Request Form */}
+      {/* Commission Request Form (Embedded Google Form) */}
       {pageText.formVisible !== false && (
-        <div className="glass-panel p-8 sm:p-12 rounded-3xl border border-studio-magenta/30 shadow-glow-magenta space-y-8">
-          
+        <div className="glass-panel p-6 sm:p-10 rounded-3xl border border-studio-magenta/30 shadow-glow-magenta space-y-6">
           <div>
             <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
               {pageText.formBadge || 'Interactive Request'}
@@ -255,299 +192,17 @@ export default function Commissions() {
             </p>
           </div>
 
-          {submitted ? (
-            <div className="p-8 rounded-2xl bg-emerald-950/70 border border-emerald-500/40 text-center space-y-3">
-              <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
-              <h3 className="font-serif text-2xl font-bold text-white">
-                {pageText.thankYouTitle || 'Thank You for Your Commission Request!'}
-              </h3>
-              <p className="text-sm text-emerald-200 max-w-md mx-auto">
-                {pageText.thankYouMessage || 'Your inquiry has been received. Rick will review your specifications and get in touch with you shortly.'}
-              </p>
-              <button
-                type="button"
-                onClick={() => setSubmitted(false)}
-                className="mt-4 px-6 py-2 rounded-xl text-xs font-semibold bg-emerald-700 text-white hover:bg-emerald-600 transition"
-              >
-                {pageText.thankYouResetBtn || 'Submit Another Inquiry'}
-              </button>
-            </div>
-          ) : (
-            <form
-              name="commission"
-              method="POST"
-              data-netlify="true"
-              netlify-honeypot="bot-field"
-              onSubmit={handleSubmit}
-              className="space-y-6"
-            >
-              {/* Netlify hidden identity fields */}
-              <input type="hidden" name="form-name" value="commission" />
-              <p className="hidden">
-                <label>Don’t fill this out if you're human: <input name="bot-field" value={formData['bot-field']} onChange={handleChange} /></label>
-              </p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* Item Type */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formItemTypeLabel || 'Item you would like me to paint or draw'} <span className="text-studio-magenta">*</span>
-                  </label>
-                  <select
-                    name="itemType"
-                    value={formData.itemType}
-                    onChange={handleChange}
-                    className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  >
-                    {(pageText.formItemTypeOptions || [
-                      'Painted Portrait',
-                      'Charcoal Portrait',
-                      'Original Oil Painting',
-                      'Original Acrylic Painting',
-                      'Other Drawing',
-                      'Prints',
-                      'Other'
-                    ]).map((opt, i) => (
-                      <option key={i} value={typeof opt === 'object' ? opt.value : opt}>
-                        {typeof opt === 'object' ? opt.label : opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Preferred Size */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formSizeLabel || 'Size preferred'} <span className="text-studio-magenta">*</span>
-                  </label>
-                  <select
-                    name="size"
-                    value={formData.size}
-                    onChange={handleChange}
-                    className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  >
-                    {(pageText.formSizeOptions || ['8x10', '9x12', '11x14', '16x20', '18x24', '22x28', '24x36']).map((opt, i) => (
-                      <option key={i} value={typeof opt === 'object' ? opt.value : opt}>
-                        {typeof opt === 'object' ? opt.label : opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Number of Subjects Field */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formSubjectsLabel || 'Number of Subjects'} <span className="text-studio-magenta">*</span>
-                  </label>
-                  <select
-                    name="numberOfSubjects"
-                    value={formData.numberOfSubjects}
-                    onChange={handleChange}
-                    className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  >
-                    {(pageText.formSubjectsOptions || [
-                      { value: '1', label: '1 Subject (Single Person / Pet / Scenery)' },
-                      { value: '2', label: '2 Subjects' },
-                      { value: '3', label: '3 Subjects' },
-                      { value: '4', label: '4 Subjects' },
-                      { value: '5+', label: '5+ Subjects' }
-                    ]).map((opt, i) => (
-                      <option key={i} value={typeof opt === 'object' ? opt.value : opt}>
-                        {typeof opt === 'object' ? opt.label : opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Preferred Medium */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formMediumLabel || 'What medium do you prefer?'}
-                  </label>
-                  <select
-                    name="medium"
-                    value={formData.medium}
-                    onChange={handleChange}
-                    className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  >
-                    {(pageText.formMediumOptions || [
-                      'Oil',
-                      'Acrylics',
-                      'Charcoal',
-                      'Graphite',
-                      'Color Pencil',
-                      'Mixed Media',
-                      'Pastel',
-                      'Let the artist choose'
-                    ]).map((opt, i) => (
-                      <option key={i} value={typeof opt === 'object' ? opt.value : opt}>
-                        {typeof opt === 'object' ? opt.label : opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Orientation */}
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formOrientationLabel || 'What Orientation would you prefer?'}
-                  </label>
-                  <select
-                    name="orientation"
-                    value={formData.orientation}
-                    onChange={handleChange}
-                    className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  >
-                    {(pageText.formOrientationOptions || [
-                      'Let the artist choose',
-                      'Portrait (Vertical)',
-                      'Landscape (Horizontal)'
-                    ]).map((opt, i) => (
-                      <option key={i} value={typeof opt === 'object' ? opt.value : opt}>
-                        {typeof opt === 'object' ? opt.label : opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-              </div>
-
-              {/* Scenery / Subject Description */}
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  {pageText.formSceneryLabel || 'What scenery would you like?'} <span className="text-studio-magenta">*</span>
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  name="sceneryDescription"
-                  value={formData.sceneryDescription}
-                  onChange={handleChange}
-                  placeholder={pageText.formSceneryPlaceholder || 'Please describe what it is you want me to paint or draw for you. (Please be as specific as possible.)'}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-
-              {/* Contact Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t border-white/5">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formNameLabel || 'Name'} <span className="text-studio-magenta">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formEmailLabel || 'Email'} <span className="text-studio-magenta">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formPhoneLabel || 'Phone (Optional)'}
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder={pageText.formPhonePlaceholder || '(Optional)'}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formAddressLabel || 'Address (Optional)'}
-                  </label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    placeholder={pageText.formAddressPlaceholder || 'City, State / Shipping'}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  />
-                </div>
-              </div>
-
-              {/* Image Title & Comments */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formImageTitleLabel || 'Image Title (Optional)'}
-                  </label>
-                  <input
-                    type="text"
-                    name="imageTitle"
-                    value={formData.imageTitle}
-                    onChange={handleChange}
-                    placeholder={pageText.formImageTitlePlaceholder || 'e.g. Reference photo title or favorite painting name'}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    {pageText.formCommentsLabel || 'Questions and comments'}
-                  </label>
-                  <input
-                    type="text"
-                    name="comments"
-                    value={formData.comments}
-                    onChange={handleChange}
-                    placeholder={pageText.formCommentsPlaceholder || 'Target date, gift recipient, framing questions...'}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                  />
-                </div>
-              </div>
-
-              {formError && (
-                <p className="text-xs text-rose-400">{formError || pageText.errorMessage}</p>
-              )}
-
-              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <a
-                  href={`mailto:${siteData.contact?.email || 'rberube54@gmail.com'}?subject=${encodeURIComponent(`Commission Request: ${formData.itemType} (${formData.size})`)}&body=${encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nAddress: ${formData.address}\n\nItem: ${formData.itemType}\nSize: ${formData.size}\nNumber of Subjects: ${formData.numberOfSubjects}\nMedium: ${formData.medium}\nOrientation: ${formData.orientation}\nImage Title: ${formData.imageTitle}\n\nScenery:\n${formData.sceneryDescription}\n\nQuestions/Comments:\n${formData.comments}`)}`}
-                  className="px-5 py-2.5 rounded-full text-xs font-medium text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 transition text-center flex items-center justify-center gap-2"
-                  title="Send this commission request directly through your email client"
-                >
-                  <span>{pageText.formEmailAppBtn || 'Open in Email App'}</span>
-                </a>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-8 py-3.5 rounded-full text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 transition flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>{submitting ? (pageText.formSubmittingBtn || 'Submitting Request...') : (pageText.formSubmitBtn || 'Submit Commission Request')}</span>
-                </button>
-              </div>
-
-            </form>
-          )}
-
+          <GoogleFormEmbed
+            url={formEmbedUrl}
+            height={formHeight}
+            title="Commission Request Form"
+            fallbackEmail={site.contact?.email || 'rjbartstudio@gmail.com'}
+          />
         </div>
       )}
 
       {/* Dynamic Extra Blocks */}
-      <PageBlocks blocks={pageText.extraBlocks} />
+      {pageText.extraBlocks && <PageBlocks blocks={pageText.extraBlocks} />}
 
       {activePriceList && (
         <PriceListModal item={activePriceList} onClose={() => setActivePriceList(null)} />

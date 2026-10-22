@@ -95,6 +95,10 @@
     "addressPublic": false,
     "instructions": "Inquire about available paintings, fine art prints, custom portrait commissions, or reach out directly at rjbartstudio@gmail.com",
     "googleContactFormUrl": "",
-    "googleCommissionFormUrl": ""
+    "googleCommissionFormUrl": "",
+    "googleContactEmbedUrl": "",
+    "googleCommissionEmbedUrl": "",
+    "googleContactEmbedHeight": 850,
+    "googleCommissionEmbedHeight": 1100
   }
 }
