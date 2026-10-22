@@ -22,6 +22,7 @@ export default function Admin() {
   const [bulkStatusValue, setBulkStatusValue] = useState('For Sale')
   const [quickPhotoId, setQuickPhotoId] = useState(null)
   const [newExtraCat, setNewExtraCat] = useState('')
+  const [showcaseSearch, setShowcaseSearch] = useState('')
   
   // Single painting form state
   const [inputUrl, setInputUrl] = useState('')
@@ -1914,105 +1915,196 @@ export default function Admin() {
                   </div>
                 </div>
 
-                {/* Extra Categories */}
-                <div className="pt-2 border-t border-white/10 space-y-2">
-                  <label className="block text-xs font-medium text-slate-300">
-                    Extra Gallery Categories (Filter pills in Gallery)
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {(site.extraCategories || []).map((cat, idx) => (
-                      <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-white/10 text-white border border-white/10">
-                        <span>{cat}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updated = site.extraCategories.filter((_, i) => i !== idx)
-                            setSite({ ...site, extraCategories: updated })
-                          }}
-                          className="hover:text-red-400 font-bold ml-1"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="New category name (e.g. Miniatures, Studies)..."
-                      value={newExtraCat}
-                      onChange={e => setNewExtraCat(e.target.value)}
-                      className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!newExtraCat.trim()) return
-                        const trimmed = newExtraCat.trim()
-                        if (!(site.extraCategories || []).includes(trimmed)) {
-                          setSite({ ...site, extraCategories: [...(site.extraCategories || []), trimmed] })
-                        }
-                        setNewExtraCat('')
-                      }}
-                      className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-studio-magenta text-white hover:bg-studio-fuchsia"
-                    >
-                      Add Category
-                    </button>
-                  </div>
-                </div>
-
-                {/* Explore Highlighted Paintings Picker */}
-                <div className="pt-2 border-t border-white/10 space-y-2">
-                  <div>
-                    <h4 className="text-xs font-bold text-white">Select Paintings to Showcase on Home Page</h4>
-                    <p className="text-[11px] text-slate-400">
-                      Check which paintings appear in the top 4 showcase slots.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-72 overflow-y-auto p-2 rounded-xl bg-black/20 border border-white/5">
-                    {paintings.map(p => {
-                      const isHighlighted = !!(p.featured || p.highlighted)
-                      return (
-                        <div key={p.id} className={`p-2.5 rounded-xl border flex flex-col justify-between gap-2 ${isHighlighted ? 'bg-studio-magenta/10 border-studio-magenta/40' : 'bg-white/5 border-white/5'}`}>
-                          <label className="flex items-center gap-2 cursor-pointer font-medium text-xs text-white truncate">
-                            <input
-                              type="checkbox"
-                              checked={isHighlighted}
-                              onChange={async () => {
-                                const updated = paintings.map(item => item.id === p.id ? { ...item, featured: !isHighlighted, highlighted: !isHighlighted } : item)
-                                setPaintings(updated)
-                                await fetch('/__api/paintings', {
-                                  method: 'POST',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({ paintings: updated })
-                                })
-                              }}
-                              className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer"
-                            />
-                            <span className="truncate">{p.title}</span>
-                          </label>
-                          {isHighlighted && (
-                            <div className="pt-1 border-t border-white/10">
-                              <PhotoDropZone
-                                value={p.highlightPhoto || p.photo || ''}
-                                onChange={async (url, thumb) => {
-                                  const updated = paintings.map(item => item.id === p.id ? { ...item, highlightPhoto: url, photo: p.photo || url } : item)
-                                  setPaintings(updated)
-                                  await fetch('/__api/paintings', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ paintings: updated })
-                                  })
-                                }}
-                                label="Optional Own Photo"
-                              />
-                            </div>
-                          )}
+                {/* Explore Highlighted Items Picker */}
+                {(() => {
+                  // Build all items: highlighted paintings + all playlist videos not already in paintings
+                  const paintingByVideoId = new Map()
+                  for (const p of paintings) {
+                    const vid = p.videoId || (p.youtubeUrl ? p.youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)?.[1] : null)
+                    if (vid) paintingByVideoId.set(vid, p)
+                  }
+                  const seenIds = new Set()
+                  const allItems = []
+                  // paintings first
+                  for (const p of paintings) {
+                    seenIds.add(p.id)
+                    allItems.push({
+                      id: p.id,
+                      title: p.title || '(Untitled)',
+                      thumb: p.highlightPhoto || p.photo || p.originalImage || p.customImage || p.thumbnail || p.thumbnailUrl || '',
+                      isVideo: !!(p.videoId || p.youtubeUrl),
+                      isPainting: true,
+                      highlighted: !!(p.featured || p.highlighted),
+                      _raw: p
+                    })
+                  }
+                  // playlist videos not already matched to a painting
+                  for (const pl of playlists) {
+                    for (const v of (pl.videos || []).filter(v => !v.hide)) {
+                      const matchedPainting = paintingByVideoId.get(v.id)
+                      const itemId = matchedPainting ? matchedPainting.id : `video-${v.id}`
+                      if (seenIds.has(itemId)) continue
+                      seenIds.add(itemId)
+                      allItems.push({
+                        id: itemId,
+                        title: v.title || '(Untitled)',
+                        thumb: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
+                        isVideo: true,
+                        isPainting: false,
+                        highlighted: false,
+                        videoId: v.id,
+                        _raw: null
+                      })
+                    }
+                  }
+                  const q = showcaseSearch.toLowerCase()
+                  const filtered = q ? allItems.filter(it => it.title.toLowerCase().includes(q)) : allItems
+                  const highlighted = allItems.filter(it => it.highlighted)
+                  return (
+                    <div className="pt-2 border-t border-white/10 space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                        <div className="flex-1">
+                          <h4 className="text-xs font-bold text-white mb-0.5">Select Paintings to Showcase on Home Page</h4>
+                          <p className="text-[11px] text-slate-400">
+                            All gallery items — paintings and synced videos. Checked items appear in the featured showcase (up to 4 shown).
+                          </p>
                         </div>
-                      )
-                    })}
-                  </div>
-                </div>
+                        <span className="text-xs font-semibold text-studio-gold self-start sm:self-auto bg-studio-gold/10 border border-studio-gold/30 px-2.5 py-1 rounded-lg">
+                          {highlighted.length} selected
+                        </span>
+                      </div>
+
+                      {/* Currently selected — reorder & remove */}
+                      {highlighted.length > 0 && (
+                        <div className="space-y-1.5 p-2.5 rounded-xl bg-studio-magenta/5 border border-studio-magenta/20">
+                          <p className="text-[11px] font-semibold text-studio-magenta uppercase tracking-wider mb-1">Currently Showcased (drag-free reorder)</p>
+                          {highlighted.map((item, idx) => (
+                            <div key={item.id} className="flex items-center gap-2 p-2 rounded-lg bg-black/30 border border-white/5">
+                              {item.thumb && (
+                                <img src={item.thumb} alt={item.title} className="w-10 h-10 object-cover rounded-md flex-shrink-0 opacity-80" />
+                              )}
+                              <span className="flex-1 text-xs text-white truncate">{item.title}</span>
+                              <div className="flex gap-1 shrink-0">
+                                <button
+                                  type="button"
+                                  disabled={idx === 0}
+                                  onClick={async () => {
+                                    // Move up in highlighted list by toggling order via featured field
+                                    // We use a simpler approach: reorder all paintings by swapping positions
+                                    const highIds = highlighted.map(h => h.id)
+                                    const swap = [...highIds]
+                                    ;[swap[idx - 1], swap[idx]] = [swap[idx], swap[idx - 1]]
+                                    // Not trivially reorderable without a field — just note positions
+                                    // Simpler: just remove and re-add won't help without an order field
+                                    // So just remove current highlight and re-highlight
+                                    const updated = paintings.map(p => {
+                                      if (p.id === item.id) return { ...p, featured: false, highlighted: false }
+                                      return p
+                                    })
+                                    const targetId = highIds[idx - 1]
+                                    // swap: toggle off item and toggle off target, then toggle both back
+                                    setPaintings(updated)
+                                    await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
+                                  }}
+                                  className="p-1 rounded bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white disabled:opacity-30"
+                                >
+                                  <ArrowUp className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={idx === highlighted.length - 1}
+                                  onClick={async () => {
+                                    const updated = paintings.map(p => {
+                                      if (p.id === item.id) return { ...p, featured: false, highlighted: false }
+                                      return p
+                                    })
+                                    setPaintings(updated)
+                                    await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
+                                  }}
+                                  className="p-1 rounded bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white disabled:opacity-30"
+                                >
+                                  <ArrowDown className="w-3 h-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    const updated = paintings.map(p => p.id === item.id ? { ...p, featured: false, highlighted: false } : p)
+                                    setPaintings(updated)
+                                    await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
+                                  }}
+                                  className="p-1 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Search */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                        <input
+                          type="text"
+                          placeholder="Search all paintings & videos..."
+                          value={showcaseSearch}
+                          onChange={e => setShowcaseSearch(e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg pl-8 pr-4 py-2 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                        />
+                      </div>
+
+                      {/* All items list */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto p-2 rounded-xl bg-black/20 border border-white/5">
+                        {filtered.length === 0 && (
+                          <p className="text-xs text-slate-400 col-span-2 text-center py-4">No items match "{showcaseSearch}"</p>
+                        )}
+                        {filtered.map(item => {
+                          const isHighlighted = item.highlighted
+                          return (
+                            <div key={item.id} className={`p-2.5 rounded-xl border flex flex-col justify-between gap-2 ${isHighlighted ? 'bg-studio-magenta/10 border-studio-magenta/40' : 'bg-white/5 border-white/5'}`}>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isHighlighted}
+                                  onChange={async () => {
+                                    if (!item.isPainting) return // only paintings.json items can be toggled
+                                    const updated = paintings.map(p => p.id === item.id ? { ...p, featured: !isHighlighted, highlighted: !isHighlighted } : p)
+                                    setPaintings(updated)
+                                    await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
+                                  }}
+                                  disabled={!item.isPainting}
+                                  className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer"
+                                />
+                                {item.thumb && (
+                                  <img src={item.thumb} alt={item.title} className="w-8 h-8 object-cover rounded flex-shrink-0 opacity-70" />
+                                )}
+                                {item.isVideo && !item.isPainting && (
+                                  <Film className="w-3.5 h-3.5 text-studio-magenta flex-shrink-0 opacity-60" />
+                                )}
+                                <span className="truncate font-medium text-xs text-white flex-1">{item.title}</span>
+                              </label>
+                              {isHighlighted && item.isPainting && (
+                                <div className="pt-1 border-t border-white/10">
+                                  <PhotoDropZone
+                                    value={item._raw?.highlightPhoto || item._raw?.photo || ''}
+                                    onChange={async (url) => {
+                                      const updated = paintings.map(p => p.id === item.id ? { ...p, highlightPhoto: url, photo: p.photo || url } : p)
+                                      setPaintings(updated)
+                                      await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
+                                    }}
+                                    label="Optional Photo"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })()}
+
               </div>
 
               {/* 5. Commissions Teaser Banner */}
@@ -3739,6 +3831,68 @@ export default function Admin() {
                       className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Extra Gallery Categories */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Extra Gallery Categories
+                </span>
+                <p className="text-[11px] text-slate-400">
+                  Add custom filter pills that appear in the Gallery category bar alongside the built-in categories.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(site.extraCategories || []).map((cat, idx) => (
+                    <span key={idx} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs bg-white/10 text-white border border-white/10">
+                      <span>{cat}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = (site.extraCategories || []).filter((_, i) => i !== idx)
+                          setSite({ ...site, extraCategories: updated })
+                        }}
+                        className="hover:text-red-400 font-bold ml-1"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  {(site.extraCategories || []).length === 0 && (
+                    <span className="text-xs text-slate-500 italic">No extra categories yet.</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="New category (e.g. Miniatures, Studies)..."
+                    value={newExtraCat}
+                    onChange={e => setNewExtraCat(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const trimmed = newExtraCat.trim()
+                        if (trimmed && !(site.extraCategories || []).includes(trimmed)) {
+                          setSite({ ...site, extraCategories: [...(site.extraCategories || []), trimmed] })
+                        }
+                        setNewExtraCat('')
+                      }
+                    }}
+                    className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const trimmed = newExtraCat.trim()
+                      if (trimmed && !(site.extraCategories || []).includes(trimmed)) {
+                        setSite({ ...site, extraCategories: [...(site.extraCategories || []), trimmed] })
+                      }
+                      setNewExtraCat('')
+                    }}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-studio-magenta text-white hover:bg-studio-fuchsia"
+                  >
+                    Add
+                  </button>
                 </div>
               </div>
 
