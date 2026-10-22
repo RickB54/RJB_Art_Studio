@@ -47,20 +47,61 @@
     "ctaContactBtn": "Contact Rick Directly"
   },
   "commissions": {
+    "heroVisible": true,
     "badge": "Custom Artwork & Portrait Services",
     "title": "Commissions & Prints",
     "intro": "Order a personalized original oil painting, acrylic artwork, or expressive charcoal portrait of loved ones or pets. Every custom commission includes a signed and dated Certificate of Authenticity.",
-    "processTitle": "How The Commission Process Works",
-    "processSubtitle": "Simple, collaborative, and tailored to your vision",
-    "processSteps": [
-      { "num": "1", "title": "Request & Vision", "desc": "Submit the request form below with your desired subject, size, and photo references." },
-      { "num": "2", "title": "Consultation & Quote", "desc": "We'll discuss orientation, canvas vs panel, background color palette, and timeline." },
-      { "num": "3", "title": "Studio Creation", "desc": "I create the piece in my Methuen studio, with optional progress updates and video recording." },
-      { "num": "4", "title": "Signed & Delivered", "desc": "Your painting is signed, accompanied by a Certificate of Authenticity, and carefully packaged." }
+    "cardsVisible": true,
+    "cards": [
+      {
+        "id": "charcoal-portraits",
+        "subtitle": "Pet & People Portraits",
+        "title": "Charcoal Portraits",
+        "description": "Hand-drawn expressive charcoal and graphite portraits on premium archival heavy paper or wood panels.",
+        "priceListId": "charcoal-portrait-prices",
+        "priceListTitle": "Charcoal Portrait",
+        "priceListThumb": "/images/price-lists/charcoal-portrait-thumb.webp",
+        "badgeTitle": "Certificate of Authenticity",
+        "badgeSubtitle": "Offered on all paintings",
+        "visible": true
+      },
+      {
+        "id": "painted-portraits",
+        "subtitle": "Oil & Acrylic",
+        "title": "Painted Portraits",
+        "description": "Cherish your loved ones or faithful pets with a custom original oil or acrylic painting tailored to your favorite memory.",
+        "priceListId": "painted-portrait-prices",
+        "priceListTitle": "Painted Portrait",
+        "priceListThumb": "/images/price-lists/painted-portrait-thumb.webp",
+        "badgeTitle": "Certificate of Authenticity",
+        "badgeSubtitle": "Offered on all paintings",
+        "visible": true
+      },
+      {
+        "id": "custom-paintings",
+        "subtitle": "Landscapes, Seascapes & Wildlife",
+        "title": "Custom Paintings",
+        "description": "Commission an original landscape, coastal scene, or still life sized precisely for your home or office space.",
+        "priceListId": "product-price-list",
+        "priceListTitle": "Custom Paintings & Products",
+        "priceListThumb": "/images/price-lists/product-price-list-thumb.webp",
+        "badgeTitle": "Certificate of Authenticity",
+        "badgeSubtitle": "Offered on all paintings",
+        "visible": true
+      },
+      {
+        "id": "archival-prints",
+        "subtitle": "Museum-Quality Reproductions",
+        "title": "Fine Art Prints",
+        "description": "Archival giclée canvas and paper prints of original works, with optional framing and multiple size choices.",
+        "priceListId": "prints-price-list",
+        "priceListTitle": "Fine Art Prints",
+        "priceListThumb": "/images/price-lists/prints-price-list-thumb.webp",
+        "badgeTitle": "Certificate of Authenticity",
+        "badgeSubtitle": "Offered on all paintings",
+        "visible": true
+      }
     ],
-    "pricingPolicyTitle": "Pricing Policy Notice",
-    "pricingPolicy": "Pricing follows my price lists: choose the size price, then add the commission fee for each extra subject. Watercolor commissions are quoted individually. Every quote is confirmed before painting begins.",
-    "pricingPolicyVisible": true,
     "watercolorNotice": {
       "visible": true,
       "prefix": "Watercolor Note: ",
@@ -69,9 +110,87 @@
       "linkUrl": "/contact?inquiry=Watercolor%20commission%20inquiry",
       "suffix": "."
     },
+    "processVisible": true,
+    "processTitle": "How The Commission Process Works",
+    "processSubtitle": "Simple, collaborative, and tailored to your vision",
+    "processSteps": [
+      { "num": "1", "title": "Request & Vision", "desc": "Submit the request form below with your desired subject, size, and photo references." },
+      { "num": "2", "title": "Consultation & Quote", "desc": "We'll discuss orientation, canvas vs panel, background color palette, and timeline." },
+      { "num": "3", "title": "Studio Creation", "desc": "I create the piece in my Methuen studio, with optional progress updates and video recording." },
+      { "num": "4", "title": "Signed & Delivered", "desc": "Your painting is signed, accompanied by a Certificate of Authenticity, and carefully packaged." }
+    ],
+    "pricingPolicyVisible": true,
+    "pricingPolicyTitle": "Pricing Policy Notice",
+    "pricingPolicy": "Pricing follows my price lists: choose the size price, then add the commission fee for each extra subject. Watercolor commissions are quoted individually. Every quote is confirmed before painting begins.",
+    "formVisible": true,
     "formBadge": "Interactive Request",
     "formTitle": "Commission Request Form",
-    "formSubtitle": "Fill out the details below to receive a personalized quote and timeline directly from Rick."
+    "formSubtitle": "Fill out the details below to receive a personalized quote and timeline directly from Rick.",
+    "formItemTypeLabel": "Item you would like me to paint or draw",
+    "formItemTypeOptions": [
+      "Painted Portrait",
+      "Charcoal Portrait",
+      "Original Oil Painting",
+      "Original Acrylic Painting",
+      "Other Drawing",
+      "Prints",
+      "Other"
+    ],
+    "formSizeLabel": "Size preferred",
+    "formSizeOptions": [
+      "8x10",
+      "9x12",
+      "11x14",
+      "16x20",
+      "18x24",
+      "22x28",
+      "24x36"
+    ],
+    "formSubjectsLabel": "Number of Subjects",
+    "formSubjectsOptions": [
+      { "value": "1", "label": "1 Subject (Single Person / Pet / Scenery)" },
+      { "value": "2", "label": "2 Subjects" },
+      { "value": "3", "label": "3 Subjects" },
+      { "value": "4", "label": "4 Subjects" },
+      { "value": "5+", "label": "5+ Subjects" }
+    ],
+    "formMediumLabel": "What medium do you prefer?",
+    "formMediumOptions": [
+      "Oil",
+      "Acrylics",
+      "Charcoal",
+      "Graphite",
+      "Color Pencil",
+      "Mixed Media",
+      "Pastel",
+      "Let the artist choose"
+    ],
+    "formOrientationLabel": "What Orientation would you prefer?",
+    "formOrientationOptions": [
+      "Let the artist choose",
+      "Portrait (Vertical)",
+      "Landscape (Horizontal)"
+    ],
+    "formSceneryLabel": "What scenery would you like?",
+    "formSceneryPlaceholder": "Please describe what it is you want me to paint or draw for you. (Please be as specific as possible.)",
+    "formNameLabel": "Name",
+    "formEmailLabel": "Email",
+    "formPhoneLabel": "Phone (Optional)",
+    "formPhonePlaceholder": "(Optional)",
+    "formAddressLabel": "Address (Optional)",
+    "formAddressPlaceholder": "City, State / Shipping",
+    "formImageTitleLabel": "Image Title (Optional)",
+    "formImageTitlePlaceholder": "e.g. Reference photo title or favorite painting name",
+    "formCommentsLabel": "Questions and comments",
+    "formCommentsPlaceholder": "Target date, gift recipient, framing questions...",
+    "formEmailAppBtn": "Open in Email App",
+    "formSubmitBtn": "Submit Commission Request",
+    "formSubmittingBtn": "Submitting Request...",
+    "thankYouTitle": "Thank You for Your Commission Request!",
+    "thankYouMessage": "Your inquiry has been received. Rick will review your specifications and get in touch with you shortly.",
+    "thankYouResetBtn": "Submit Another Inquiry",
+    "errorMessage": "There was an error submitting your request. Please try again or email Rick directly.",
+    "extraBlocks": []
   },
   "videos": {
     "badge": "YouTube Studio Playlists",

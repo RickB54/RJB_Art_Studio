@@ -4,7 +4,9 @@ import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshC
 import siteDataInitial from '../data/site.json'
 import paintingsDataInitial from '../data/paintings.json'
 import pagesDataInitial from '../data/pages.json'
+import pagesDefaultInitial from '../data/pages.default.json'
 import PhotoDropZone from '../components/PhotoDropZone'
+import AdminBlockEditor from '../components/AdminBlockEditor'
 
 export default function Admin() {
   const [paintings, setPaintings] = useState(paintingsDataInitial)
@@ -1790,112 +1792,347 @@ export default function Admin() {
             </div>
           )}
 
-          {/* SECTION: COMMISSIONS & SERVICES */}
+          {/* SECTION: COMMISSIONS & PRINTS */}
           {editPageSection === 'commissions' && (
-            <div className="space-y-6">
-              <h3 className="text-sm font-semibold text-studio-gold uppercase tracking-wider">Commissions & Prints Services</h3>
-
-              <div className="space-y-4">
-                {(site.services || []).map((svc, idx) => (
-                  <div key={svc.id || idx} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1">Service Title</label>
-                        <input
-                          type="text"
-                          value={svc.title}
-                          onChange={e => {
-                            const updated = [...site.services]
-                            updated[idx] = { ...updated[idx], title: e.target.value }
-                            setSite({ ...site, services: updated })
-                          }}
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1">Subtitle</label>
-                        <input
-                          type="text"
-                          value={svc.subtitle}
-                          onChange={e => {
-                            const updated = [...site.services]
-                            updated[idx] = { ...updated[idx], subtitle: e.target.value }
-                            setSite({ ...site, services: updated })
-                          }}
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1">Description</label>
-                      <textarea
-                        rows={2}
-                        value={svc.description}
-                        onChange={e => {
-                          const updated = [...site.services]
-                          updated[idx] = { ...updated[idx], description: e.target.value }
-                          setSite({ ...site, services: updated })
-                        }}
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
-                      />
-                    </div>
-                  </div>
-                ))}
+            <div className="space-y-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span className="text-studio-gold">✍</span>
+                    <span>Commissions & Prints Page Editor</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Control every visible string, service card, process step, notice, form field, and extra block on the Commissions page.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Restore all default text and settings for Commissions & Prints? Any unsaved edits will be replaced with defaults.')) {
+                      setPages(prev => ({ ...prev, commissions: JSON.parse(JSON.stringify(pagesDefaultInitial.commissions)) }))
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
               </div>
 
-              {/* Pricing Policy Notice */}
-              <div className="pt-4 border-t border-white/10 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Pricing Policy Notice</h4>
-                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+              {/* 1. Section Visibility Toggles */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Page Section Visibility
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-300">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.commissions?.heroVisible !== false}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), heroVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Header Intro</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.commissions?.cardsVisible !== false}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), cardsVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Service Cards</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.commissions?.watercolorNotice?.visible !== false}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), watercolorNotice: { ...(pages.commissions?.watercolorNotice || {}), visible: e.target.checked } } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Watercolor Notice</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.commissions?.processVisible !== false}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), processVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Process Steps</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={pages.commissions?.pricingPolicyVisible !== false}
-                      onChange={e => setPages({
-                        ...pages,
-                        commissions: {
-                          ...(pages.commissions || {}),
-                          pricingPolicyVisible: e.target.checked
-                        }
-                      })}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), pricingPolicyVisible: e.target.checked } })}
                       className="rounded text-studio-magenta"
                     />
-                    <span>Show Notice</span>
+                    <span>Pricing Policy</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.commissions?.formVisible !== false}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), formVisible: e.target.checked } })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Request Form</span>
                   </label>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Notice Title</label>
-                  <input
-                    type="text"
-                    value={pages.commissions?.pricingPolicyTitle || ''}
-                    onChange={e => setPages({
-                      ...pages,
-                      commissions: {
-                        ...(pages.commissions || {}),
-                        pricingPolicyTitle: e.target.value
-                      }
-                    })}
-                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                  />
+              </div>
+
+              {/* 2. Hero Header */}
+              <div className="space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Header Intro Text
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Pill Badge</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.badge || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), badge: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Page Heading (H1)</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.title || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), title: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Notice Text</label>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Intro Description</label>
                   <textarea
-                    rows={3}
-                    value={pages.commissions?.pricingPolicy || ''}
-                    onChange={e => setPages({
-                      ...pages,
-                      commissions: {
-                        ...(pages.commissions || {}),
-                        pricingPolicy: e.target.value
-                      }
-                    })}
-                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                    rows={2}
+                    value={pages.commissions?.intro || ''}
+                    onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), intro: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-xl p-2.5 text-xs text-white"
                   />
                 </div>
               </div>
 
-              {/* Watercolor Commission Notice */}
+              {/* 3. Service / Feature Cards (Editable List) */}
+              <div className="pt-4 border-t border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                      Service / Feature Cards
+                    </span>
+                    <p className="text-xs text-slate-400">
+                      Add, edit, reorder, hide or delete service cards. All cards use the site's dark glass design.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newCard = {
+                        id: `card-${Date.now()}`,
+                        subtitle: 'Service Category',
+                        title: 'New Custom Service',
+                        description: 'Detailed description of this custom artwork or service.',
+                        priceListId: '',
+                        priceListTitle: '',
+                        priceListThumb: '',
+                        badgeTitle: 'Certificate of Authenticity',
+                        badgeSubtitle: 'Offered on all paintings',
+                        visible: true
+                      }
+                      const updated = [...(pages.commissions?.cards || []), newCard]
+                      setPages({ ...pages, commissions: { ...(pages.commissions || {}), cards: updated } })
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-studio-magenta text-white hover:bg-studio-fuchsia transition flex items-center gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Service Card</span>
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {(pages.commissions?.cards || []).map((card, cIdx, arr) => {
+                    const isHidden = card.visible === false
+                    return (
+                      <div
+                        key={card.id || cIdx}
+                        className={`p-4 rounded-2xl border transition-colors space-y-3 ${
+                          isHidden ? 'bg-black/30 border-white/5 opacity-60' : 'bg-white/5 border-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-studio-gold">Card #{cIdx + 1}: {card.title}</span>
+                            {isHidden && <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-950/60 text-rose-300">Hidden</span>}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={cIdx === 0}
+                              onClick={() => {
+                                const updated = [...arr]
+                                const temp = updated[cIdx]
+                                updated[cIdx] = updated[cIdx - 1]
+                                updated[cIdx - 1] = temp
+                                setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                              }}
+                              className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-30"
+                              title="Move Up"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={cIdx === arr.length - 1}
+                              onClick={() => {
+                                const updated = [...arr]
+                                const temp = updated[cIdx]
+                                updated[cIdx] = updated[cIdx + 1]
+                                updated[cIdx + 1] = temp
+                                setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                              }}
+                              className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-30"
+                              title="Move Down"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = [...arr]
+                                updated[cIdx] = { ...updated[cIdx], visible: !isHidden }
+                                setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                              }}
+                              className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white"
+                              title={isHidden ? 'Show card' : 'Hide card'}
+                            >
+                              {isHidden ? <EyeOff className="w-3.5 h-3.5 text-rose-400" /> : <Eye className="w-3.5 h-3.5 text-emerald-400" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(`Delete "${card.title}" card?`)) {
+                                  const updated = arr.filter((_, i) => i !== cIdx)
+                                  setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                                }
+                              }}
+                              className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-red-400"
+                              title="Delete card"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-medium text-slate-300 mb-1">Small Label / Subtitle</label>
+                            <input
+                              type="text"
+                              value={card.subtitle || ''}
+                              onChange={e => {
+                                const updated = [...arr]
+                                updated[cIdx] = { ...updated[cIdx], subtitle: e.target.value }
+                                setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                              }}
+                              className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-medium text-slate-300 mb-1">Card Title</label>
+                            <input
+                              type="text"
+                              value={card.title || ''}
+                              onChange={e => {
+                                const updated = [...arr]
+                                updated[cIdx] = { ...updated[cIdx], title: e.target.value }
+                                setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                              }}
+                              className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-medium text-slate-300 mb-1">Description</label>
+                          <textarea
+                            rows={2}
+                            value={card.description || ''}
+                            onChange={e => {
+                              const updated = [...arr]
+                              updated[cIdx] = { ...updated[cIdx], description: e.target.value }
+                              setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                            }}
+                            className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[11px] font-medium text-slate-300 mb-1">Attached Price List</label>
+                            <select
+                              value={card.priceListId || ''}
+                              onChange={e => {
+                                const plId = e.target.value
+                                const updated = [...arr]
+                                const pl = PRICE_LISTS.find(p => p.id === plId)
+                                updated[cIdx] = {
+                                  ...updated[cIdx],
+                                  priceListId: plId,
+                                  priceListTitle: pl ? pl.title : '',
+                                  priceListThumb: pl ? pl.thumb : ''
+                                }
+                                setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                              }}
+                              className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                            >
+                              <option value="">(None)</option>
+                              <option value="charcoal-portrait-prices">Charcoal Portraits Price List</option>
+                              <option value="painted-portrait-prices">Painted Portraits Price List</option>
+                              <option value="product-price-list">Prints & Originals Product Price List</option>
+                              <option value="prints-price-list">Prints Price List</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-medium text-slate-300 mb-1">Badge Title</label>
+                            <input
+                              type="text"
+                              value={card.badgeTitle || ''}
+                              onChange={e => {
+                                const updated = [...arr]
+                                updated[cIdx] = { ...updated[cIdx], badgeTitle: e.target.value }
+                                setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                              }}
+                              className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                              placeholder="Certificate of Authenticity"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] font-medium text-slate-300 mb-1">Badge Subtitle</label>
+                            <input
+                              type="text"
+                              value={card.badgeSubtitle || ''}
+                              onChange={e => {
+                                const updated = [...arr]
+                                updated[cIdx] = { ...updated[cIdx], badgeSubtitle: e.target.value }
+                                setPages({ ...pages, commissions: { ...pages.commissions, cards: updated } })
+                              }}
+                              className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                              placeholder="Offered on all paintings"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* 4. Watercolor Commission Notice */}
               <div className="pt-4 border-t border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-white uppercase tracking-wider">Watercolor Notice Banner</h4>
@@ -1993,6 +2230,339 @@ export default function Admin() {
                   </div>
                 </div>
               </div>
+
+              {/* 5. Process Steps */}
+              <div className="pt-4 border-t border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                      Commission Process Steps
+                    </span>
+                    <p className="text-xs text-slate-400">Add, remove, reorder and edit the steps shown to prospective clients.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const steps = pages.commissions?.processSteps || []
+                      const newStep = {
+                        num: (steps.length + 1).toString(),
+                        title: 'New Step Title',
+                        desc: 'Step explanation text.'
+                      }
+                      setPages({ ...pages, commissions: { ...(pages.commissions || {}), processSteps: [...steps, newStep] } })
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-studio-cobalt text-white hover:bg-studio-blue transition flex items-center gap-1.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Step</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Process Section Title</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.processTitle || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), processTitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Process Subtitle</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.processSubtitle || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), processSubtitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {(pages.commissions?.processSteps || []).map((step, sIdx, arr) => (
+                    <div key={sIdx} className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-studio-gold">Step #{sIdx + 1}</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            disabled={sIdx === 0}
+                            onClick={() => {
+                              const updated = [...arr]
+                              const temp = updated[sIdx]
+                              updated[sIdx] = updated[sIdx - 1]
+                              updated[sIdx - 1] = temp
+                              setPages({ ...pages, commissions: { ...pages.commissions, processSteps: updated } })
+                            }}
+                            className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-30"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={sIdx === arr.length - 1}
+                            onClick={() => {
+                              const updated = [...arr]
+                              const temp = updated[sIdx]
+                              updated[sIdx] = updated[sIdx + 1]
+                              updated[sIdx + 1] = temp
+                              setPages({ ...pages, commissions: { ...pages.commissions, processSteps: updated } })
+                            }}
+                            className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-30"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = arr.filter((_, i) => i !== sIdx)
+                              setPages({ ...pages, commissions: { ...pages.commissions, processSteps: updated } })
+                            }}
+                            className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-red-400"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                        <div className="sm:col-span-1">
+                          <input
+                            type="text"
+                            value={step.num || ''}
+                            onChange={e => {
+                              const updated = [...arr]
+                              updated[sIdx] = { ...updated[sIdx], num: e.target.value }
+                              setPages({ ...pages, commissions: { ...pages.commissions, processSteps: updated } })
+                            }}
+                            placeholder="Step #"
+                            className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                          />
+                        </div>
+                        <div className="sm:col-span-3">
+                          <input
+                            type="text"
+                            value={step.title || ''}
+                            onChange={e => {
+                              const updated = [...arr]
+                              updated[sIdx] = { ...updated[sIdx], title: e.target.value }
+                              setPages({ ...pages, commissions: { ...pages.commissions, processSteps: updated } })
+                            }}
+                            placeholder="Step Title"
+                            className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+                      <textarea
+                        rows={2}
+                        value={step.desc || ''}
+                        onChange={e => {
+                          const updated = [...arr]
+                          updated[sIdx] = { ...updated[sIdx], desc: e.target.value }
+                          setPages({ ...pages, commissions: { ...pages.commissions, processSteps: updated } })
+                        }}
+                        placeholder="Step description..."
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 6. Pricing Policy Notice */}
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Pricing Policy Notice</h4>
+                  <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={pages.commissions?.pricingPolicyVisible !== false}
+                      onChange={e => setPages({
+                        ...pages,
+                        commissions: {
+                          ...(pages.commissions || {}),
+                          pricingPolicyVisible: e.target.checked
+                        }
+                      })}
+                      className="rounded text-studio-magenta"
+                    />
+                    <span>Show Notice</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Notice Title</label>
+                  <input
+                    type="text"
+                    value={pages.commissions?.pricingPolicyTitle || ''}
+                    onChange={e => setPages({
+                      ...pages,
+                      commissions: {
+                        ...(pages.commissions || {}),
+                        pricingPolicyTitle: e.target.value
+                      }
+                    })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Notice Text</label>
+                  <textarea
+                    rows={3}
+                    value={pages.commissions?.pricingPolicy || ''}
+                    onChange={e => setPages({
+                      ...pages,
+                      commissions: {
+                        ...(pages.commissions || {}),
+                        pricingPolicy: e.target.value
+                      }
+                    })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              {/* 7. Commission Form Fields & Dropdowns */}
+              <div className="pt-4 border-t border-white/10 space-y-4">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+                  Commission Form Settings, Labels & Options
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Form Badge</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.formBadge || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), formBadge: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Form Heading</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.formTitle || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), formTitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Form Subtitle</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.formSubtitle || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), formSubtitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Option Lists */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Item Types Dropdown Options (Comma-separated)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={(pages.commissions?.formItemTypeOptions || []).map(o => typeof o === 'object' ? o.label : o).join(', ')}
+                      onChange={e => {
+                        const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                        setPages({ ...pages, commissions: { ...(pages.commissions || {}), formItemTypeOptions: arr } })
+                      }}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Size Preferred Options (Comma-separated)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={(pages.commissions?.formSizeOptions || []).map(o => typeof o === 'object' ? o.label : o).join(', ')}
+                      onChange={e => {
+                        const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                        setPages({ ...pages, commissions: { ...(pages.commissions || {}), formSizeOptions: arr } })
+                      }}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Mediums Options (Comma-separated)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={(pages.commissions?.formMediumOptions || []).map(o => typeof o === 'object' ? o.label : o).join(', ')}
+                      onChange={e => {
+                        const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                        setPages({ ...pages, commissions: { ...(pages.commissions || {}), formMediumOptions: arr } })
+                      }}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Orientation Options (Comma-separated)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={(pages.commissions?.formOrientationOptions || []).map(o => typeof o === 'object' ? o.label : o).join(', ')}
+                      onChange={e => {
+                        const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                        setPages({ ...pages, commissions: { ...(pages.commissions || {}), formOrientationOptions: arr } })
+                      }}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Thank You & Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Submit Button Text</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.formSubmitBtn || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), formSubmitBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Thank You Title</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.thankYouTitle || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), thankYouTitle: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Reset / New Inquiry Button</label>
+                    <input
+                      type="text"
+                      value={pages.commissions?.thankYouResetBtn || ''}
+                      onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), thankYouResetBtn: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-300 mb-1">Thank You Message</label>
+                  <textarea
+                    rows={2}
+                    value={pages.commissions?.thankYouMessage || ''}
+                    onChange={e => setPages({ ...pages, commissions: { ...(pages.commissions || {}), thankYouMessage: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              {/* 8. Extra Page Blocks */}
+              <AdminBlockEditor
+                blocks={pages.commissions?.extraBlocks || []}
+                onChange={newBlocks => setPages({ ...pages, commissions: { ...(pages.commissions || {}), extraBlocks: newBlocks } })}
+              />
             </div>
           )}
 
