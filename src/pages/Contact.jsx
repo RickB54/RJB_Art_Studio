@@ -45,6 +45,9 @@ export default function Contact() {
         </div>
       )}
 
+      {/* Slot: After header */}
+      <PageBlocks blocks={ct.blockSlots?.after_header} />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Direct Email & Studio Channels */}
@@ -164,6 +167,9 @@ export default function Contact() {
         </div>
 
       </div>
+
+      {/* Slot: After form */}
+      <PageBlocks blocks={ct.blockSlots?.after_form} />
 
       {/* Slot: Bottom of page */}
       <PageBlocks blocks={ct.blockSlots?.bottom || ct.blocks} />

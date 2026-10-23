@@ -464,6 +464,9 @@ export default function Gallery() {
         </div>
       )}
 
+      {/* Slot: After filters */}
+      <PageBlocks blocks={galleryText.blockSlots?.after_filters} />
+
       {/* Gallery Grid */}
       {filteredPaintings.length === 0 ? (
         <div className="text-center py-20 glass-panel rounded-2xl border border-white/10 space-y-3">

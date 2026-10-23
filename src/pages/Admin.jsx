@@ -28,21 +28,31 @@ const ABOUT_BLOCK_SLOTS = [
 
 const COMMISSIONS_BLOCK_SLOTS = [
   { id: 'top', label: 'Top of Page' },
+  { id: 'after_header', label: 'After Header' },
+  { id: 'after_cards', label: 'After Service Cards' },
+  { id: 'after_watercolor', label: 'After Watercolor Notice' },
+  { id: 'after_process', label: 'After 4-Step Process' },
+  { id: 'after_pricing_notice', label: 'After Pricing Notice' },
+  { id: 'after_form', label: 'After Request Form' },
   { id: 'bottom', label: 'Bottom of Page' },
 ]
 
 const GALLERY_BLOCK_SLOTS = [
   { id: 'top', label: 'Top of Page' },
+  { id: 'after_filters', label: 'After Search & Filters' },
   { id: 'bottom', label: 'Bottom of Page' },
 ]
 
 const VIDEOS_BLOCK_SLOTS = [
   { id: 'top', label: 'Top of Page' },
+  { id: 'after_header', label: 'After Header' },
   { id: 'bottom', label: 'Bottom of Page' },
 ]
 
 const CONTACT_BLOCK_SLOTS = [
   { id: 'top', label: 'Top of Page' },
+  { id: 'after_header', label: 'After Header' },
+  { id: 'after_form', label: 'After Form & Channels' },
   { id: 'bottom', label: 'Bottom of Page' },
 ]
 

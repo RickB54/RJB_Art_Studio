@@ -49,6 +49,9 @@ export default function Commissions() {
         </div>
       )}
 
+      {/* Slot: After header */}
+      <PageBlocks blocks={pageText.blockSlots?.after_header} />
+
       {/* Services Grid with In-Card Thumbnails */}
       {pageText.cardsVisible !== false && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -106,6 +109,9 @@ export default function Commissions() {
         </div>
       )}
 
+      {/* Slot: After cards */}
+      <PageBlocks blocks={pageText.blockSlots?.after_cards} />
+
       {/* Watercolor Note */}
       {(pageText.watercolorNotice?.visible !== false) && (
         <div className="p-4 sm:p-5 rounded-2xl bg-studio-purple/15 border border-studio-purple/30 flex items-start sm:items-center gap-3 text-xs sm:text-sm text-slate-200">
@@ -125,6 +131,9 @@ export default function Commissions() {
           </p>
         </div>
       )}
+
+      {/* Slot: After watercolor notice */}
+      <PageBlocks blocks={pageText.blockSlots?.after_watercolor} />
 
       {/* The 4-Step Commission Process */}
       {pageText.processVisible !== false && (
@@ -161,6 +170,9 @@ export default function Commissions() {
         </div>
       )}
 
+      {/* Slot: After process steps */}
+      <PageBlocks blocks={pageText.blockSlots?.after_process} />
+
       {/* Pricing Policy Notice */}
       {(pageText.pricingPolicyVisible !== false) && (
         <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-studio-gold/30 space-y-3">
@@ -173,6 +185,9 @@ export default function Commissions() {
           </p>
         </div>
       )}
+
+      {/* Slot: After pricing notice */}
+      <PageBlocks blocks={pageText.blockSlots?.after_pricing_notice} />
 
       {/* Commission Request Form (Embedded Google Form) */}
       {pageText.formVisible !== false && (
@@ -197,6 +212,9 @@ export default function Commissions() {
           />
         </div>
       )}
+
+      {/* Slot: After the form */}
+      <PageBlocks blocks={pageText.blockSlots?.after_form} />
 
       {/* Slot: Bottom of page */}
       <PageBlocks blocks={pageText.blockSlots?.bottom || pageText.extraBlocks} />

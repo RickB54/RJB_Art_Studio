@@ -52,6 +52,9 @@ export default function Videos() {
         </div>
       )}
 
+      {/* Slot: After header */}
+      <PageBlocks blocks={vt.blockSlots?.after_header} />
+
       {/* Featured Channel Banner */}
       {vt.bannerVisible !== false && (
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-red-500/20 bg-gradient-to-r from-red-950/30 via-studio-card to-studio-surface flex flex-col md:flex-row items-center justify-between gap-6">
