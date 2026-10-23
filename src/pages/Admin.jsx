@@ -72,6 +72,7 @@ export default function Admin() {
   const [quickPhotoId, setQuickPhotoId] = useState(null)
   const [newExtraCat, setNewExtraCat] = useState('')
   const [showcaseSearch, setShowcaseSearch] = useState('')
+  const [showcaseExpandedId, setShowcaseExpandedId] = useState(null)
   const [activeGuideModal, setActiveGuideModal] = useState(null)
   
   // Single painting form state
@@ -2108,9 +2109,9 @@ export default function Admin() {
                   </div>
                 </div>
 
-                {/* Explore Highlighted Items Picker */}
+                {/* Unified Home Page Showcase Picker */}
                 {(() => {
-                  // Build all items: highlighted paintings + all playlist videos not already in paintings
+                  // Build all gallery items: paintings first, then playlist-only videos
                   const paintingByVideoId = new Map()
                   for (const p of paintings) {
                     const vid = p.videoId || (p.youtubeUrl ? p.youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)?.[1] : null)
@@ -2118,7 +2119,6 @@ export default function Admin() {
                   }
                   const seenIds = new Set()
                   const allItems = []
-                  // paintings first
                   for (const p of paintings) {
                     seenIds.add(p.id)
                     allItems.push({
@@ -2126,16 +2126,20 @@ export default function Admin() {
                       title: p.title || '(Untitled)',
                       thumb: p.highlightPhoto || p.photo || p.originalImage || p.customImage || p.thumbnail || p.thumbnailUrl || '',
                       isVideo: !!(p.videoId || p.youtubeUrl),
-                      isPainting: true,
-                      highlighted: !!(p.featured || p.highlighted),
-                      _raw: p
+                      videoId: p.videoId || null,
+                      youtubeUrl: p.youtubeUrl || '',
+                      fineArtAmericaUrl: p.fineArtAmericaUrl || '',
+                      price: p.price || '',
+                      badge: p.status || (p.sold ? 'Sold' : ''),
+                      category: p.category || '',
+                      medium: p.medium || '',
+                      size: p.size || '',
                     })
                   }
-                  // playlist videos not already matched to a painting
                   for (const pl of playlists) {
                     for (const v of (pl.videos || []).filter(v => !v.hide)) {
                       const matchedPainting = paintingByVideoId.get(v.id)
-                      const itemId = matchedPainting ? matchedPainting.id : `video-${v.id}`
+                      const itemId = matchedPainting ? matchedPainting.id : `playlist-${v.id}`
                       if (seenIds.has(itemId)) continue
                       seenIds.add(itemId)
                       allItems.push({
@@ -2143,95 +2147,176 @@ export default function Admin() {
                         title: v.title || '(Untitled)',
                         thumb: `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
                         isVideo: true,
-                        isPainting: false,
-                        highlighted: false,
                         videoId: v.id,
-                        _raw: null
+                        youtubeUrl: `https://www.youtube.com/watch?v=${v.id}`,
+                        fineArtAmericaUrl: '',
+                        price: '',
+                        badge: '',
+                        category: pl.title || 'Video',
+                        medium: '',
+                        size: '',
                       })
                     }
                   }
+
+                  // featuredItems: array stored in pages.home
+                  const featuredItems = pages.home?.featuredItems || []
+                  const featuredIds = new Set(featuredItems.map(fi => fi.id))
+
                   const q = showcaseSearch.toLowerCase()
-                  const filtered = q ? allItems.filter(it => it.title.toLowerCase().includes(q)) : allItems
-                  const highlighted = allItems.filter(it => it.highlighted)
+                  const filtered = q ? allItems.filter(it => it.title.toLowerCase().includes(q) || (it.category || '').toLowerCase().includes(q)) : allItems
+
+                  const saveFeaturedItems = async (updated) => {
+                    const newPages = { ...pages, home: { ...(pages.home || {}), featuredItems: updated } }
+                    setPages(newPages)
+                    await fetch('/__api/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pages: newPages }) })
+                  }
+
+                  const toggleItem = (galleryItem) => {
+                    if (featuredIds.has(galleryItem.id)) {
+                      // Remove
+                      saveFeaturedItems(featuredItems.filter(fi => fi.id !== galleryItem.id))
+                      if (showcaseExpandedId === galleryItem.id) setShowcaseExpandedId(null)
+                    } else {
+                      // Add with defaults from the gallery item
+                      saveFeaturedItems([...featuredItems, {
+                        id: galleryItem.id,
+                        title: galleryItem.title,
+                        thumb: galleryItem.thumb,
+                        highlightPhoto: '',
+                        badge: galleryItem.badge || '',
+                        price: galleryItem.price || '',
+                        videoId: galleryItem.videoId || null,
+                        youtubeUrl: galleryItem.youtubeUrl || '',
+                        fineArtAmericaUrl: galleryItem.fineArtAmericaUrl || '',
+                        isVideo: galleryItem.isVideo || false,
+                        category: galleryItem.category || '',
+                        medium: galleryItem.medium || '',
+                        size: galleryItem.size || '',
+                      }])
+                    }
+                  }
+
+                  const updateFeaturedItem = (id, patch) => {
+                    saveFeaturedItems(featuredItems.map(fi => fi.id === id ? { ...fi, ...patch } : fi))
+                  }
+
+                  const moveItem = (idx, dir) => {
+                    const arr = [...featuredItems]
+                    const swapIdx = idx + dir
+                    if (swapIdx < 0 || swapIdx >= arr.length) return
+                    ;[arr[idx], arr[swapIdx]] = [arr[swapIdx], arr[idx]]
+                    saveFeaturedItems(arr)
+                  }
+
                   return (
-                    <div className="pt-2 border-t border-white/10 space-y-3">
+                    <div className="pt-2 border-t border-white/10 space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-start gap-3">
                         <div className="flex-1">
-                          <h4 className="text-xs font-bold text-white mb-0.5">Select Paintings to Showcase on Home Page</h4>
+                          <h4 className="text-xs font-bold text-white mb-0.5">Select Items to Showcase on Home Page</h4>
                           <p className="text-[11px] text-slate-400">
-                            All gallery items — paintings and synced videos. Checked items appear in the featured showcase (up to 4 shown).
+                            Choose any painting or video from your gallery. Click a thumbnail to add or remove it. Expand ▸ to set a custom photo, badge, or price for each item.
                           </p>
                         </div>
-                        <span className="text-xs font-semibold text-studio-gold self-start sm:self-auto bg-studio-gold/10 border border-studio-gold/30 px-2.5 py-1 rounded-lg">
-                          {highlighted.length} selected
+                        <span className="text-xs font-semibold text-studio-gold self-start sm:self-auto bg-studio-gold/10 border border-studio-gold/30 px-2.5 py-1 rounded-lg shrink-0">
+                          {featuredItems.length} selected
                         </span>
                       </div>
 
-                      {/* Currently selected — reorder & remove */}
-                      {highlighted.length > 0 && (
-                        <div className="space-y-1.5 p-2.5 rounded-xl bg-studio-magenta/5 border border-studio-magenta/20">
-                          <p className="text-[11px] font-semibold text-studio-magenta uppercase tracking-wider mb-1">Currently Showcased (drag-free reorder)</p>
-                          {highlighted.map((item, idx) => (
-                            <div key={item.id} className="flex items-center gap-2 p-2 rounded-lg bg-black/30 border border-white/5">
-                              {item.thumb && (
-                                <img src={item.thumb} alt={item.title} className="w-10 h-10 object-cover rounded-md flex-shrink-0 opacity-80" />
-                              )}
-                              <span className="flex-1 text-xs text-white truncate">{item.title}</span>
-                              <div className="flex gap-1 shrink-0">
-                                <button
-                                  type="button"
-                                  disabled={idx === 0}
-                                  onClick={async () => {
-                                    // Move up in highlighted list by toggling order via featured field
-                                    // We use a simpler approach: reorder all paintings by swapping positions
-                                    const highIds = highlighted.map(h => h.id)
-                                    const swap = [...highIds]
-                                    ;[swap[idx - 1], swap[idx]] = [swap[idx], swap[idx - 1]]
-                                    // Not trivially reorderable without a field — just note positions
-                                    // Simpler: just remove and re-add won't help without an order field
-                                    // So just remove current highlight and re-highlight
-                                    const updated = paintings.map(p => {
-                                      if (p.id === item.id) return { ...p, featured: false, highlighted: false }
-                                      return p
-                                    })
-                                    const targetId = highIds[idx - 1]
-                                    // swap: toggle off item and toggle off target, then toggle both back
-                                    setPaintings(updated)
-                                    await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
-                                  }}
-                                  className="p-1 rounded bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white disabled:opacity-30"
-                                >
-                                  <ArrowUp className="w-3 h-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={idx === highlighted.length - 1}
-                                  onClick={async () => {
-                                    const updated = paintings.map(p => {
-                                      if (p.id === item.id) return { ...p, featured: false, highlighted: false }
-                                      return p
-                                    })
-                                    setPaintings(updated)
-                                    await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
-                                  }}
-                                  className="p-1 rounded bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white disabled:opacity-30"
-                                >
-                                  <ArrowDown className="w-3 h-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    const updated = paintings.map(p => p.id === item.id ? { ...p, featured: false, highlighted: false } : p)
-                                    setPaintings(updated)
-                                    await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
-                                  }}
-                                  className="p-1 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
+                      {/* Currently showcased — reorder & customize */}
+                      {featuredItems.length > 0 && (
+                        <div className="space-y-2 p-3 rounded-xl bg-studio-magenta/5 border border-studio-magenta/20">
+                          <p className="text-[11px] font-semibold text-studio-magenta uppercase tracking-wider">
+                            Currently Showcased — click ▸ to customize each card
+                          </p>
+                          {featuredItems.map((fi, idx) => {
+                            const isExpanded = showcaseExpandedId === fi.id
+                            const displayThumb = fi.highlightPhoto || fi.thumb
+                            return (
+                              <div key={fi.id} className="rounded-xl border border-white/10 bg-black/30 overflow-hidden">
+                                {/* Row */}
+                                <div className="flex items-center gap-2 p-2">
+                                  {displayThumb && (
+                                    <img src={displayThumb} alt={fi.title} className="w-10 h-10 object-cover rounded-md flex-shrink-0" />
+                                  )}
+                                  <span className="flex-1 text-xs text-white truncate">{fi.title}</span>
+                                  {fi.badge && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-900/60 text-emerald-300 border border-emerald-500/30 shrink-0">{fi.badge}</span>
+                                  )}
+                                  {fi.price && (
+                                    <span className="text-[10px] text-studio-gold font-semibold shrink-0">${fi.price}</span>
+                                  )}
+                                  <div className="flex gap-1 shrink-0">
+                                    <button type="button" disabled={idx === 0} onClick={() => moveItem(idx, -1)}
+                                      className="p-1 rounded bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white disabled:opacity-30">
+                                      <ArrowUp className="w-3 h-3" />
+                                    </button>
+                                    <button type="button" disabled={idx === featuredItems.length - 1} onClick={() => moveItem(idx, 1)}
+                                      className="p-1 rounded bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white disabled:opacity-30">
+                                      <ArrowDown className="w-3 h-3" />
+                                    </button>
+                                    <button type="button"
+                                      onClick={() => setShowcaseExpandedId(isExpanded ? null : fi.id)}
+                                      className={`p-1 rounded text-slate-400 hover:text-white ${isExpanded ? 'bg-studio-magenta/30' : 'bg-white/5 hover:bg-white/15'}`}
+                                      title="Customize this card">
+                                      <Edit3 className="w-3 h-3" />
+                                    </button>
+                                    <button type="button"
+                                      onClick={() => toggleItem({ id: fi.id })}
+                                      className="p-1 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300">
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                                {/* Expanded customizer */}
+                                {isExpanded && (
+                                  <div className="border-t border-white/10 p-3 space-y-3 bg-black/20">
+                                    <p className="text-[10px] text-studio-magenta font-semibold uppercase tracking-wider">Customize "{fi.title}"</p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      <div>
+                                        <label className="block text-[11px] font-medium text-slate-400 mb-1">Custom Display Title</label>
+                                        <input type="text" value={fi.title}
+                                          onChange={e => updateFeaturedItem(fi.id, { title: e.target.value })}
+                                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[11px] font-medium text-slate-400 mb-1">Badge / Status Label</label>
+                                        <input type="text" placeholder="e.g. For Sale, Sold, New" value={fi.badge}
+                                          onChange={e => updateFeaturedItem(fi.id, { badge: e.target.value })}
+                                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[11px] font-medium text-slate-400 mb-1">Price (numbers only, e.g. 350)</label>
+                                        <input type="text" placeholder="e.g. 350" value={fi.price}
+                                          onChange={e => updateFeaturedItem(fi.id, { price: e.target.value })}
+                                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[11px] font-medium text-slate-400 mb-1">Fine Art America Print URL</label>
+                                        <input type="text" placeholder="https://fineartamerica.com/..." value={fi.fineArtAmericaUrl || ''}
+                                          onChange={e => updateFeaturedItem(fi.id, { fineArtAmericaUrl: e.target.value })}
+                                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Custom Display Photo (overrides default thumbnail)</label>
+                                      <PhotoDropZone
+                                        value={fi.highlightPhoto || fi.thumb || ''}
+                                        onChange={url => updateFeaturedItem(fi.id, { highlightPhoto: url })}
+                                        label="Upload or paste photo URL"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Photo URL (paste direct link)</label>
+                                      <input type="text" placeholder="https://... or /images/..." value={fi.highlightPhoto || ''}
+                                        onChange={e => updateFeaturedItem(fi.id, { highlightPhoto: e.target.value })}
+                                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       )}
 
@@ -2240,60 +2325,68 @@ export default function Admin() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
                         <input
                           type="text"
-                          placeholder="Search all paintings & videos..."
+                          placeholder="Search paintings & videos..."
                           value={showcaseSearch}
                           onChange={e => setShowcaseSearch(e.target.value)}
                           className="w-full bg-[#13111c] border border-white/10 rounded-lg pl-8 pr-4 py-2 text-xs text-white focus:outline-none focus:border-studio-magenta"
                         />
                       </div>
 
-                      {/* All items list */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto p-2 rounded-xl bg-black/20 border border-white/5">
+                      {/* Gallery grid — ALL items, click to add/remove */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 rounded-xl bg-black/20 border border-white/5">
                         {filtered.length === 0 && (
-                          <p className="text-xs text-slate-400 col-span-2 text-center py-4">No items match "{showcaseSearch}"</p>
+                          <p className="text-xs text-slate-400 col-span-3 text-center py-6">No items match "{showcaseSearch}"</p>
                         )}
                         {filtered.map(item => {
-                          const isHighlighted = item.highlighted
+                          const isSelected = featuredIds.has(item.id)
                           return (
-                            <div key={item.id} className={`p-2.5 rounded-xl border flex flex-col justify-between gap-2 ${isHighlighted ? 'bg-studio-magenta/10 border-studio-magenta/40' : 'bg-white/5 border-white/5'}`}>
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={isHighlighted}
-                                  onChange={async () => {
-                                    if (!item.isPainting) return // only paintings.json items can be toggled
-                                    const updated = paintings.map(p => p.id === item.id ? { ...p, featured: !isHighlighted, highlighted: !isHighlighted } : p)
-                                    setPaintings(updated)
-                                    await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
-                                  }}
-                                  disabled={!item.isPainting}
-                                  className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer"
-                                />
-                                {item.thumb && (
-                                  <img src={item.thumb} alt={item.title} className="w-8 h-8 object-cover rounded flex-shrink-0 opacity-70" />
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => toggleItem(item)}
+                              className={`relative rounded-xl overflow-hidden group text-left border-2 transition-all focus:outline-none focus:ring-2 focus:ring-studio-magenta ${
+                                isSelected
+                                  ? 'border-studio-magenta shadow-glow-magenta'
+                                  : 'border-transparent hover:border-white/30'
+                              }`}
+                            >
+                              {/* Thumbnail */}
+                              <div className="aspect-[4/3] bg-studio-surface relative overflow-hidden">
+                                {item.thumb ? (
+                                  <img src={item.thumb} alt={item.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <ImageIcon className="w-6 h-6 text-slate-600" />
+                                  </div>
                                 )}
-                                {item.isVideo && !item.isPainting && (
-                                  <Film className="w-3.5 h-3.5 text-studio-magenta flex-shrink-0 opacity-60" />
+                                {/* Video badge */}
+                                {item.isVideo && (
+                                  <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-600/90 text-white">
+                                    VIDEO
+                                  </div>
                                 )}
-                                <span className="truncate font-medium text-xs text-white flex-1">{item.title}</span>
-                              </label>
-                              {isHighlighted && item.isPainting && (
-                                <div className="pt-1 border-t border-white/10">
-                                  <PhotoDropZone
-                                    value={item._raw?.highlightPhoto || item._raw?.photo || ''}
-                                    onChange={async (url) => {
-                                      const updated = paintings.map(p => p.id === item.id ? { ...p, highlightPhoto: url, photo: p.photo || url } : p)
-                                      setPaintings(updated)
-                                      await fetch('/__api/paintings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paintings: updated }) })
-                                    }}
-                                    label="Optional Photo"
-                                  />
-                                </div>
-                              )}
-                            </div>
+                                {/* Selected checkmark */}
+                                {isSelected && (
+                                  <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-studio-magenta flex items-center justify-center shadow">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                                  </div>
+                                )}
+                                {/* Hover overlay */}
+                                <div className={`absolute inset-0 transition-opacity ${isSelected ? 'bg-studio-magenta/15' : 'bg-black/0 group-hover:bg-black/30'}`} />
+                              </div>
+                              {/* Title */}
+                              <div className="p-1.5">
+                                <p className="text-[11px] font-medium text-white leading-tight line-clamp-2">{item.title}</p>
+                                {item.category && <p className="text-[10px] text-slate-500 mt-0.5 truncate">{item.category}</p>}
+                              </div>
+                            </button>
                           )
                         })}
                       </div>
+                      <p className="text-[10px] text-slate-500">
+                        Click any thumbnail to add it to the home page showcase. Up to 4 items are shown at once. Use ▸ (edit icon) in the list above to set custom photo, badge, or price per item.
+                      </p>
                     </div>
                   )
                 })()}

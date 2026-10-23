@@ -20,7 +20,27 @@ export default function Home() {
       .catch(() => {})
   }, [])
 
-  const featuredPaintings = paintings.filter(p => p.featured || p.highlighted).slice(0, 4)
+  // Use new unified featuredItems if configured, else fall back to legacy featured flag on paintings
+  const featuredItems = homeText.featuredItems
+  const featuredPaintings = featuredItems && featuredItems.length > 0
+    ? featuredItems.slice(0, 4).map(fi => {
+        // Merge with live painting data if available
+        const livePainting = paintings.find(p => p.id === fi.id)
+        return {
+          ...(livePainting || {}),
+          ...fi,
+          // Override display fields from featuredItems
+          title: fi.title || livePainting?.title || '(Untitled)',
+          highlightPhoto: fi.highlightPhoto || livePainting?.highlightPhoto || livePainting?.photo || livePainting?.thumbnail || fi.thumb || '',
+          price: fi.price !== undefined && fi.price !== '' ? fi.price : livePainting?.price,
+          status: fi.badge || livePainting?.status,
+          fineArtAmericaUrl: fi.fineArtAmericaUrl || livePainting?.fineArtAmericaUrl || '',
+          category: fi.category || livePainting?.category || '',
+          medium: fi.medium || livePainting?.medium || '',
+          size: fi.size || livePainting?.size || '',
+        }
+      })
+    : paintings.filter(p => p.featured || p.highlighted).slice(0, 4)
 
   const highlights = homeText.highlights || [
     { stat: "500+", label: "Paintings Created →", link: "/gallery" },
@@ -138,7 +158,7 @@ export default function Home() {
               >
                 <div className="relative aspect-[4/3] bg-studio-surface overflow-hidden">
                   <img 
-                    src={painting.highlightPhoto || painting.photo || painting.originalImage || painting.customImage || painting.thumbnail} 
+                    src={painting.highlightPhoto || painting.photo || painting.originalImage || painting.customImage || painting.thumbnail || painting.thumbnailUrl || painting.thumb} 
                     alt={painting.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
