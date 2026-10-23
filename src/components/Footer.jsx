@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Youtube, Facebook, Instagram, Pin, Mail, ExternalLink } from 'lucide-react'
+import { Youtube, Facebook, Instagram, Pin, Mail, ExternalLink, FileText } from 'lucide-react'
 import siteData from '../data/site.json'
 import { PRICE_LISTS } from '../data/priceLists'
 import PriceListModal from './PriceListModal'
@@ -82,6 +82,7 @@ export { EmailChooser }
 export default function Footer() {
   const [activePriceList, setActivePriceList] = useState(null)
   const [pages, setPages] = useState(initialPages)
+  const [thumbErrors, setThumbErrors] = useState({})
 
   useEffect(() => {
     fetch('/__api/data')
@@ -262,14 +263,24 @@ export default function Footer() {
                 onClick={() => setActivePriceList(pl)}
                 className="group p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-studio-gold/50 transition flex flex-col items-center text-center focus:outline-none focus:ring-2 focus:ring-studio-gold text-left"
               >
-                <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-black/60 border border-white/5 mb-2 relative">
-                  <img
-                    src={pl.thumb}
-                    alt={pl.alt}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                <div className="w-full aspect-[4/3] rounded-lg overflow-hidden bg-black/60 border border-white/5 mb-2 relative flex items-center justify-center">
+                  {thumbErrors[pl.id] ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-studio-gold p-2 text-center bg-white/5">
+                      <FileText className="w-6 h-6 mb-1 text-studio-gold" />
+                      <span className="text-[11px] font-medium line-clamp-2 leading-tight">{pl.title}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <img
+                        src={pl.thumb}
+                        alt={pl.alt}
+                        onError={() => setThumbErrors(prev => ({ ...prev, [pl.id]: true }))}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                    </>
+                  )}
                 </div>
                 <span className="text-xs font-serif font-bold text-white group-hover:text-studio-gold transition line-clamp-1">
                   {pl.title}

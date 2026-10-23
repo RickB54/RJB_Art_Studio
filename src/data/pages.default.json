@@ -125,7 +125,7 @@
         "description": "Hand-drawn expressive charcoal and graphite portraits on premium archival heavy paper or wood panels.",
         "priceListId": "charcoal-portrait-prices",
         "priceListTitle": "Charcoal Portrait",
-        "priceListThumb": "/images/price-lists/charcoal-portrait-thumb.webp",
+        "priceListThumb": "/images/price-lists/charcoal-portrait-prices-thumb.webp",
         "badgeTitle": "Certificate of Authenticity",
         "badgeSubtitle": "Offered on all paintings",
         "visible": true
@@ -137,7 +137,7 @@
         "description": "Cherish your loved ones or faithful pets with a custom original oil or acrylic painting tailored to your favorite memory.",
         "priceListId": "painted-portrait-prices",
         "priceListTitle": "Painted Portrait",
-        "priceListThumb": "/images/price-lists/painted-portrait-thumb.webp",
+        "priceListThumb": "/images/price-lists/painted-portrait-prices-thumb.webp",
         "badgeTitle": "Certificate of Authenticity",
         "badgeSubtitle": "Offered on all paintings",
         "visible": true

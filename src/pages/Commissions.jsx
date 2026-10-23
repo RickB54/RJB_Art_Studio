@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Brush, CheckCircle2, ShieldCheck, AlertCircle, FileText, Info } from 'lucide-react'
 import siteData from '../data/site.json'
 import pagesData from '../data/pages.json'
-import { PRICE_LISTS } from '../data/priceLists'
+import { PRICE_LISTS, getPriceList } from '../data/priceLists'
 import PriceListModal from '../components/PriceListModal'
 import PageBlocks from '../components/PageBlocks'
 import GoogleFormEmbed from '../components/GoogleFormEmbed'
@@ -12,6 +12,7 @@ export default function Commissions() {
   const [pageText, setPageText] = useState(pagesData.commissions || {})
   const [site, setSite] = useState(siteData)
   const [activePriceList, setActivePriceList] = useState(null)
+  const [thumbErrors, setThumbErrors] = useState({})
 
   useEffect(() => {
     fetch('/__api/data')
@@ -22,21 +23,6 @@ export default function Commissions() {
       })
       .catch(() => {})
   }, [])
-
-  // Map service card ID or priceListId to corresponding PRICE_LIST item
-  const getServicePriceList = (card) => {
-    if (!card) return null
-    if (card.priceListId) {
-      const match = PRICE_LISTS.find(p => p.id === card.priceListId)
-      if (match) return match
-    }
-    const id = card.id
-    if (id === 'charcoal-portraits') return PRICE_LISTS.find(p => p.id === 'charcoal-portrait-prices')
-    if (id === 'painted-portraits') return PRICE_LISTS.find(p => p.id === 'painted-portrait-prices')
-    if (id === 'custom-paintings') return PRICE_LISTS.find(p => p.id === 'product-price-list')
-    if (id === 'archival-prints') return PRICE_LISTS.find(p => p.id === 'prints-price-list')
-    return null
-  }
 
   const cardsList = pageText.cards || site.services || []
   const formEmbedUrl = site.contact?.googleCommissionEmbedUrl || site.contact?.googleCommissionFormUrl || ''
@@ -64,7 +50,7 @@ export default function Commissions() {
       {pageText.cardsVisible !== false && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {cardsList.filter(svc => svc && svc.visible !== false).map((svc) => {
-            const pl = getServicePriceList(svc)
+            const pl = getPriceList(svc)
             return (
               <div key={svc.id || svc.title} className="glass-panel p-7 rounded-2xl border border-white/10 flex flex-col justify-between space-y-4">
                 <div>
@@ -81,11 +67,19 @@ export default function Commissions() {
                     className="group/thumb p-2.5 rounded-xl bg-black/40 hover:bg-black/60 border border-white/10 hover:border-studio-gold/60 transition flex items-center gap-3 text-left w-full focus:outline-none focus:ring-2 focus:ring-studio-gold"
                     title={`View ${pl.title} Price List`}
                   >
-                    <img
-                      src={svc.priceListThumb || pl.thumb}
-                      alt={pl.alt || pl.title}
-                      className="w-16 h-12 rounded object-cover border border-white/10 shrink-0 group-hover/thumb:scale-105 transition-transform"
-                    />
+                    {thumbErrors[pl.id] ? (
+                      <div className="w-16 h-12 rounded bg-studio-card border border-white/10 flex flex-col items-center justify-center text-studio-gold text-[10px] font-medium p-1 text-center shrink-0">
+                        <FileText className="w-4 h-4 mb-0.5 text-studio-gold" />
+                        <span className="line-clamp-1 leading-tight">{pl.title}</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={svc.priceListThumb || pl.thumb}
+                        alt={pl.alt || pl.title}
+                        onError={() => setThumbErrors(prev => ({ ...prev, [pl.id]: true }))}
+                        className="w-16 h-12 rounded object-cover border border-white/10 shrink-0 group-hover/thumb:scale-105 transition-transform"
+                      />
+                    )}
                     <div className="min-w-0 flex-1">
                       <span className="text-xs font-semibold text-white group-hover/thumb:text-studio-gold transition block truncate">
                         {svc.priceListTitle || `${pl.title} Price List`}

@@ -2,6 +2,8 @@
 // Usage: npm run publish              (auto commit message)
 //        npm run publish -- "message" (custom commit message)
 import { execSync } from 'node:child_process'
+import readline from 'node:readline/promises'
+import { stdin as input, stdout as output } from 'node:process'
 
 const commitMsg = process.argv[2]?.trim() || 'Update gallery and site content'
 
@@ -18,6 +20,22 @@ function run(cmd, desc) {
 console.log('\n========================================')
 console.log('  RJB Art Studio - Publish Workflow')
 console.log('========================================\n')
+
+// Refuse to run if not an interactive terminal
+if (!process.stdin.isTTY) {
+  console.error('[SECURITY ERROR] Live deploy requires an interactive terminal. Aborting.')
+  process.exit(1)
+}
+
+// Require explicit confirmation
+const rl = readline.createInterface({ input, output })
+const confirmation = await rl.question('⚠️  Live deployment costs 15 Netlify build credits.\nType DEPLOY to confirm deployment to Netlify Production: ')
+rl.close()
+
+if (confirmation.trim() !== 'DEPLOY') {
+  console.log('\nDeployment cancelled. (Did not type DEPLOY)')
+  process.exit(0)
+}
 
 // 1. Security check: no private files tracked
 const trackedFiles = execSync('git ls-files').toString()
