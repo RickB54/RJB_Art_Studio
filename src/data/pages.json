@@ -10,10 +10,26 @@
     "commissionBtn": "Request A Commission",
     "highlightsVisible": true,
     "highlights": [
-      { "stat": "500+", "label": "Paintings Created →", "link": "/gallery" },
-      { "stat": "2x", "label": "Artist of the Month →", "link": "/about#awards" },
-      { "stat": "Oil & Acrylic", "label": "Fine Art Mediums →", "link": "/gallery" },
-      { "stat": "YouTube", "label": "Video Tutorials →", "link": "/videos" }
+      {
+        "stat": "500+",
+        "label": "Paintings Created →",
+        "link": "/gallery"
+      },
+      {
+        "stat": "2x",
+        "label": "Artist of the Month →",
+        "link": "/about#awards"
+      },
+      {
+        "stat": "Oil & Acrylic",
+        "label": "Fine Art Mediums →",
+        "link": "/gallery"
+      },
+      {
+        "stat": "YouTube",
+        "label": "Video Tutorials →",
+        "link": "/videos"
+      }
     ],
     "featuredVisible": true,
     "featuredHeading": "Featured Works",
@@ -100,9 +116,20 @@
     "studioSubtitle": "Dedicated Art & Video Recording Facility",
     "studioDescription": "In 2019, I designed and custom-built my own dedicated 33' x 17' painting and video recording studio in Methuen. Equipped with natural lighting, multiple DSLR overhead video angles, and specialized wet-on-wet easels, this studio is where every painting comes to life and where each YouTube demonstration video is produced.",
     "studioStats": [
-      { "value": "33' × 17'", "label": "Dedicated Creative Space" },
-      { "value": "4K DSLR", "label": "Video Capture Setup →", "link": "/videos" },
-      { "value": "Oil & Acrylic", "label": "Custom Easel Stations →", "link": "/gallery" }
+      {
+        "value": "33' × 17'",
+        "label": "Dedicated Creative Space"
+      },
+      {
+        "value": "4K DSLR",
+        "label": "Video Capture Setup →",
+        "link": "/videos"
+      },
+      {
+        "value": "Oil & Acrylic",
+        "label": "Custom Easel Stations →",
+        "link": "/gallery"
+      }
     ],
     "ctaVisible": true,
     "ctaTitle": "Interested in working together or purchasing art?",
@@ -179,10 +206,26 @@
     "processTitle": "How The Commission Process Works",
     "processSubtitle": "Simple, collaborative, and tailored to your vision",
     "processSteps": [
-      { "num": "1", "title": "Request & Vision", "desc": "Submit the request form below with your desired subject, size, and photo references." },
-      { "num": "2", "title": "Consultation & Quote", "desc": "We'll discuss orientation, canvas vs panel, background color palette, and timeline." },
-      { "num": "3", "title": "Studio Creation", "desc": "I create the piece in my Methuen studio, with optional progress updates and video recording." },
-      { "num": "4", "title": "Signed & Delivered", "desc": "Your painting is signed, accompanied by a Certificate of Authenticity, and carefully packaged." }
+      {
+        "num": "1",
+        "title": "Request & Vision",
+        "desc": "Submit the request form below with your desired subject, size, and photo references."
+      },
+      {
+        "num": "2",
+        "title": "Consultation & Quote",
+        "desc": "We'll discuss orientation, canvas vs panel, background color palette, and timeline."
+      },
+      {
+        "num": "3",
+        "title": "Studio Creation",
+        "desc": "I create the piece in my Methuen studio, with optional progress updates and video recording."
+      },
+      {
+        "num": "4",
+        "title": "Signed & Delivered",
+        "desc": "Your painting is signed, accompanied by a Certificate of Authenticity, and carefully packaged."
+      }
     ],
     "pricingPolicyVisible": true,
     "pricingPolicyTitle": "Pricing Policy Notice",
@@ -213,11 +256,26 @@
     ],
     "formSubjectsLabel": "Number of Subjects",
     "formSubjectsOptions": [
-      { "value": "1", "label": "1 Subject (Single Person / Pet / Scenery)" },
-      { "value": "2", "label": "2 Subjects" },
-      { "value": "3", "label": "3 Subjects" },
-      { "value": "4", "label": "4 Subjects" },
-      { "value": "5+", "label": "5+ Subjects" }
+      {
+        "value": "1",
+        "label": "1 Subject (Single Person / Pet / Scenery)"
+      },
+      {
+        "value": "2",
+        "label": "2 Subjects"
+      },
+      {
+        "value": "3",
+        "label": "3 Subjects"
+      },
+      {
+        "value": "4",
+        "label": "4 Subjects"
+      },
+      {
+        "value": "5+",
+        "label": "5+ Subjects"
+      }
     ],
     "formMediumLabel": "What medium do you prefer?",
     "formMediumOptions": [
@@ -293,11 +351,26 @@
     "directEmailLabel": "Artist Direct Email:",
     "exploreTitle": "Explore",
     "exploreLinks": [
-      { "label": "Original Art Gallery", "target": "/gallery" },
-      { "label": "About the Artist & Studio", "target": "/about" },
-      { "label": "Commissions & Pricing", "target": "/commissions" },
-      { "label": "YouTube Painting Tutorials", "target": "/videos" },
-      { "label": "Contact Rick", "target": "/contact" }
+      {
+        "label": "Original Art Gallery",
+        "target": "/gallery"
+      },
+      {
+        "label": "About the Artist & Studio",
+        "target": "/about"
+      },
+      {
+        "label": "Commissions & Pricing",
+        "target": "/commissions"
+      },
+      {
+        "label": "YouTube Painting Tutorials",
+        "target": "/videos"
+      },
+      {
+        "label": "Contact Rick",
+        "target": "/contact"
+      }
     ],
     "connectTitle": "Connect",
     "priceListsTitle": "Official Price Lists",

@@ -96,8 +96,8 @@
     "instructions": "Inquire about available paintings, fine art prints, custom portrait commissions, or reach out directly at rjbartstudio@gmail.com",
     "googleContactFormUrl": "",
     "googleCommissionFormUrl": "",
-    "googleContactEmbedUrl": "",
-    "googleCommissionEmbedUrl": "",
+    "googleContactEmbedUrl": "https://docs.google.com/forms/d/e/1FAIpQLSe-dVd6uyJdNXTqcABwSi61XhnbUTXi5FlCPthfJhMzzN_zWw/viewform?usp=dialog",
+    "googleCommissionEmbedUrl": "https://docs.google.com/forms/d/e/1FAIpQLSeQpSxpdNA-WScpraok0v-ADPPEqVFSsmOEUDWXfQOoD1Z_yg/viewform?usp=preview",
     "googleContactEmbedHeight": 850,
     "googleCommissionEmbedHeight": 1100
   }
