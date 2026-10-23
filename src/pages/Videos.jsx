@@ -4,6 +4,7 @@ import { Youtube, ExternalLink, PlaySquare, Layers, AlertCircle, ArrowRight } fr
 import siteData from '../data/site.json'
 import initialPlaylists from '../data/playlists.json'
 import initialPages from '../data/pages.json'
+import PageBlocks from '../components/PageBlocks'
 
 export default function Videos() {
   const [playlists, setPlaylists] = useState(initialPlaylists)
@@ -32,6 +33,9 @@ export default function Videos() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       
+      {/* Slot: Top of page */}
+      <PageBlocks blocks={vt.blockSlots?.top} />
+
       {/* Page Header */}
       {vt.headerVisible !== false && (
         <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -162,6 +166,9 @@ export default function Videos() {
           })}
         </div>
       </div>
+
+      {/* Slot: Bottom of page */}
+      <PageBlocks blocks={vt.blockSlots?.bottom || vt.extraBlocks} />
 
     </div>
   )

@@ -35,6 +35,10 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
       newBlock = { ...newBlock, heading: 'Online Form / Embedded Document', subtitle: 'Direct Submission', text: '', url: '', height: 850 }
     } else if (type === 'video') {
       newBlock = { ...newBlock, heading: 'Featured Video Demonstration', subtitle: 'Studio Video', text: '', url: '' }
+    } else if (type === 'photo') {
+      newBlock = { ...newBlock, image: '', caption: '', size: 'medium', align: 'center' }
+    } else if (type === 'divider') {
+      newBlock = { ...newBlock, style: 'standard' }
     }
 
     updateBlocks([...blocks, newBlock])
@@ -121,12 +125,14 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
             className="bg-[#13111c] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white"
           >
             <option value="text">📄 Text Section</option>
+            <option value="photo">📷 Photo</option>
             <option value="image-text">🖼 Image + Text</option>
             <option value="cards">🗂 Cards Row</option>
             <option value="notice">🔔 Notice Box</option>
             <option value="button">🔘 Button Link</option>
             <option value="embed">📋 Embed (Google Forms / URL)</option>
             <option value="video">🎬 Video (YouTube)</option>
+            <option value="divider">➖ Divider</option>
           </select>
           <button
             type="button"
@@ -620,6 +626,68 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                         className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                       />
                     </div>
+                  </div>
+                )}
+
+                {/* 8. Photo Block */}
+                {block.type === 'photo' && (
+                  <div className="space-y-3 pt-3 border-t border-white/5">
+                    <div>
+                      <PhotoDropZone
+                        value={block.image || ''}
+                        onChange={url => handleUpdateField(idx, 'image', url)}
+                        label="Upload or Drop Photo"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Caption (Optional)</label>
+                        <input
+                          type="text"
+                          value={block.caption || ''}
+                          onChange={e => handleUpdateField(idx, 'caption', e.target.value)}
+                          placeholder="e.g. Rick in the Methuen studio"
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Size</label>
+                        <select
+                          value={block.size || 'medium'}
+                          onChange={e => handleUpdateField(idx, 'size', e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        >
+                          <option value="small">Small</option>
+                          <option value="medium">Medium</option>
+                          <option value="large">Large</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1">Alignment</label>
+                      <div className="flex items-center gap-4 text-xs text-slate-300">
+                        {['left', 'center', 'right'].map(align => (
+                          <label key={align} className="flex items-center gap-1.5 cursor-pointer capitalize">
+                            <input
+                              type="radio"
+                              name={`photo-align-editor-${block.id || idx}`}
+                              value={align}
+                              checked={(block.align || 'center') === align}
+                              onChange={() => handleUpdateField(idx, 'align', align)}
+                              className="accent-studio-magenta"
+                            />
+                            <span>{align}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 9. Divider Block */}
+                {block.type === 'divider' && (
+                  <div className="py-2 text-center text-xs text-slate-400 border border-white/5 rounded-xl bg-black/20">
+                    <span className="text-studio-gold">◆</span> Clean separator line with studio accent
                   </div>
                 )}
 

@@ -30,7 +30,10 @@ export default function Commissions() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
-      
+
+      {/* Slot: Top of page */}
+      <PageBlocks blocks={pageText.blockSlots?.top} />
+
       {/* Header */}
       {pageText.heroVisible !== false && (
         <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -195,8 +198,8 @@ export default function Commissions() {
         </div>
       )}
 
-      {/* Dynamic Extra Blocks */}
-      {pageText.extraBlocks && <PageBlocks blocks={pageText.extraBlocks} />}
+      {/* Slot: Bottom of page */}
+      <PageBlocks blocks={pageText.blockSlots?.bottom || pageText.extraBlocks} />
 
       {activePriceList && (
         <PriceListModal item={activePriceList} onClose={() => setActivePriceList(null)} />

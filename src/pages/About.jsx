@@ -27,6 +27,9 @@ export default function About() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
       
+      {/* Slot: Top */}
+      <PageBlocks blocks={aboutText.blockSlots?.top} />
+
       {/* Header */}
       {aboutText.headerVisible !== false && (
         <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -41,6 +44,9 @@ export default function About() {
           </p>
         </div>
       )}
+
+      {/* Slot: After Header */}
+      <PageBlocks blocks={aboutText.blockSlots?.after_header} />
 
       {/* Main Bio Card */}
       {aboutText.journeyVisible !== false && (
@@ -80,6 +86,9 @@ export default function About() {
           </div>
         </div>
       )}
+
+      {/* Slot: Under Artistic Journey */}
+      <PageBlocks blocks={aboutText.blockSlots?.after_journey} />
 
       {/* Mayoral Awards & Honors */}
       {aboutText.awardsVisible !== false && awards.length > 0 && (
@@ -134,6 +143,9 @@ export default function About() {
         </div>
       )}
 
+      {/* Slot: After Awards & Recognition */}
+      <PageBlocks blocks={aboutText.blockSlots?.after_awards} />
+
       {/* The Studio Story */}
       {aboutText.studioVisible !== false && (
         <div id="the-studio" className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-6 scroll-mt-28">
@@ -186,6 +198,9 @@ export default function About() {
         </div>
       )}
 
+      {/* Slot: After Studio */}
+      <PageBlocks blocks={aboutText.blockSlots?.after_studio} />
+
       {/* Call to Action Bar */}
       {aboutText.ctaVisible !== false && (
         <div className="glass-panel p-8 rounded-2xl border border-studio-magenta/30 bg-gradient-to-r from-studio-purple/20 via-studio-card to-studio-surface text-center space-y-4">
@@ -212,10 +227,11 @@ export default function About() {
         </div>
       )}
 
-      {/* Dynamic Extra Page Blocks */}
-      {aboutText.extraBlocks && aboutText.extraBlocks.length > 0 && (
-        <PageBlocks blocks={aboutText.extraBlocks} />
-      )}
+      {/* Slot: After CTA */}
+      <PageBlocks blocks={aboutText.blockSlots?.after_cta} />
+
+      {/* Slot: Bottom */}
+      <PageBlocks blocks={aboutText.blockSlots?.bottom || aboutText.extraBlocks} />
 
     </div>
   )

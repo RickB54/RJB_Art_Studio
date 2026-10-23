@@ -304,6 +304,49 @@ export default function PageBlocks({ blocks }) {
           )
         }
 
+        // 8. Photo Block (Single image with optional caption, size small/medium/large, align left/center/right)
+        if (block.type === 'photo') {
+          const sizeClass = block.size === 'small' ? 'max-w-md' : block.size === 'large' ? 'max-w-5xl' : 'max-w-2xl'
+          const alignClass = block.align === 'left' ? 'mr-auto' : block.align === 'right' ? 'ml-auto' : 'mx-auto'
+          const textAlignClass = block.align === 'left' ? 'text-left' : block.align === 'right' ? 'text-right' : 'text-center'
+          return (
+            <div key={key} className="py-2">
+              <figure className={`${sizeClass} ${alignClass} space-y-2`}>
+                {block.image ? (
+                  <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-xl">
+                    <img
+                      src={block.image}
+                      alt={block.caption || block.alt || 'Studio Photo'}
+                      className="w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-xs text-slate-400 bg-white/5 rounded-2xl border border-dashed border-white/10">
+                    No photo selected
+                  </div>
+                )}
+                {block.caption && (
+                  <figcaption className={`text-xs text-slate-400 italic pt-1 ${textAlignClass}`}>
+                    {block.caption}
+                  </figcaption>
+                )}
+              </figure>
+            </div>
+          )
+        }
+
+        // 9. Divider Block
+        if (block.type === 'divider') {
+          return (
+            <div key={key} className="py-6 flex items-center justify-center">
+              <div className="w-full border-t border-white/10 relative flex items-center justify-center">
+                <span className="absolute bg-studio-surface px-3 text-studio-gold text-xs">◆</span>
+              </div>
+            </div>
+          )
+        }
+
         return null
       })}
     </div>

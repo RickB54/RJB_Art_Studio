@@ -27,6 +27,9 @@ export default function Contact() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       
+      {/* Slot: Top of page */}
+      <PageBlocks blocks={ct.blockSlots?.top} />
+
       {/* Header */}
       {ct.headerVisible !== false && (
         <div className="text-center max-w-2xl mx-auto space-y-3">
@@ -162,8 +165,8 @@ export default function Contact() {
 
       </div>
 
-      {/* Extra Page Blocks */}
-      {ct.blocks && <PageBlocks blocks={ct.blocks} />}
+      {/* Slot: Bottom of page */}
+      <PageBlocks blocks={ct.blockSlots?.bottom || ct.blocks} />
 
     </div>
   )

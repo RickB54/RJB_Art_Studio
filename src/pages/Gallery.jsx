@@ -293,7 +293,10 @@ export default function Gallery() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
-      
+
+      {/* Slot: Top of page */}
+      <PageBlocks blocks={galleryText.blockSlots?.top} />
+
       {/* Page Header */}
       {galleryText.headerVisible !== false && (
         <div className="text-center max-w-3xl mx-auto space-y-3">
@@ -764,10 +767,8 @@ export default function Gallery() {
         </div>
       )}
 
-      {/* Dynamic Extra Page Blocks */}
-      {galleryText.extraBlocks && galleryText.extraBlocks.length > 0 && (
-        <PageBlocks blocks={galleryText.extraBlocks} />
-      )}
+      {/* Slot: Bottom of page */}
+      <PageBlocks blocks={galleryText.blockSlots?.bottom || galleryText.extraBlocks} />
 
     </div>
   )

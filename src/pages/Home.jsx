@@ -33,7 +33,10 @@ export default function Home() {
 
   return (
     <div className="space-y-24 sm:space-y-32">
-      
+
+      {/* Slot: Top of page */}
+      <PageBlocks blocks={homeText.blockSlots?.top} />
+
       {/* Hero Section */}
       {homeText.heroVisible !== false && (
         <section className="relative pt-12 pb-16 sm:pt-20 sm:pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -102,6 +105,9 @@ export default function Home() {
 
         </section>
       )}
+
+      {/* Slot: After Hero */}
+      <PageBlocks blocks={homeText.blockSlots?.after_hero} />
 
       {/* Featured Paintings Section */}
       {homeText.featuredVisible !== false && (
@@ -208,6 +214,9 @@ export default function Home() {
         </section>
       )}
 
+      {/* Slot: After Featured */}
+      <PageBlocks blocks={homeText.blockSlots?.after_featured} />
+
       {/* Commissions & Prints Teaser Banner */}
       {homeText.teaserVisible !== false && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -245,6 +254,9 @@ export default function Home() {
         </section>
       )}
 
+      {/* Slot: After Teaser */}
+      <PageBlocks blocks={homeText.blockSlots?.after_teaser} />
+
       {/* Upcoming Shows & Events */}
       {homeText.artShowsVisible !== false && artShows.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
@@ -273,10 +285,8 @@ export default function Home() {
         </section>
       )}
 
-      {/* Dynamic Extra Page Blocks */}
-      {homeText.extraBlocks && homeText.extraBlocks.length > 0 && (
-        <PageBlocks blocks={homeText.extraBlocks} />
-      )}
+      {/* Slot: After Shows / Bottom */}
+      <PageBlocks blocks={homeText.blockSlots?.bottom || homeText.extraBlocks} />
 
     </div>
   )

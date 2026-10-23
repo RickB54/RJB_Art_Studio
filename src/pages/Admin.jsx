@@ -6,7 +6,45 @@ import paintingsDataInitial from '../data/paintings.json'
 import pagesDataInitial from '../data/pages.json'
 import pagesDefaultInitial from '../data/pages.default.json'
 import PhotoDropZone from '../components/PhotoDropZone'
-import AdminBlockEditor from '../components/AdminBlockEditor'
+import AdminBlockSlot from '../components/AdminBlockSlot'
+
+const HOME_BLOCK_SLOTS = [
+  { id: 'top', label: 'Top of Page (Above Hero)' },
+  { id: 'after_hero', label: 'After Hero Section' },
+  { id: 'after_featured', label: 'After Featured Artworks' },
+  { id: 'after_teaser', label: 'After About Rick Teaser' },
+  { id: 'bottom', label: 'Bottom of Page' },
+]
+
+const ABOUT_BLOCK_SLOTS = [
+  { id: 'top', label: 'Top of Page' },
+  { id: 'after_header', label: 'After Header / Bio' },
+  { id: 'after_journey', label: 'After Artistic Journey' },
+  { id: 'after_awards', label: 'After Awards & Recognitions' },
+  { id: 'after_studio', label: 'After Studio Tour & Process' },
+  { id: 'after_cta', label: 'After Inquiries & Commissions Banner' },
+  { id: 'bottom', label: 'Bottom of Page' },
+]
+
+const COMMISSIONS_BLOCK_SLOTS = [
+  { id: 'top', label: 'Top of Page' },
+  { id: 'bottom', label: 'Bottom of Page' },
+]
+
+const GALLERY_BLOCK_SLOTS = [
+  { id: 'top', label: 'Top of Page' },
+  { id: 'bottom', label: 'Bottom of Page' },
+]
+
+const VIDEOS_BLOCK_SLOTS = [
+  { id: 'top', label: 'Top of Page' },
+  { id: 'bottom', label: 'Bottom of Page' },
+]
+
+const CONTACT_BLOCK_SLOTS = [
+  { id: 'top', label: 'Top of Page' },
+  { id: 'bottom', label: 'Bottom of Page' },
+]
 
 export default function Admin() {
   const [paintings, setPaintings] = useState(paintingsDataInitial)
@@ -720,6 +758,90 @@ export default function Admin() {
     setEditPageSection(nextSection)
     setActiveTab('site')
   }
+
+  const updatePageBlockSlot = (sectionKey, slotId, newBlocks) => {
+    const curSection = pages[sectionKey] || {}
+    const curSlots = curSection.blockSlots || {}
+    setPages({
+      ...pages,
+      [sectionKey]: {
+        ...curSection,
+        blockSlots: {
+          ...curSlots,
+          [slotId]: newBlocks
+        }
+      }
+    })
+  }
+
+  const moveBlockBetweenSlots = (sectionKey, fromSlotId, toSlotId, blockIndex, insertAt) => {
+    const curSection = pages[sectionKey] || {}
+    const curSlots = curSection.blockSlots || {}
+    const fromList = [...(curSlots[fromSlotId] || (fromSlotId === 'bottom' ? curSection.extraBlocks || curSection.blocks : []) || [])]
+    const toList = [...(curSlots[toSlotId] || (toSlotId === 'bottom' ? curSection.extraBlocks || curSection.blocks : []) || [])]
+    const [moved] = fromList.splice(blockIndex, 1)
+    if (!moved) return
+    if (insertAt === 'start') {
+      toList.unshift(moved)
+    } else {
+      toList.push(moved)
+    }
+    setPages({
+      ...pages,
+      [sectionKey]: {
+        ...curSection,
+        blockSlots: {
+          ...curSlots,
+          [fromSlotId]: fromList,
+          [toSlotId]: toList
+        }
+      }
+    })
+  }
+
+  const renderBlockSlotsEditor = (sectionKey, slotsList, sectionTitle) => (
+    <div className="pt-6 border-t border-white/10 space-y-4">
+      <div>
+        <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
+          Custom Content Blocks Between Sections
+        </span>
+        <p className="text-[11px] text-slate-400 mt-0.5">
+          Add custom content blocks (photos, text, cards, notices, buttons, videos, embeds) between sections on the {sectionTitle}. Changes save when you click Save Page Content Changes.
+        </p>
+      </div>
+      <div className="space-y-4">
+        {slotsList.map((slot, sIdx) => {
+          const pageObj = pages[sectionKey] || {}
+          const slotBlocks = pageObj.blockSlots?.[slot.id] || (slot.id === 'bottom' ? pageObj.extraBlocks || pageObj.blocks : []) || []
+          const prevSlot = sIdx > 0 ? slotsList[sIdx - 1] : null
+          const nextSlot = sIdx < slotsList.length - 1 ? slotsList[sIdx + 1] : null
+          return (
+            <div key={slot.id} className="rounded-xl border border-white/10 bg-white/[0.02] overflow-hidden">
+              <div className="px-3.5 py-2 bg-white/5 border-b border-white/10 flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-studio-magenta uppercase tracking-wider flex items-center gap-1.5">
+                  <span>Slot:</span>
+                  <span className="text-white">{slot.label}</span>
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {slotBlocks.length} block{slotBlocks.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <div className="p-3">
+                <AdminBlockSlot
+                  slotId={slot.id}
+                  label={slot.label}
+                  blocks={slotBlocks}
+                  onUpdate={newBlocks => updatePageBlockSlot(sectionKey, slot.id, newBlocks)}
+                  onMoveToPrevSlot={prevSlot ? (bIdx) => moveBlockBetweenSlots(sectionKey, slot.id, prevSlot.id, bIdx, 'end') : null}
+                  onMoveToNextSlot={nextSlot ? (bIdx) => moveBlockBetweenSlots(sectionKey, slot.id, nextSlot.id, bIdx, 'start') : null}
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 
   const restoreDefaultSection = (sectionKey, sectionName) => {
     if (window.confirm(`Restore original shipped text for ${sectionName}? Any unsaved changes on this page will be replaced with defaults.`)) {
@@ -2364,12 +2486,8 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* 7. Extra Page Blocks */}
-              <AdminBlockEditor
-                blocks={pages.home?.extraBlocks || []}
-                onChange={newBlocks => setPages({ ...pages, home: { ...(pages.home || {}), extraBlocks: newBlocks } })}
-                title="Home Page Extra Blocks"
-              />
+              {/* Custom Block Slots */}
+              {renderBlockSlotsEditor('home', HOME_BLOCK_SLOTS, 'Home Page')}
             </div>
           )}
 
@@ -2936,12 +3054,8 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* 7. Extra Page Blocks */}
-              <AdminBlockEditor
-                blocks={pages.about?.extraBlocks || []}
-                onChange={newBlocks => setPages({ ...pages, about: { ...(pages.about || {}), extraBlocks: newBlocks } })}
-                title="About Page Extra Blocks"
-              />
+              {/* Custom Block Slots */}
+              {renderBlockSlotsEditor('about', ABOUT_BLOCK_SLOTS, 'About & Studio Page')}
             </div>
           )}
 
@@ -3647,11 +3761,8 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* 8. Extra Page Blocks */}
-              <AdminBlockEditor
-                blocks={pages.commissions?.extraBlocks || []}
-                onChange={newBlocks => setPages({ ...pages, commissions: { ...(pages.commissions || {}), extraBlocks: newBlocks } })}
-              />
+              {/* Custom Block Slots */}
+              {renderBlockSlotsEditor('commissions', COMMISSIONS_BLOCK_SLOTS, 'Commissions & Prints Page')}
             </div>
           )}
 
@@ -3955,12 +4066,8 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* 5. Extra Page Blocks */}
-              <AdminBlockEditor
-                blocks={pages.gallery?.extraBlocks || []}
-                onChange={newBlocks => setPages({ ...pages, gallery: { ...(pages.gallery || {}), extraBlocks: newBlocks } })}
-                title="Gallery Page Extra Blocks"
-              />
+              {/* Custom Block Slots */}
+              {renderBlockSlotsEditor('gallery', GALLERY_BLOCK_SLOTS, 'Gallery Page')}
             </div>
           )}
 
@@ -4062,6 +4169,9 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
+
+              {/* Custom Block Slots */}
+              {renderBlockSlotsEditor('videos', VIDEOS_BLOCK_SLOTS, 'Videos Page')}
             </div>
           )}
 
@@ -4212,11 +4322,8 @@ export default function Admin() {
                 </p>
               </div>
 
-              {/* Extra Page Blocks */}
-              <AdminBlockEditor
-                blocks={pages.contact?.blocks || []}
-                onChange={newBlocks => setPages({ ...pages, contact: { ...(pages.contact || {}), blocks: newBlocks } })}
-              />
+              {/* Custom Block Slots */}
+              {renderBlockSlotsEditor('contact', CONTACT_BLOCK_SLOTS, 'Contact Page')}
             </div>
           )}
 
