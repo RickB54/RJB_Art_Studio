@@ -100,9 +100,24 @@
     "studioSubtitle": "Dedicated Art & Video Recording Facility",
     "studioDescription": "In 2019, I designed and custom-built my own dedicated 33' x 17' painting and video recording studio in Methuen. Equipped with natural lighting, multiple DSLR overhead video angles, and specialized wet-on-wet easels, this studio is where every painting comes to life and where each YouTube demonstration video is produced.",
     "studioStats": [
-      { "value": "33' × 17'", "label": "Dedicated Creative Space" },
-      { "value": "4K DSLR", "label": "Video Capture Setup →", "link": "/videos" },
-      { "value": "Oil & Acrylic", "label": "Custom Easel Stations →", "link": "/gallery" }
+      {
+        "value": "My Studio Build Part 1",
+        "label": "Dedicated Creative Space",
+        "link": "https://youtu.be/rZG8c2-QHaQ",
+        "thumbnail": "https://img.youtube.com/vi/rZG8c2-QHaQ/hqdefault.jpg"
+      },
+      {
+        "value": "My Studio Build Part 2",
+        "label": "Video Capture Setup →",
+        "link": "https://youtu.be/zbfRIlxRoAE",
+        "thumbnail": "https://img.youtube.com/vi/zbfRIlxRoAE/hqdefault.jpg"
+      },
+      {
+        "value": "My Studio Build Part 3",
+        "label": "Custom Easel Stations →",
+        "link": "https://youtu.be/vGr11cLrNvs",
+        "thumbnail": "https://img.youtube.com/vi/vGr11cLrNvs/hqdefault.jpg"
+      }
     ],
     "ctaVisible": true,
     "ctaTitle": "Interested in working together or purchasing art?",

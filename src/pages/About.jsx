@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Award, Palette, Home, Heart, ArrowRight } from 'lucide-react'
+import { Award, Palette, Home, Heart, ArrowRight, Play, ExternalLink, Film } from 'lucide-react'
 import siteData from '../data/site.json'
 import pagesData from '../data/pages.json'
 import PageBlocks from '../components/PageBlocks'
+
+function getYouTubeVideoId(url) {
+  if (!url) return null
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
+  return m ? m[1] : null
+}
 
 export default function About() {
   const [aboutText, setAboutText] = useState(pagesData.about || {})
@@ -167,33 +173,96 @@ export default function About() {
             {aboutText.studioDescription || "In 2019, I designed and custom-built my own dedicated 33' x 17' painting and video recording studio in Methuen. Equipped with natural lighting, multiple DSLR overhead video angles, and specialized wet-on-wet easels, this studio is where every painting comes to life and where each YouTube demonstration video is produced."}
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-            {studioStats.map((stat, idx) => (
-              stat.link ? (
-                <Link
-                  key={idx}
-                  to={stat.link}
-                  className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-studio-gold/40 hover:bg-studio-gold/5 transition-all duration-200 text-center group block focus:outline-none focus:ring-2 focus:ring-studio-gold"
-                  title={stat.label}
-                >
-                  <span className="block font-serif text-xl font-bold text-studio-gold group-hover:brightness-125">
-                    {stat.value}
-                  </span>
-                  <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">
-                    {stat.label}
-                  </span>
-                </Link>
-              ) : (
-                <div key={idx} className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-                  <span className="block font-serif text-xl font-bold text-white">
-                    {stat.value}
-                  </span>
-                  <span className="text-xs text-slate-400">
-                    {stat.label}
-                  </span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2">
+            {studioStats.map((stat, idx) => {
+              const videoId = getYouTubeVideoId(stat.link)
+              const thumbUrl = stat.thumbnail || stat.image || (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : '')
+              const isExternal = stat.link && (stat.link.startsWith('http://') || stat.link.startsWith('https://') || stat.link.startsWith('//'))
+
+              const cardContent = (
+                <div className="glass-panel glass-panel-hover rounded-2xl overflow-hidden flex flex-col group transition-all duration-300 h-full border border-white/10 hover:border-studio-gold/50 shadow-md hover:shadow-xl">
+                  {/* Thumbnail / Media Container */}
+                  <div className="relative aspect-video bg-studio-surface overflow-hidden">
+                    {thumbUrl ? (
+                      <img
+                        src={thumbUrl}
+                        alt={stat.value || stat.label || 'Studio Video'}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-white/5 flex items-center justify-center text-slate-500">
+                        <Film className="w-8 h-8" />
+                      </div>
+                    )}
+
+                    {/* Play Button Overlay (when video link present) */}
+                    {stat.link && (
+                      <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-red-600 transition-transform">
+                          <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Info */}
+                  <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+                    <div>
+                      <h3 className="font-serif text-base sm:text-lg font-bold text-white group-hover:text-studio-gold transition-colors">
+                        {stat.value}
+                      </h3>
+                      <p className="text-xs text-slate-300 mt-1 line-clamp-2">
+                        {stat.label}
+                      </p>
+                    </div>
+
+                    {stat.link && (
+                      <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs text-studio-gold font-semibold">
+                        <span className="flex items-center gap-1">
+                          <span>Watch Video</span>
+                          {isExternal && <ExternalLink className="w-3 h-3 opacity-70" />}
+                        </span>
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
-            ))}
+
+              if (stat.link) {
+                if (isExternal) {
+                  return (
+                    <a
+                      key={idx}
+                      href={stat.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block focus:outline-none focus:ring-2 focus:ring-studio-gold rounded-2xl h-full"
+                      title={`Watch: ${stat.value}`}
+                    >
+                      {cardContent}
+                    </a>
+                  )
+                }
+                return (
+                  <Link
+                    key={idx}
+                    to={stat.link}
+                    className="block focus:outline-none focus:ring-2 focus:ring-studio-gold rounded-2xl h-full"
+                    title={stat.value}
+                  >
+                    {cardContent}
+                  </Link>
+                )
+              }
+
+              return (
+                <div key={idx} className="block h-full">
+                  {cardContent}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

@@ -117,18 +117,22 @@
     "studioDescription": "In 2019, I designed and custom-built my own dedicated 33' x 17' painting and video recording studio in Methuen. Equipped with natural lighting, multiple DSLR overhead video angles, and specialized wet-on-wet easels, this studio is where every painting comes to life and where each YouTube demonstration video is produced.",
     "studioStats": [
       {
-        "value": "33' × 17'",
-        "label": "Dedicated Creative Space"
+        "value": "My Studio Build Part 1",
+        "label": "Dedicated Creative Space",
+        "link": "https://youtu.be/rZG8c2-QHaQ",
+        "thumbnail": "https://img.youtube.com/vi/rZG8c2-QHaQ/hqdefault.jpg"
       },
       {
-        "value": "4K DSLR",
+        "value": "My Studio Build Part 2",
         "label": "Video Capture Setup →",
-        "link": "/videos"
+        "link": "https://youtu.be/zbfRIlxRoAE",
+        "thumbnail": "https://img.youtube.com/vi/zbfRIlxRoAE/hqdefault.jpg"
       },
       {
-        "value": "Oil & Acrylic",
+        "value": "My Studio Build Part 3",
         "label": "Custom Easel Stations →",
-        "link": "/gallery"
+        "link": "https://youtu.be/vGr11cLrNvs",
+        "thumbnail": "https://img.youtube.com/vi/vGr11cLrNvs/hqdefault.jpg"
       }
     ],
     "ctaVisible": true,
@@ -136,7 +140,20 @@
     "ctaDescription": "Browse the gallery of paintings, inquire about custom portrait commissions, or reach out with any questions.",
     "ctaGalleryBtn": "Browse The Gallery",
     "ctaContactBtn": "Contact Rick Directly",
-    "extraBlocks": []
+    "extraBlocks": [],
+    "blockSlots": {
+      "after_header": [
+        {
+          "id": "block-1792790472290-tlgb",
+          "type": "photo",
+          "visible": true,
+          "image": "/images/paintings/unnamed-147087.webp",
+          "caption": "Rick Berube",
+          "size": "small",
+          "align": "center"
+        }
+      ]
+    }
   },
   "commissions": {
     "heroVisible": true,

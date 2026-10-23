@@ -2936,87 +2936,172 @@ export default function Admin() {
                     </button>
                   </div>
 
-                  <div className="space-y-2">
-                    {(pages.about?.studioStats || []).map((st, idx) => (
-                      <div key={idx} className="flex flex-col sm:flex-row items-center gap-2 p-2.5 rounded-xl bg-black/30 border border-white/5">
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (idx === 0) return
-                              const cur = [...(pages.about?.studioStats || [])]
-                              const temp = cur[idx]
-                              cur[idx] = cur[idx - 1]
-                              cur[idx - 1] = temp
-                              setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
-                            }}
-                            disabled={idx === 0}
-                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
-                          >
-                            <ArrowUp className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const cur = [...(pages.about?.studioStats || [])]
-                              if (idx === cur.length - 1) return
-                              const temp = cur[idx]
-                              cur[idx] = cur[idx + 1]
-                              cur[idx + 1] = temp
-                              setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
-                            }}
-                            disabled={idx === (pages.about?.studioStats || []).length - 1}
-                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
-                          >
-                            <ArrowDown className="w-3.5 h-3.5" />
-                          </button>
+                  <div className="space-y-3">
+                    {(pages.about?.studioStats || []).map((st, idx) => {
+                      const ytMatch = (st.link || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
+                      const ytId = ytMatch ? ytMatch[1] : null
+                      const defaultYtThumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : ''
+                      const activeThumb = st.thumbnail || defaultYtThumb
+
+                      return (
+                        <div key={idx} className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-studio-gold">
+                              Studio Video Card #{idx + 1}: {st.value || 'Untitled'}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (idx === 0) return
+                                  const cur = [...(pages.about?.studioStats || [])]
+                                  const temp = cur[idx]
+                                  cur[idx] = cur[idx - 1]
+                                  cur[idx - 1] = temp
+                                  setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                                }}
+                                disabled={idx === 0}
+                                className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                                title="Move Up"
+                              >
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const cur = [...(pages.about?.studioStats || [])]
+                                  if (idx === cur.length - 1) return
+                                  const temp = cur[idx]
+                                  cur[idx] = cur[idx + 1]
+                                  cur[idx + 1] = temp
+                                  setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                                }}
+                                disabled={idx === (pages.about?.studioStats || []).length - 1}
+                                className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                                title="Move Down"
+                              >
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const cur = (pages.about?.studioStats || []).filter((_, i) => i !== idx)
+                                  setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                                }}
+                                className="p-1 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300"
+                                title="Delete card"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-medium text-slate-300 mb-1">Title</label>
+                              <input
+                                type="text"
+                                value={st.value}
+                                onChange={e => {
+                                  const cur = [...(pages.about?.studioStats || [])]
+                                  cur[idx] = { ...cur[idx], value: e.target.value }
+                                  setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                                }}
+                                placeholder="e.g. My Studio Build Part 1"
+                                className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-bold"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-slate-300 mb-1">Subtitle / Description</label>
+                              <input
+                                type="text"
+                                value={st.label}
+                                onChange={e => {
+                                  const cur = [...(pages.about?.studioStats || [])]
+                                  cur[idx] = { ...cur[idx], label: e.target.value }
+                                  setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                                }}
+                                placeholder="e.g. Dedicated Creative Space"
+                                className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-[11px] font-medium text-slate-300 mb-1">YouTube Video Link</label>
+                              <input
+                                type="text"
+                                value={st.link || ''}
+                                onChange={e => {
+                                  const cur = [...(pages.about?.studioStats || [])]
+                                  cur[idx] = { ...cur[idx], link: e.target.value }
+                                  setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                                }}
+                                placeholder="https://youtu.be/..."
+                                className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono"
+                              />
+                            </div>
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="block text-[11px] font-medium text-slate-300">Thumbnail Image URL</label>
+                                {ytId && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cur = [...(pages.about?.studioStats || [])]
+                                      cur[idx] = { ...cur[idx], thumbnail: defaultYtThumb }
+                                      setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                                    }}
+                                    className="text-[10px] text-studio-magenta hover:underline font-semibold"
+                                  >
+                                    Auto YouTube Thumb
+                                  </button>
+                                )}
+                              </div>
+                              <input
+                                type="text"
+                                value={st.thumbnail || ''}
+                                onChange={e => {
+                                  const cur = [...(pages.about?.studioStats || [])]
+                                  cur[idx] = { ...cur[idx], thumbnail: e.target.value }
+                                  setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                                }}
+                                placeholder={defaultYtThumb || "Image URL or drop below"}
+                                className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Thumbnail preview and drop zone */}
+                          <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                            {activeThumb ? (
+                              <div className="w-28 aspect-video rounded-lg overflow-hidden border border-white/10 bg-black shrink-0 relative">
+                                <img
+                                  src={activeThumb}
+                                  alt={st.value || 'Thumbnail'}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                                  <Play className="w-4 h-4 fill-white text-white opacity-80" />
+                                </div>
+                              </div>
+                            ) : null}
+                            <div className="flex-1 w-full">
+                              <PhotoDropZone
+                                value={st.thumbnail || ''}
+                                onChange={url => {
+                                  const cur = [...(pages.about?.studioStats || [])]
+                                  cur[idx] = { ...cur[idx], thumbnail: url }
+                                  setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
+                                }}
+                                label="Drop custom photo/thumbnail or browse"
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <input
-                          type="text"
-                          value={st.value}
-                          onChange={e => {
-                            const cur = [...(pages.about?.studioStats || [])]
-                            cur[idx] = { ...cur[idx], value: e.target.value }
-                            setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
-                          }}
-                          placeholder="Value / Title (e.g. 33' × 17')"
-                          className="w-full sm:w-32 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-bold"
-                        />
-                        <input
-                          type="text"
-                          value={st.label}
-                          onChange={e => {
-                            const cur = [...(pages.about?.studioStats || [])]
-                            cur[idx] = { ...cur[idx], label: e.target.value }
-                            setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
-                          }}
-                          placeholder="Description Label"
-                          className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
-                        />
-                        <input
-                          type="text"
-                          value={st.link || ''}
-                          onChange={e => {
-                            const cur = [...(pages.about?.studioStats || [])]
-                            cur[idx] = { ...cur[idx], link: e.target.value }
-                            setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
-                          }}
-                          placeholder="Optional Link (e.g. /gallery)"
-                          className="w-full sm:w-36 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const cur = (pages.about?.studioStats || []).filter((_, i) => i !== idx)
-                            setPages({ ...pages, about: { ...(pages.about || {}), studioStats: cur } })
-                          }}
-                          className="p-1.5 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300"
-                          title="Delete card"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </div>
