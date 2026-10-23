@@ -4259,6 +4259,31 @@ export default function Admin() {
                 ))}
               </div>
 
+              {/* Privacy Notice Box */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3">
+                <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Privacy Notice Box</p>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Privacy Box Title</label>
+                  <input
+                    type="text"
+                    value={pages.contact?.privacyTitle || ''}
+                    placeholder="Studio Privacy Protection"
+                    onChange={e => setPages({ ...pages, contact: { ...(pages.contact || {}), privacyTitle: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Privacy Box Text</label>
+                  <textarea
+                    rows={2}
+                    value={pages.contact?.privacyText || ''}
+                    placeholder="Your details are only used to respond to your inquiry."
+                    onChange={e => setPages({ ...pages, contact: { ...(pages.contact || {}), privacyText: e.target.value } })}
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
+                  />
+                </div>
+              </div>
+
               {/* Divider */}
               <hr className="border-white/10" />
 

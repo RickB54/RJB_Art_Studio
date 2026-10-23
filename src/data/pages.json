@@ -336,6 +336,8 @@
     "directEmailTitle": "Direct Email",
     "directEmailDesc": "Prefer to use email directly? Click your address below and choose Gmail or your default email app:",
     "channelsTitle": "Studio Channels",
+    "privacyTitle": "Studio Privacy Protection",
+    "privacyText": "Your details are only used to respond to your inquiry.",
     "formTitle": "Send a Message",
     "formSubtitle": "Fill out the form below and Rick will reply to your inquiry as soon as possible."
   },

@@ -131,10 +131,10 @@ export default function Contact() {
           <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-xs text-slate-400 space-y-1">
             <div className="flex items-center gap-1.5 text-studio-gold font-semibold">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Studio Privacy Protection</span>
+              <span>{ct.privacyTitle || 'Studio Privacy Protection'}</span>
             </div>
             <p>
-              Your contact details are encrypted and used solely for responding to your art inquiries.
+              {ct.privacyText || 'Your details are only used to respond to your inquiry.'}
             </p>
           </div>
         </div>
