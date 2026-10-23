@@ -285,8 +285,33 @@ function adminApiPlugin() {
   }
 }
 
+function excludeGuideFromBuildPlugin() {
+  return {
+    name: 'exclude-guide-from-build',
+    apply: 'build',
+    closeBundle() {
+      const guideFiles = [
+        'Website-Update-Guide.pdf',
+        'website-update-guide-preview.webp',
+        'website-update-guide-thumb.webp'
+      ]
+      const distDocs = path.resolve(__dirname, 'dist/docs')
+      if (fs.existsSync(distDocs)) {
+        for (const file of guideFiles) {
+          const filePath = path.join(distDocs, file)
+          if (fs.existsSync(filePath)) {
+            try {
+              fs.unlinkSync(filePath)
+            } catch {}
+          }
+        }
+      }
+    }
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), adminApiPlugin()],
+  plugins: [react(), adminApiPlugin(), excludeGuideFromBuildPlugin()],
   server: {
     port: 5180,
     strictPort: true,

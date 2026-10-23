@@ -138,6 +138,12 @@ check('Price list images directory exists', fs.existsSync(priceListsDir))
 check('At least 4 price list images', plImages.length >= 4, `found ${plImages.length}`)
 check('PDF docs directory exists', fs.existsSync(pdfDir))
 check('At least 1 price list PDF', plPdfs.length >= 1, `found ${plPdfs.length}`)
+check(
+  'Website Update Guide files exist in public/docs for dev',
+  fs.existsSync(path.join(pdfDir, 'Website-Update-Guide.pdf')) &&
+  fs.existsSync(path.join(pdfDir, 'website-update-guide-preview.webp')) &&
+  fs.existsSync(path.join(pdfDir, 'website-update-guide-thumb.webp'))
+)
 
 // ── 6. FOOTER SOCIAL LINKS ────────────────────
 console.log('\n── 6. Footer social links ──────────────')
@@ -186,6 +192,20 @@ if (distExists) {
   const indexHtml = fs.readFileSync(path.join(distDir, 'index.html'), 'utf-8')
   check('dist/index.html has <title>', indexHtml.includes('<title>'))
   check('No Vite dev hint in dist HTML', !indexHtml.includes('@vite/client'))
+
+  // Check admin guide files are excluded from production dist (dev only)
+  const guideFiles = [
+    'Website-Update-Guide.pdf',
+    'website-update-guide-preview.webp',
+    'website-update-guide-thumb.webp'
+  ]
+  const distDocsDir = path.join(distDir, 'docs')
+  const leakedGuideFiles = guideFiles.filter(f => fs.existsSync(path.join(distDocsDir, f)))
+  check(
+    'Admin guide files excluded from production dist/docs (dev only)',
+    leakedGuideFiles.length === 0,
+    leakedGuideFiles.length > 0 ? `leaked in dist/docs: ${leakedGuideFiles.join(', ')}` : undefined
+  )
 }
 
 // ── 8. SITEMAP ───────────────────────────────

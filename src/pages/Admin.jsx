@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon } from 'lucide-react'
+import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon, Maximize2, Download } from 'lucide-react'
 import siteDataInitial from '../data/site.json'
 import paintingsDataInitial from '../data/paintings.json'
 import pagesDataInitial from '../data/pages.json'
 import pagesDefaultInitial from '../data/pages.default.json'
 import PhotoDropZone from '../components/PhotoDropZone'
 import AdminBlockSlot from '../components/AdminBlockSlot'
+import PriceListModal from '../components/PriceListModal'
 
 const HOME_BLOCK_SLOTS = [
   { id: 'top', label: 'Top of Page (Above Hero)' },
@@ -71,6 +72,7 @@ export default function Admin() {
   const [quickPhotoId, setQuickPhotoId] = useState(null)
   const [newExtraCat, setNewExtraCat] = useState('')
   const [showcaseSearch, setShowcaseSearch] = useState('')
+  const [activeGuideModal, setActiveGuideModal] = useState(null)
   
   // Single painting form state
   const [inputUrl, setInputUrl] = useState('')
@@ -4782,6 +4784,72 @@ export default function Admin() {
             <p className="text-xs text-slate-400">Everything you need to know to manage your art studio website. No coding required.</p>
           </div>
 
+          {/* Visual Guide Viewer Card */}
+          <div className="glass-panel p-5 rounded-2xl border border-studio-gold/40 bg-gradient-to-r from-studio-gold/10 via-studio-card to-studio-surface space-y-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveGuideModal({
+                    id: 'website-update-guide',
+                    title: 'Website Update Guide',
+                    preview: '/docs/website-update-guide-preview.webp',
+                    pdf: '/docs/Website-Update-Guide.pdf',
+                    downloadName: 'Website-Update-Guide.pdf'
+                  })}
+                  className="group relative w-20 h-28 sm:w-24 sm:h-32 rounded-xl overflow-hidden border border-white/20 shadow-lg shrink-0 hover:border-studio-gold transition focus:outline-none focus:ring-2 focus:ring-studio-gold cursor-pointer"
+                  title="Click to open Website Update Guide in full-screen viewer"
+                >
+                  <img
+                    src="/docs/website-update-guide-thumb.webp"
+                    alt="Website Update Guide"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <span className="p-1.5 rounded-full bg-studio-gold text-black shadow opacity-90 group-hover:opacity-100 group-hover:scale-110 transition">
+                      <Maximize2 className="w-4 h-4" />
+                    </span>
+                  </div>
+                </button>
+                <div className="space-y-1">
+                  <span className="text-[11px] font-bold text-studio-gold uppercase tracking-wider">
+                    Official Reference Document
+                  </span>
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-white">
+                    Website Update Guide
+                  </h3>
+                  <p className="text-xs text-slate-300 max-w-xl">
+                    View the complete reference guide with visual instructions, shortcuts, and workflows for updating paintings, pricing, and pages.
+                  </p>
+                  <div className="pt-2 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveGuideModal({
+                        id: 'website-update-guide',
+                        title: 'Website Update Guide',
+                        preview: '/docs/website-update-guide-preview.webp',
+                        pdf: '/docs/Website-Update-Guide.pdf',
+                        downloadName: 'Website-Update-Guide.pdf'
+                      })}
+                      className="px-3.5 py-1.5 rounded-xl bg-studio-gold text-black hover:bg-studio-gold-light text-xs font-semibold flex items-center gap-1.5 shadow transition cursor-pointer"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      <span>Open Full Screen</span>
+                    </button>
+                    <a
+                      href="/docs/Website-Update-Guide.pdf"
+                      download="Website-Update-Guide.pdf"
+                      className="px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center gap-1.5 transition"
+                    >
+                      <Download className="w-3.5 h-3.5 text-studio-gold" />
+                      <span>Download PDF</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* QUICK START */}
           <div className="glass-panel p-5 rounded-2xl border border-white/10 space-y-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2"><span className="text-studio-gold">🚀</span> Quick Start — Typical Workflow</h3>
@@ -4869,6 +4937,11 @@ export default function Admin() {
             <p className="text-xs text-slate-300">Run <code className="font-mono bg-white/5 px-1 rounded">npm run check</code> in a terminal to verify that all pages, JSON data files, and key site features are working correctly before publishing. The check runs without a browser and reports any problems.</p>
           </div>
         </div>
+      )}
+
+      {/* Website Update Guide Modal */}
+      {activeGuideModal && (
+        <PriceListModal item={activeGuideModal} onClose={() => setActiveGuideModal(null)} />
       )}
 
     </div>
