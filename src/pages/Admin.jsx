@@ -708,6 +708,19 @@ export default function Admin() {
     setActiveTab(nextTab)
   }
 
+  const handleChoosePageFromDropdown = (nextSection) => {
+    if (!nextSection) return
+    if (activeTab === 'site' && nextSection === editPageSection) return
+    if (hasUnsavedChangesForSection(editPageSection)) {
+      const proceed = window.confirm(
+        `You have unsaved changes on "${editPageSection.toUpperCase()}" page. Do you want to switch pages without saving?`
+      )
+      if (!proceed) return
+    }
+    setEditPageSection(nextSection)
+    setActiveTab('site')
+  }
+
   const restoreDefaultSection = (sectionKey, sectionName) => {
     if (window.confirm(`Restore original shipped text for ${sectionName}? Any unsaved changes on this page will be replaced with defaults.`)) {
       if (sectionKey === 'footerHeader' || sectionKey === 'footer') {
@@ -771,23 +784,50 @@ export default function Admin() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-white/10 pb-4">
-        {[['single', editingId ? 'Edit Painting' : 'Add Single Painting'],
-          ['bulk', 'Bulk Importer'],
-          ['manage', `Paintings (${paintings.length})`],
-          ['playlists', `Playlists (${playlists.length})`],
-          ['site', 'Page Text & Content'],
-          ['help', '? Help']
-        ].map(([key, label]) => (
-          <button key={key} type="button" onClick={() => handleSwitchTab(key)}
-            className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
-              activeTab === key
-                ? (key === 'help' ? 'bg-studio-gold text-black shadow' : 'bg-studio-magenta text-white shadow-glow-magenta')
-                : 'bg-white/5 text-slate-300 hover:bg-white/10'
-            }`}>
-            {label}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {[['single', editingId ? 'Edit Painting' : 'Add Single Painting'],
+            ['bulk', 'Bulk Importer'],
+            ['manage', `Paintings (${paintings.length})`],
+            ['playlists', `Playlists (${playlists.length})`],
+            ['help', '? Help']
+          ].map(([key, label]) => (
+            <button key={key} type="button" onClick={() => handleSwitchTab(key)}
+              className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${
+                activeTab === key
+                  ? (key === 'help' ? 'bg-studio-gold text-black shadow' : 'bg-studio-magenta text-white shadow-glow-magenta')
+                  : 'bg-white/5 text-slate-300 hover:bg-white/10'
+              }`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Page Editor Dropdown */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="admin-page-select" className="text-xs text-slate-300 font-semibold hidden sm:inline">
+            Edit a page:
+          </label>
+          <select
+            id="admin-page-select"
+            value={activeTab === 'site' ? editPageSection : ''}
+            onChange={e => handleChoosePageFromDropdown(e.target.value)}
+            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition cursor-pointer ${
+              activeTab === 'site'
+                ? 'bg-studio-magenta text-white border-studio-magenta shadow-glow-magenta'
+                : 'bg-[#13111c] text-slate-300 border-white/15 hover:border-studio-magenta/60 hover:text-white'
+            }`}
+          >
+            <option value="" disabled>Edit a page...</option>
+            <option value="home">Home</option>
+            <option value="gallery">Gallery</option>
+            <option value="about">About</option>
+            <option value="commissions">Commissions & Prints</option>
+            <option value="videos">Videos</option>
+            <option value="contact">Contact</option>
+            <option value="footerHeader">Header & Footer</option>
+          </select>
+        </div>
       </div>
 
       {/* TAB 1: Single Painting Form */}
@@ -1567,24 +1607,30 @@ export default function Admin() {
               </p>
             </div>
             
-            {/* Page Section Dropdown */}
-            <div className="flex items-center gap-2">
-              <label className="text-xs text-slate-300 font-semibold whitespace-nowrap">Editing Page:</label>
-              <select
-                value={editPageSection}
-                onChange={e => handleSwitchPageSection(e.target.value)}
-                className="bg-[#13111c] border border-studio-magenta/40 text-white text-xs font-semibold rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-studio-magenta"
-              >
-                <option value="home">🏠 Home Page</option>
-                <option value="about">🎨 About & Studio (Awards & Photos)</option>
-                <option value="commissions">✍ Commissions & Prints</option>
-                <option value="gallery">🖼 Gallery Page Text & Filters</option>
-                <option value="videos">🎬 Videos & Tutorials Page</option>
-                <option value="contact">✉ Contact & Email / Google Forms</option>
-                <option value="paintingDetail">🔍 Painting & Playlist Detail</option>
-                <option value="notFound">🚫 404 Not Found Page</option>
-                <option value="footerHeader">⚓ Header, Footer & Notice Banner</option>
-              </select>
+            {/* Active Page Indicator */}
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs text-studio-gold font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-studio-gold/10 border border-studio-gold/30">
+                {({
+                  home: '🏠 Home Page',
+                  about: '🎨 About & Studio',
+                  commissions: '✍ Commissions & Prints',
+                  gallery: '🖼 Gallery Page',
+                  videos: '🎬 Videos & Tutorials',
+                  contact: '✉ Contact Page',
+                  paintingDetail: '🔍 Painting Detail',
+                  notFound: '🚫 404 Not Found',
+                  footerHeader: '⚓ Header & Footer'
+                })[editPageSection] || editPageSection}
+              </span>
+              {hasUnsavedChangesForSection(editPageSection) ? (
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
+                  ● Unsaved changes
+                </span>
+              ) : (
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
+                  ✓ Saved
+                </span>
+              )}
             </div>
           </div>
 
