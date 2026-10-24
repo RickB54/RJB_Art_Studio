@@ -54,7 +54,54 @@
     ],
     "artShowsBtn": "Inquire About Future Booths",
     "artShowsLink": "/contact",
-    "extraBlocks": []
+    "extraBlocks": [],
+    "featuredItems": [
+      {
+        "id": "video-T6Ycxx0jqr8",
+        "title": "Bringing Home The Christmas Tree Acrylic Painting",
+        "thumb": "https://img.youtube.com/vi/T6Ycxx0jqr8/maxresdefault.jpg",
+        "highlightPhoto": "",
+        "badge": "For Sale",
+        "price": 154,
+        "videoId": "T6Ycxx0jqr8",
+        "youtubeUrl": "https://www.youtube.com/watch?v=T6Ycxx0jqr8",
+        "fineArtAmericaUrl": "",
+        "isVideo": true,
+        "category": "Landscapes & Seascapes",
+        "medium": "Acrylic on Canvas Board",
+        "size": "11x14"
+      },
+      {
+        "id": "video-Ty0yexr4_r4",
+        "title": "Horse Carriage Sleigh Ride",
+        "thumb": "https://img.youtube.com/vi/Ty0yexr4_r4/hqdefault.jpg",
+        "highlightPhoto": "",
+        "badge": "",
+        "price": "",
+        "videoId": "Ty0yexr4_r4",
+        "youtubeUrl": "https://www.youtube.com/watch?v=Ty0yexr4_r4",
+        "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
+        "isVideo": true,
+        "category": "Christmas Paintings",
+        "medium": "Oil or Acrylic on Canvas",
+        "size": "Custom"
+      },
+      {
+        "id": "video-15rmv_ScZlQ",
+        "title": "Candles In The Window Acrylic Painting",
+        "thumb": "https://img.youtube.com/vi/15rmv_ScZlQ/hqdefault.jpg",
+        "highlightPhoto": "",
+        "badge": "",
+        "price": "",
+        "videoId": "15rmv_ScZlQ",
+        "youtubeUrl": "https://www.youtube.com/watch?v=15rmv_ScZlQ",
+        "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
+        "isVideo": true,
+        "category": "Christmas Paintings",
+        "medium": "Oil or Acrylic on Canvas",
+        "size": "Custom"
+      }
+    ]
   },
   "gallery": {
     "headerVisible": true,
