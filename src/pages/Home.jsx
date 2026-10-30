@@ -20,6 +20,14 @@ export default function Home() {
       .catch(() => {})
   }, [])
 
+  const cleanPhotoUrl = (raw) => {
+    if (!raw || typeof raw !== 'string') return ''
+    const t = raw.trim()
+    if (!t) return ''
+    if (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('data:')) return t
+    return '/' + t.replace(/^(\.\/)?(public\/)?/, '').replace(/^\/+/, '')
+  }
+
   // Use new unified featuredItems if configured, else fall back to legacy featured flag on paintings
   const featuredItems = homeText.featuredItems
   const featuredPaintings = featuredItems && featuredItems.length > 0
@@ -243,41 +251,95 @@ export default function Home() {
       <PageBlocks blocks={homeText.blockSlots?.after_featured} />
 
       {/* Commissions & Prints Teaser Banner */}
-      {homeText.teaserVisible !== false && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="glass-panel rounded-3xl p-8 sm:p-12 border border-studio-magenta/20 bg-gradient-to-r from-studio-purple/10 via-studio-card to-studio-surface relative overflow-hidden">
-            <div className="max-w-2xl relative z-10 space-y-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-studio-magenta/20 text-studio-magenta border border-studio-magenta/30">
-                <Brush className="w-3.5 h-3.5" />
-                <span>{homeText.teaserBadge || "Custom Art Orders"}</span>
-              </span>
-              <h3 className="font-serif text-2xl sm:text-4xl font-bold text-white leading-tight">
-                {homeText.teaserTitle || "Looking for a custom portrait of family or a beloved pet?"}
-              </h3>
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-line">
-                {homeText.teaserText || "I create one-of-a-kind original painted and charcoal portraits from your photo references, signed and accompanied by a Certificate of Authenticity. Archival prints of original works are also available directly on Fine Art America."}
-              </p>
-              <div className="pt-2 flex flex-wrap gap-4">
-                <Link 
-                  to="/commissions"
-                  className="px-6 py-3 rounded-full text-sm font-semibold bg-studio-magenta text-white hover:bg-studio-fuchsia transition shadow-glow-magenta"
-                >
-                  {homeText.teaserPrimaryBtn || "Learn About Commissions & Sizing"}
-                </Link>
-                <a 
-                  href={siteData.socials.fineArtAmerica}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-6 py-3 rounded-full text-sm font-semibold bg-white/5 border border-white/10 text-studio-gold hover:bg-white/10 transition flex items-center gap-1.5"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>{homeText.teaserSecondaryBtn || "Visit Fine Art America Shop"}</span>
-                </a>
-              </div>
+      {homeText.teaserVisible !== false && (() => {
+        const teaserImg1 = cleanPhotoUrl(homeText.teaserImage)
+        const teaserImg2 = cleanPhotoUrl(homeText.teaserImage2)
+        const teaserImages = [teaserImg1, teaserImg2].filter(Boolean)
+        const teaserPos = homeText.teaserImagePosition || 'right'
+
+        const renderTeaserContent = () => (
+          <div className="space-y-4">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-studio-magenta/20 text-studio-magenta border border-studio-magenta/30">
+              <Brush className="w-3.5 h-3.5" />
+              <span>{homeText.teaserBadge || "Custom Art Orders"}</span>
+            </span>
+            <h3 className="font-serif text-2xl sm:text-4xl font-bold text-white leading-tight">
+              {homeText.teaserTitle || "Looking for a custom portrait of family or a beloved pet?"}
+            </h3>
+            <p className="text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-line">
+              {homeText.teaserText || "I create one-of-a-kind original painted and charcoal portraits from your photo references, signed and accompanied by a Certificate of Authenticity. Archival prints of original works are also available directly on Fine Art America."}
+            </p>
+            <div className="pt-2 flex flex-wrap gap-4">
+              <Link 
+                to="/commissions"
+                className="px-6 py-3 rounded-full text-sm font-semibold bg-studio-magenta text-white hover:bg-studio-fuchsia transition shadow-glow-magenta"
+              >
+                {homeText.teaserPrimaryBtn || "Learn About Commissions & Sizing"}
+              </Link>
+              <a 
+                href={siteData.socials.fineArtAmerica}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 rounded-full text-sm font-semibold bg-white/5 border border-white/10 text-studio-gold hover:bg-white/10 transition flex items-center gap-1.5"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>{homeText.teaserSecondaryBtn || "Visit Fine Art America Shop"}</span>
+              </a>
             </div>
           </div>
-        </section>
-      )}
+        )
+
+        const renderTeaserImages = () => {
+          if (teaserImages.length === 0) return null
+          return (
+            <div className={teaserImages.length > 1 ? "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full" : "w-full"}>
+              {teaserImages.map((img, i) => (
+                <div key={i} className="rounded-2xl overflow-hidden border border-white/15 bg-black/40 shadow-xl group">
+                  <img
+                    src={img}
+                    alt={`${homeText.teaserTitle || 'Custom portrait'} - ${i + 1}`}
+                    className="w-full h-56 sm:h-72 lg:h-80 object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+          )
+        }
+
+        return (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="glass-panel rounded-3xl p-8 sm:p-12 border border-studio-magenta/20 bg-gradient-to-r from-studio-purple/10 via-studio-card to-studio-surface relative overflow-hidden">
+              {teaserImages.length === 0 ? (
+                <div className="max-w-2xl relative z-10">
+                  {renderTeaserContent()}
+                </div>
+              ) : teaserPos === 'above' ? (
+                <div className="relative z-10 space-y-8">
+                  {renderTeaserImages()}
+                  <div className="max-w-3xl">{renderTeaserContent()}</div>
+                </div>
+              ) : teaserPos === 'below' ? (
+                <div className="relative z-10 space-y-8">
+                  <div className="max-w-3xl">{renderTeaserContent()}</div>
+                  {renderTeaserImages()}
+                </div>
+              ) : teaserPos === 'left' ? (
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                  <div className="order-2 lg:order-1">{renderTeaserImages()}</div>
+                  <div className="order-1 lg:order-2">{renderTeaserContent()}</div>
+                </div>
+              ) : (
+                /* default: right */
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                  <div className="order-1">{renderTeaserContent()}</div>
+                  <div className="order-2">{renderTeaserImages()}</div>
+                </div>
+              )}
+            </div>
+          </section>
+        )
+      })()}
 
       {/* Slot: After Teaser */}
       <PageBlocks blocks={homeText.blockSlots?.after_teaser} />
@@ -285,8 +347,13 @@ export default function Home() {
       {/* Upcoming Shows & Events */}
       {homeText.artShowsVisible !== false && artShows.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-          {artShows.map((show, idx) => (
-            <div key={idx} className="glass-panel rounded-2xl p-6 sm:p-8 border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          {artShows.map((show, idx) => {
+            const showImg1 = cleanPhotoUrl(show.image)
+            const showImg2 = cleanPhotoUrl(show.image2)
+            const showImages = [showImg1, showImg2].filter(Boolean)
+            const showPos = show.imagePosition || homeText.artShowsImagePosition || 'right'
+
+            const renderShowText = () => (
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-studio-gold">
                   <Calendar className="w-4 h-4" />
@@ -299,14 +366,79 @@ export default function Home() {
                   {show.date} • {show.location}
                 </p>
               </div>
+            )
+
+            const renderShowBtn = () => (
               <Link
                 to={homeText.artShowsLink || "/contact"}
-                className="px-5 py-2.5 rounded-lg text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition whitespace-nowrap"
+                className="px-5 py-2.5 rounded-lg text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition whitespace-nowrap self-start md:self-auto shrink-0"
               >
                 {homeText.artShowsBtn || "Inquire About Future Booths"}
               </Link>
-            </div>
-          ))}
+            )
+
+            const renderShowImages = () => {
+              if (showImages.length === 0) return null
+              return (
+                <div className={showImages.length > 1 ? "grid grid-cols-2 gap-2 shrink-0" : "shrink-0"}>
+                  {showImages.map((img, i) => (
+                    <div key={i} className="rounded-xl overflow-hidden border border-white/15 bg-black/40 shadow-md group">
+                      <img
+                        src={img}
+                        alt={`${show.title} photo ${i + 1}`}
+                        className="w-32 sm:w-44 h-24 sm:h-32 object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+
+            return (
+              <div key={idx} className="glass-panel rounded-2xl p-6 sm:p-8 border border-white/10">
+                {showImages.length === 0 ? (
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    {renderShowText()}
+                    {renderShowBtn()}
+                  </div>
+                ) : showPos === 'above' ? (
+                  <div className="space-y-4">
+                    {renderShowImages()}
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                      {renderShowText()}
+                      {renderShowBtn()}
+                    </div>
+                  </div>
+                ) : showPos === 'below' ? (
+                  <div className="space-y-4">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                      {renderShowText()}
+                      {renderShowBtn()}
+                    </div>
+                    {renderShowImages()}
+                  </div>
+                ) : showPos === 'left' ? (
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      {renderShowImages()}
+                      {renderShowText()}
+                    </div>
+                    {renderShowBtn()}
+                  </div>
+                ) : (
+                  /* default: right */
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div className="flex-1">{renderShowText()}</div>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                      {renderShowImages()}
+                      {renderShowBtn()}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </section>
       )}
 

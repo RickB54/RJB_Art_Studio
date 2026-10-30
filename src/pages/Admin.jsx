@@ -2109,8 +2109,33 @@ export default function Admin() {
                   </div>
                 </div>
 
-                {/* Unified Home Page Showcase Picker */}
+                {/* Available gallery & public photos for quick selection across all Home page editors */}
                 {(() => {
+                  const homeAvailablePhotos = []
+                  const seenHomePhotoUrls = new Set()
+                  for (const p of (paintings || [])) {
+                    for (const candidate of [p.photo, p.originalImage, p.customImage, p.thumbnailUrl, p.thumbnail, p.highlightPhoto]) {
+                      if (candidate && typeof candidate === 'string' && candidate.trim() && !seenHomePhotoUrls.has(candidate)) {
+                        seenHomePhotoUrls.add(candidate)
+                        const fileName = candidate.split('/').pop().split('?')[0]
+                        const labelTitle = p.title ? p.title.slice(0, 30) : 'Photo'
+                        homeAvailablePhotos.push({
+                          url: candidate,
+                          label: `${labelTitle} (${fileName})`
+                        })
+                      }
+                    }
+                  }
+
+                  const normalizePhotoInput = (raw) => {
+                    if (!raw) return ''
+                    const t = raw.trim()
+                    if (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('data:')) return t
+                    let clean = t.replace(/^(\.\/)?(public\/)?/, '')
+                    if (!clean.startsWith('/')) clean = '/' + clean
+                    return clean
+                  }
+
                   // Build all gallery items: paintings first, then playlist-only videos
                   const paintingByVideoId = new Map()
                   for (const p of paintings) {
@@ -2162,32 +2187,7 @@ export default function Admin() {
                   // featuredItems: array stored in pages.home
                   const featuredItems = pages.home?.featuredItems || []
                   const featuredIds = new Set(featuredItems.map(fi => fi.id))
-
-                  // Available gallery & public photos for quick selection
-                  const availablePhotos = []
-                  const seenPhotoUrls = new Set()
-                  for (const p of (paintings || [])) {
-                    for (const candidate of [p.photo, p.originalImage, p.customImage, p.thumbnailUrl, p.thumbnail, p.highlightPhoto]) {
-                      if (candidate && typeof candidate === 'string' && candidate.trim() && !seenPhotoUrls.has(candidate)) {
-                        seenPhotoUrls.add(candidate)
-                        const fileName = candidate.split('/').pop().split('?')[0]
-                        const labelTitle = p.title ? p.title.slice(0, 30) : 'Photo'
-                        availablePhotos.push({
-                          url: candidate,
-                          label: `${labelTitle} (${fileName})`
-                        })
-                      }
-                    }
-                  }
-
-                  const normalizePhotoInput = (raw) => {
-                    if (!raw) return ''
-                    const t = raw.trim()
-                    if (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('data:')) return t
-                    let clean = t.replace(/^(\.\/)?(public\/)?/, '')
-                    if (!clean.startsWith('/')) clean = '/' + clean
-                    return clean
-                  }
+                  const availablePhotos = homeAvailablePhotos
 
                   const q = showcaseSearch.toLowerCase()
                   const filtered = q ? allItems.filter(it => it.title.toLowerCase().includes(q) || (it.category || '').toLowerCase().includes(q)) : allItems
@@ -2446,10 +2446,10 @@ export default function Admin() {
 
               </div>
 
-              {/* 5. Commissions Teaser Banner */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+              {/* 5. Commissions Teaser Banner (Pet Portrait Block) */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
                 <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
-                  Commissions & Prints Teaser Banner
+                  Commissions & Prints Teaser Banner (Pet Portrait Block)
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -2500,6 +2500,118 @@ export default function Admin() {
                     />
                   </div>
                 </div>
+
+                {/* Picture Settings inside Pet Portrait block */}
+                <div className="pt-3 border-t border-white/10 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-studio-magenta">
+                      🖼 Pictures Inside Block (1 or 2 pics)
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <label className="text-[11px] text-slate-300 font-medium">Position:</label>
+                      <select
+                        value={pages.home?.teaserImagePosition || 'right'}
+                        onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserImagePosition: e.target.value } })}
+                        className="bg-[#13111c] border border-white/15 rounded-lg px-2.5 py-1 text-xs text-white"
+                      >
+                        <option value="right">Right side of text</option>
+                        <option value="left">Left side of text</option>
+                        <option value="above">Above text</option>
+                        <option value="below">Below text</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Picture 1 */}
+                  <div className="p-3 rounded-xl bg-black/20 border border-white/5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-slate-200">Picture 1</label>
+                      {pages.home?.teaserImage && (
+                        <button
+                          type="button"
+                          onClick={() => setPages({ ...pages, home: { ...(pages.home || {}), teaserImage: '' } })}
+                          className="text-[11px] text-rose-400 hover:text-rose-300 underline"
+                        >
+                          Remove Pic 1
+                        </button>
+                      )}
+                    </div>
+                    <PhotoDropZone
+                      value={pages.home?.teaserImage || ''}
+                      onChange={url => setPages({ ...pages, home: { ...(pages.home || {}), teaserImage: url } })}
+                      label="Upload or Drop Pic 1"
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="/images/... or https://..."
+                        value={pages.home?.teaserImage || ''}
+                        onChange={e => {
+                          const val = e.target.value.trim().replace(/^(\.\/)?(public\/)?/, '')
+                          const clean = val && !val.startsWith('http') && !val.startsWith('/') ? '/' + val : val
+                          setPages({ ...pages, home: { ...(pages.home || {}), teaserImage: clean } })
+                        }}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                      />
+                      <select
+                        value={pages.home?.teaserImage || ''}
+                        onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserImage: e.target.value } })}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                      >
+                        <option value="">-- Or choose from saved gallery photos --</option>
+                        {(paintings || []).map((p, pIdx) => {
+                          const u = p.photo || p.highlightPhoto || p.thumbnailUrl || p.thumbnail
+                          return u ? <option key={pIdx} value={u}>{p.title ? `${p.title.slice(0, 30)} (${u.split('/').pop()})` : u}</option> : null
+                        })}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Picture 2 */}
+                  <div className="p-3 rounded-xl bg-black/20 border border-white/5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-slate-200">Picture 2 (Optional Second Pic)</label>
+                      {pages.home?.teaserImage2 && (
+                        <button
+                          type="button"
+                          onClick={() => setPages({ ...pages, home: { ...(pages.home || {}), teaserImage2: '' } })}
+                          className="text-[11px] text-rose-400 hover:text-rose-300 underline"
+                        >
+                          Remove Pic 2
+                        </button>
+                      )}
+                    </div>
+                    <PhotoDropZone
+                      value={pages.home?.teaserImage2 || ''}
+                      onChange={url => setPages({ ...pages, home: { ...(pages.home || {}), teaserImage2: url } })}
+                      label="Upload or Drop Pic 2"
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="/images/... or https://..."
+                        value={pages.home?.teaserImage2 || ''}
+                        onChange={e => {
+                          const val = e.target.value.trim().replace(/^(\.\/)?(public\/)?/, '')
+                          const clean = val && !val.startsWith('http') && !val.startsWith('/') ? '/' + val : val
+                          setPages({ ...pages, home: { ...(pages.home || {}), teaserImage2: clean } })
+                        }}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                      />
+                      <select
+                        value={pages.home?.teaserImage2 || ''}
+                        onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserImage2: e.target.value } })}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                      >
+                        <option value="">-- Or choose from saved gallery photos --</option>
+                        {(paintings || []).map((p, pIdx) => {
+                          const u = p.photo || p.highlightPhoto || p.thumbnailUrl || p.thumbnail
+                          return u ? <option key={pIdx} value={u}>{p.title ? `${p.title.slice(0, 30)} (${u.split('/').pop()})` : u}</option> : null
+                        })}
+                      </select>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* 6. Art Shows & In-Person Appearances (Add / remove / reorder) */}
@@ -2509,7 +2621,7 @@ export default function Admin() {
                     <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
                       Art Shows & Appearances List
                     </span>
-                    <p className="text-xs text-slate-400">Add, reorder, or edit in-person booth announcements.</p>
+                    <p className="text-xs text-slate-400">Add, reorder, or edit in-person booth announcements with pics inside cards.</p>
                   </div>
                   <button
                     type="button"
@@ -2519,7 +2631,7 @@ export default function Admin() {
                         ...pages,
                         home: {
                           ...(pages.home || {}),
-                          artShows: [...cur, { title: "New Art Show Exhibit", date: "Date or Season", location: "City, State" }]
+                          artShows: [...cur, { title: "New Art Show Exhibit", date: "Date or Season", location: "City, State", image: "", image2: "", imagePosition: "right" }]
                         }
                       })
                     }}
@@ -2530,7 +2642,7 @@ export default function Admin() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   <div>
                     <label className="block text-[11px] font-medium text-slate-300 mb-1">Section Badge</label>
                     <input
@@ -2558,87 +2670,187 @@ export default function Admin() {
                       className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono"
                     />
                   </div>
+                  <div>
+                    <label className="block text-[11px] font-medium text-slate-300 mb-1">Default Picture Position</label>
+                    <select
+                      value={pages.home?.artShowsImagePosition || 'right'}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), artShowsImagePosition: e.target.value } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    >
+                      <option value="right">Right of text</option>
+                      <option value="left">Left of text</option>
+                      <option value="above">Above text</option>
+                      <option value="below">Below text</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {(pages.home?.artShows || []).map((sh, idx) => (
-                    <div key={idx} className="flex flex-col sm:flex-row items-center gap-2 p-2.5 rounded-xl bg-black/30 border border-white/5">
-                      <div className="flex items-center gap-1 shrink-0">
+                    <div key={idx} className="p-3 rounded-xl bg-black/30 border border-white/5 space-y-2">
+                      <div className="flex flex-col sm:flex-row items-center gap-2">
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (idx === 0) return
+                              const cur = [...(pages.home?.artShows || [])]
+                              const temp = cur[idx]
+                              cur[idx] = cur[idx - 1]
+                              cur[idx - 1] = temp
+                              setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                            }}
+                            disabled={idx === 0}
+                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cur = [...(pages.home?.artShows || [])]
+                              if (idx === cur.length - 1) return
+                              const temp = cur[idx]
+                              cur[idx] = cur[idx + 1]
+                              cur[idx + 1] = temp
+                              setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                            }}
+                            disabled={idx === (pages.home?.artShows || []).length - 1}
+                            className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={sh.title}
+                          onChange={e => {
+                            const cur = [...(pages.home?.artShows || [])]
+                            cur[idx] = { ...cur[idx], title: e.target.value }
+                            setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                          }}
+                          placeholder="Exhibit Name / Event Title"
+                          className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                        />
+                        <input
+                          type="text"
+                          value={sh.date}
+                          onChange={e => {
+                            const cur = [...(pages.home?.artShows || [])]
+                            cur[idx] = { ...cur[idx], date: e.target.value }
+                            setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                          }}
+                          placeholder="Date / Schedule"
+                          className="w-full sm:w-44 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                        />
+                        <input
+                          type="text"
+                          value={sh.location}
+                          onChange={e => {
+                            const cur = [...(pages.home?.artShows || [])]
+                            cur[idx] = { ...cur[idx], location: e.target.value }
+                            setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                          }}
+                          placeholder="Location"
+                          className="w-full sm:w-48 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                        />
                         <button
                           type="button"
                           onClick={() => {
-                            if (idx === 0) return
-                            const cur = [...(pages.home?.artShows || [])]
-                            const temp = cur[idx]
-                            cur[idx] = cur[idx - 1]
-                            cur[idx - 1] = temp
+                            const cur = (pages.home?.artShows || []).filter((_, i) => i !== idx)
                             setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
                           }}
-                          disabled={idx === 0}
-                          className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
+                          className="p-1.5 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300"
+                          title="Delete show"
                         >
-                          <ArrowUp className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const cur = [...(pages.home?.artShows || [])]
-                            if (idx === cur.length - 1) return
-                            const temp = cur[idx]
-                            cur[idx] = cur[idx + 1]
-                            cur[idx + 1] = temp
-                            setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
-                          }}
-                          disabled={idx === (pages.home?.artShows || []).length - 1}
-                          className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 disabled:opacity-30"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <input
-                        type="text"
-                        value={sh.title}
-                        onChange={e => {
-                          const cur = [...(pages.home?.artShows || [])]
-                          cur[idx] = { ...cur[idx], title: e.target.value }
-                          setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
-                        }}
-                        placeholder="Exhibit Name / Event Title"
-                        className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
-                      />
-                      <input
-                        type="text"
-                        value={sh.date}
-                        onChange={e => {
-                          const cur = [...(pages.home?.artShows || [])]
-                          cur[idx] = { ...cur[idx], date: e.target.value }
-                          setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
-                        }}
-                        placeholder="Date / Schedule"
-                        className="w-full sm:w-44 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
-                      />
-                      <input
-                        type="text"
-                        value={sh.location}
-                        onChange={e => {
-                          const cur = [...(pages.home?.artShows || [])]
-                          cur[idx] = { ...cur[idx], location: e.target.value }
-                          setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
-                        }}
-                        placeholder="Location"
-                        className="w-full sm:w-48 bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const cur = (pages.home?.artShows || []).filter((_, i) => i !== idx)
-                          setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
-                        }}
-                        className="p-1.5 rounded bg-white/5 hover:bg-rose-900/60 text-slate-400 hover:text-rose-300"
-                        title="Delete show"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+
+                      {/* Pictures for this show */}
+                      <div className="pt-2 border-t border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center text-xs">
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-0.5">Picture Position</label>
+                          <select
+                            value={sh.imagePosition || pages.home?.artShowsImagePosition || 'right'}
+                            onChange={e => {
+                              const cur = [...(pages.home?.artShows || [])]
+                              cur[idx] = { ...cur[idx], imagePosition: e.target.value }
+                              setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                            }}
+                            className="w-full bg-[#13111c] border border-white/10 rounded px-2 py-1 text-xs text-white"
+                          >
+                            <option value="right">Right of text</option>
+                            <option value="left">Left of text</option>
+                            <option value="above">Above text</option>
+                            <option value="below">Below text</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-0.5">Pic 1 (URL or Pick)</label>
+                          <div className="flex gap-1">
+                            <input
+                              type="text"
+                              value={sh.image || ''}
+                              onChange={e => {
+                                const cur = [...(pages.home?.artShows || [])]
+                                cur[idx] = { ...cur[idx], image: e.target.value.trim().replace(/^(\.\/)?(public\/)?/, '') }
+                                setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                              }}
+                              placeholder="/images/..."
+                              className="w-full bg-[#13111c] border border-white/10 rounded px-2 py-1 text-xs text-white"
+                            />
+                            <select
+                              value={sh.image || ''}
+                              onChange={e => {
+                                const cur = [...(pages.home?.artShows || [])]
+                                cur[idx] = { ...cur[idx], image: e.target.value }
+                                setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                              }}
+                              className="w-24 bg-[#13111c] border border-white/10 rounded px-1 py-1 text-xs text-slate-300"
+                              title="Pick saved photo"
+                            >
+                              <option value="">Pick...</option>
+                              {(paintings || []).map((p, pIdx) => {
+                                const u = p.photo || p.highlightPhoto || p.thumbnailUrl || p.thumbnail
+                                return u ? <option key={pIdx} value={u}>{p.title ? `${p.title.slice(0, 20)}...` : u}</option> : null
+                              })}
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-0.5">Pic 2 (Optional URL or Pick)</label>
+                          <div className="flex gap-1">
+                            <input
+                              type="text"
+                              value={sh.image2 || ''}
+                              onChange={e => {
+                                const cur = [...(pages.home?.artShows || [])]
+                                cur[idx] = { ...cur[idx], image2: e.target.value.trim().replace(/^(\.\/)?(public\/)?/, '') }
+                                setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                              }}
+                              placeholder="/images/..."
+                              className="w-full bg-[#13111c] border border-white/10 rounded px-2 py-1 text-xs text-white"
+                            />
+                            <select
+                              value={sh.image2 || ''}
+                              onChange={e => {
+                                const cur = [...(pages.home?.artShows || [])]
+                                cur[idx] = { ...cur[idx], image2: e.target.value }
+                                setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                              }}
+                              className="w-24 bg-[#13111c] border border-white/10 rounded px-1 py-1 text-xs text-slate-300"
+                              title="Pick saved photo"
+                            >
+                              <option value="">Pick...</option>
+                              {(paintings || []).map((p, pIdx) => {
+                                const u = p.photo || p.highlightPhoto || p.thumbnailUrl || p.thumbnail
+                                return u ? <option key={pIdx} value={u}>{p.title ? `${p.title.slice(0, 20)}...` : u}</option> : null
+                              })}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
