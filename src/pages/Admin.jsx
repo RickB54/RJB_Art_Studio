@@ -2163,6 +2163,32 @@ export default function Admin() {
                   const featuredItems = pages.home?.featuredItems || []
                   const featuredIds = new Set(featuredItems.map(fi => fi.id))
 
+                  // Available gallery & public photos for quick selection
+                  const availablePhotos = []
+                  const seenPhotoUrls = new Set()
+                  for (const p of (paintings || [])) {
+                    for (const candidate of [p.photo, p.originalImage, p.customImage, p.thumbnailUrl, p.thumbnail, p.highlightPhoto]) {
+                      if (candidate && typeof candidate === 'string' && candidate.trim() && !seenPhotoUrls.has(candidate)) {
+                        seenPhotoUrls.add(candidate)
+                        const fileName = candidate.split('/').pop().split('?')[0]
+                        const labelTitle = p.title ? p.title.slice(0, 30) : 'Photo'
+                        availablePhotos.push({
+                          url: candidate,
+                          label: `${labelTitle} (${fileName})`
+                        })
+                      }
+                    }
+                  }
+
+                  const normalizePhotoInput = (raw) => {
+                    if (!raw) return ''
+                    const t = raw.trim()
+                    if (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('data:')) return t
+                    let clean = t.replace(/^(\.\/)?(public\/)?/, '')
+                    if (!clean.startsWith('/')) clean = '/' + clean
+                    return clean
+                  }
+
                   const q = showcaseSearch.toLowerCase()
                   const filtered = q ? allItems.filter(it => it.title.toLowerCase().includes(q) || (it.category || '').toLowerCase().includes(q)) : allItems
 
@@ -2306,12 +2332,39 @@ export default function Admin() {
                                         label="Upload or paste photo URL"
                                       />
                                     </div>
-                                    <div>
-                                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Photo URL (paste direct link)</label>
-                                      <input type="text" placeholder="https://... or /images/..." value={fi.highlightPhoto || ''}
-                                        onChange={e => updateFeaturedItem(fi.id, { highlightPhoto: e.target.value })}
-                                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                      <div>
+                                        <label className="block text-[11px] font-medium text-slate-400 mb-1">Photo URL (public/images or web link)</label>
+                                        <input type="text" placeholder="/images/... or https://..." value={fi.highlightPhoto || ''}
+                                          onChange={e => updateFeaturedItem(fi.id, { highlightPhoto: normalizePhotoInput(e.target.value) })}
+                                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
+                                      </div>
+                                      <div>
+                                        <label className="block text-[11px] font-medium text-slate-400 mb-1">Or Pick Existing Gallery / Public Photo</label>
+                                        <select
+                                          value={fi.highlightPhoto || ''}
+                                          onChange={e => updateFeaturedItem(fi.id, { highlightPhoto: e.target.value })}
+                                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                                        >
+                                          <option value="">-- Choose from saved photos --</option>
+                                          {availablePhotos.map((ap, pIdx) => (
+                                            <option key={pIdx} value={ap.url}>{ap.label}</option>
+                                          ))}
+                                        </select>
+                                      </div>
                                     </div>
+                                    {fi.highlightPhoto && (
+                                      <div className="flex items-center justify-between text-[11px] pt-1">
+                                        <span className="text-slate-400 truncate max-w-xs">Using: <code className="text-studio-gold">{fi.highlightPhoto}</code></span>
+                                        <button
+                                          type="button"
+                                          onClick={() => updateFeaturedItem(fi.id, { highlightPhoto: '' })}
+                                          className="text-rose-400 hover:text-rose-300 underline"
+                                        >
+                                          Revert to default thumbnail
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>

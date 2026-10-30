@@ -26,12 +26,17 @@ export default function Home() {
     ? featuredItems.slice(0, 4).map(fi => {
         // Merge with live painting data if available
         const livePainting = paintings.find(p => p.id === fi.id)
+        const rawPhoto = fi.highlightPhoto || livePainting?.highlightPhoto || livePainting?.photo || livePainting?.originalImage || livePainting?.customImage || livePainting?.thumbnail || livePainting?.thumbnailUrl || fi.thumb || ''
+        const cleanPhoto = rawPhoto && typeof rawPhoto === 'string' && !rawPhoto.startsWith('http://') && !rawPhoto.startsWith('https://') && !rawPhoto.startsWith('data:')
+          ? ('/' + rawPhoto.replace(/^(\.\/)?(public\/)?/, '').replace(/^\/+/, ''))
+          : rawPhoto
+
         return {
           ...(livePainting || {}),
           ...fi,
           // Override display fields from featuredItems
           title: fi.title || livePainting?.title || '(Untitled)',
-          highlightPhoto: fi.highlightPhoto || livePainting?.highlightPhoto || livePainting?.photo || livePainting?.thumbnail || fi.thumb || '',
+          highlightPhoto: cleanPhoto,
           price: fi.price !== undefined && fi.price !== '' ? fi.price : livePainting?.price,
           status: fi.badge || livePainting?.status,
           fineArtAmericaUrl: fi.fineArtAmericaUrl || livePainting?.fineArtAmericaUrl || '',

@@ -100,6 +100,21 @@
         "category": "Christmas Paintings",
         "medium": "Oil or Acrylic on Canvas",
         "size": "Custom"
+      },
+      {
+        "id": "video-fIYMAPzSWm4",
+        "title": "Haunted House acrylic painting",
+        "thumb": "https://img.youtube.com/vi/fIYMAPzSWm4/hqdefault.jpg",
+        "highlightPhoto": "",
+        "badge": "",
+        "price": "",
+        "videoId": "fIYMAPzSWm4",
+        "youtubeUrl": "https://www.youtube.com/watch?v=fIYMAPzSWm4",
+        "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
+        "isVideo": true,
+        "category": "Halloween Paintings",
+        "medium": "Oil or Acrylic on Canvas",
+        "size": "Custom"
       }
     ]
   },
