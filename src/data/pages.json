@@ -119,10 +119,50 @@
       }
     ],
     "teaserImage": "",
-    "teaserImagePosition": "left",
+    "teaserImagePosition": "below",
     "blockSlots": {
-      "after_teaser": []
-    }
+      "after_teaser": [],
+      "after_featured": [
+        {
+          "id": "block-1793388324278-wyv3",
+          "type": "text",
+          "visible": true,
+          "heading": "In Loving Memory of My Dad, Henry E. Berube",
+          "subtitle": "April 14, 1938 – September 24, 2026",
+          "text": "My dad passed away on September 24, 2026, at the age of 88.\nI’ll carry him with me in everything I do. Thank you, Dad. I love you and I miss you.\nI’m grateful for the life he gave us and for everything he taught me. This page is for him.\n\nRest in peace, Dad."
+        },
+        {
+          "id": "block-1793389440095-ucpr",
+          "type": "photo",
+          "visible": true,
+          "image": "/images/paintings/20131223_124457-464118.webp",
+          "caption": "",
+          "size": "small",
+          "align": "left",
+          "images": [
+            {
+              "id": "block-1793389440095-ucpr-img-1",
+              "url": "/images/paintings/20131223_124457-464118.webp",
+              "caption": "",
+              "size": "small",
+              "align": "left"
+            },
+            {
+              "id": "img-1793390516996-3r32",
+              "url": "/images/paintings/screenshot-2026-09-28-163701-543401.webp",
+              "caption": "",
+              "size": "small",
+              "align": "right"
+            }
+          ],
+          "videoPosition": "above",
+          "videoUrl": "",
+          "layout": "grid",
+          "videoPoster": ""
+        }
+      ]
+    },
+    "teaserImage2": ""
   },
   "gallery": {
     "headerVisible": true,
@@ -144,7 +184,10 @@
     "loadMoreBtn": "Load More Artwork",
     "noResultsText": "No artwork matches your current filters.",
     "resetFiltersBtn": "Reset All Filters",
-    "extraBlocks": []
+    "extraBlocks": [],
+    "blockSlots": {
+      "bottom": []
+    }
   },
   "about": {
     "headerVisible": true,

@@ -4,7 +4,7 @@ import { ArrowRight, Sparkles, ExternalLink, Brush, Calendar, ShoppingBag } from
 import siteData from '../data/site.json'
 import paintingsData from '../data/paintings.json'
 import pagesData from '../data/pages.json'
-import PageBlocks from '../components/PageBlocks'
+import PageBlocks, { BlockVideoEmbed } from '../components/PageBlocks'
 
 export default function Home() {
   const [paintings, setPaintings] = useState(paintingsData)
@@ -289,20 +289,36 @@ export default function Home() {
           </div>
         )
 
-        const renderTeaserImages = () => {
-          if (teaserImages.length === 0) return null
+        const teaserVideo = homeText.teaserVideoUrl
+        const hasTeaserMedia = teaserImages.length > 0 || !!teaserVideo
+
+        const renderTeaserMedia = () => {
+          if (!hasTeaserMedia) return null
           return (
-            <div className={teaserImages.length > 1 ? "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full" : "w-full"}>
-              {teaserImages.map((img, i) => (
-                <div key={i} className="rounded-2xl overflow-hidden border border-white/15 bg-black/40 shadow-xl group">
-                  <img
-                    src={img}
-                    alt={`${homeText.teaserTitle || 'Custom portrait'} - ${i + 1}`}
-                    className="w-full h-56 sm:h-72 lg:h-80 object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
+            <div className="space-y-4 w-full">
+              {teaserImages.length > 0 && (
+                <div className={teaserImages.length > 1 ? "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full" : "w-full"}>
+                  {teaserImages.map((img, i) => (
+                    <div key={i} className="rounded-2xl overflow-hidden border border-white/15 bg-black/40 shadow-xl group">
+                      <img
+                        src={img}
+                        alt={`${homeText.teaserTitle || 'Custom portrait'} - ${i + 1}`}
+                        className="w-full h-56 sm:h-72 lg:h-80 object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {teaserVideo && (
+                <div className="w-full">
+                  <BlockVideoEmbed
+                    url={teaserVideo}
+                    poster={homeText.teaserVideoPoster}
+                    title={homeText.teaserTitle || 'Portrait Video'}
                   />
                 </div>
-              ))}
+              )}
             </div>
           )
         }
@@ -310,30 +326,30 @@ export default function Home() {
         return (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="glass-panel rounded-3xl p-8 sm:p-12 border border-studio-magenta/20 bg-gradient-to-r from-studio-purple/10 via-studio-card to-studio-surface relative overflow-hidden">
-              {teaserImages.length === 0 ? (
+              {!hasTeaserMedia ? (
                 <div className="max-w-2xl relative z-10">
                   {renderTeaserContent()}
                 </div>
               ) : teaserPos === 'above' ? (
                 <div className="relative z-10 space-y-8">
-                  {renderTeaserImages()}
+                  {renderTeaserMedia()}
                   <div className="max-w-3xl">{renderTeaserContent()}</div>
                 </div>
               ) : teaserPos === 'below' ? (
                 <div className="relative z-10 space-y-8">
                   <div className="max-w-3xl">{renderTeaserContent()}</div>
-                  {renderTeaserImages()}
+                  {renderTeaserMedia()}
                 </div>
               ) : teaserPos === 'left' ? (
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                  <div className="order-2 lg:order-1">{renderTeaserImages()}</div>
+                  <div className="order-2 lg:order-1">{renderTeaserMedia()}</div>
                   <div className="order-1 lg:order-2">{renderTeaserContent()}</div>
                 </div>
               ) : (
                 /* default: right */
                 <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                   <div className="order-1">{renderTeaserContent()}</div>
-                  <div className="order-2">{renderTeaserImages()}</div>
+                  <div className="order-2">{renderTeaserMedia()}</div>
                 </div>
               )}
             </div>
@@ -351,6 +367,8 @@ export default function Home() {
             const showImg1 = cleanPhotoUrl(show.image)
             const showImg2 = cleanPhotoUrl(show.image2)
             const showImages = [showImg1, showImg2].filter(Boolean)
+            const showVideo = show.videoUrl
+            const hasShowMedia = showImages.length > 0 || !!showVideo
             const showPos = show.imagePosition || homeText.artShowsImagePosition || 'right'
 
             const renderShowText = () => (
@@ -377,34 +395,43 @@ export default function Home() {
               </Link>
             )
 
-            const renderShowImages = () => {
-              if (showImages.length === 0) return null
+            const renderShowMedia = () => {
+              if (!hasShowMedia) return null
               return (
-                <div className={showImages.length > 1 ? "grid grid-cols-2 gap-2 shrink-0" : "shrink-0"}>
+                <div className="flex flex-col sm:flex-row gap-2 shrink-0 max-w-full sm:max-w-md">
                   {showImages.map((img, i) => (
-                    <div key={i} className="rounded-xl overflow-hidden border border-white/15 bg-black/40 shadow-md group">
+                    <div key={i} className="rounded-xl overflow-hidden border border-white/15 bg-black/40 shadow-md group shrink-0">
                       <img
                         src={img}
                         alt={`${show.title} photo ${i + 1}`}
-                        className="w-32 sm:w-44 h-24 sm:h-32 object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-32 sm:w-40 h-24 sm:h-28 object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
                     </div>
                   ))}
+                  {showVideo && (
+                    <div className="w-full sm:w-48 aspect-video shrink-0">
+                      <BlockVideoEmbed
+                        url={showVideo}
+                        poster={show.videoPoster}
+                        title={show.title}
+                      />
+                    </div>
+                  )}
                 </div>
               )
             }
 
             return (
               <div key={idx} className="glass-panel rounded-2xl p-6 sm:p-8 border border-white/10">
-                {showImages.length === 0 ? (
+                {!hasShowMedia ? (
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     {renderShowText()}
                     {renderShowBtn()}
                   </div>
                 ) : showPos === 'above' ? (
                   <div className="space-y-4">
-                    {renderShowImages()}
+                    {renderShowMedia()}
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                       {renderShowText()}
                       {renderShowBtn()}
@@ -416,12 +443,12 @@ export default function Home() {
                       {renderShowText()}
                       {renderShowBtn()}
                     </div>
-                    {renderShowImages()}
+                    {renderShowMedia()}
                   </div>
                 ) : showPos === 'left' ? (
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                      {renderShowImages()}
+                      {renderShowMedia()}
                       {renderShowText()}
                     </div>
                     {renderShowBtn()}
@@ -431,7 +458,7 @@ export default function Home() {
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div className="flex-1">{renderShowText()}</div>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                      {renderShowImages()}
+                      {renderShowMedia()}
                       {renderShowBtn()}
                     </div>
                   </div>

@@ -8,6 +8,7 @@ import pagesDefaultInitial from '../data/pages.default.json'
 import PhotoDropZone from '../components/PhotoDropZone'
 import AdminBlockSlot from '../components/AdminBlockSlot'
 import PriceListModal from '../components/PriceListModal'
+import { cleanVideoUrl } from '../components/PageBlocks'
 
 const HOME_BLOCK_SLOTS = [
   { id: 'top', label: 'Top of Page (Above Hero)' },
@@ -2611,6 +2612,31 @@ export default function Admin() {
                       </select>
                     </div>
                   </div>
+
+                  {/* Video URL in Teaser Block */}
+                  <div className="p-3 rounded-xl bg-black/20 border border-white/5 space-y-2">
+                    <label className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
+                      <Youtube className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Video URL in this Block (Optional - YouTube or MP4)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://www.youtube.com/watch?v=... or /video.mp4"
+                      value={pages.home?.teaserVideoUrl || ''}
+                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserVideoUrl: cleanVideoUrl(e.target.value) } })}
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                    />
+                    {pages.home?.teaserVideoUrl && (
+                      <div className="mt-1.5">
+                        <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster Image (shown before play — useful for local MP4 files)</span>
+                        <PhotoDropZone
+                          value={pages.home?.teaserVideoPoster || ''}
+                          onChange={url => setPages({ ...pages, home: { ...(pages.home || {}), teaserVideoPoster: url } })}
+                          label="Upload Thumbnail Poster (Optional)"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -2767,10 +2793,10 @@ export default function Admin() {
                         </button>
                       </div>
 
-                      {/* Pictures for this show */}
-                      <div className="pt-2 border-t border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-2 items-center text-xs">
+                      {/* Pictures & Video for this show */}
+                      <div className="pt-2 border-t border-white/5 grid grid-cols-1 sm:grid-cols-4 gap-2 items-center text-xs">
                         <div>
-                          <label className="block text-[10px] text-slate-400 mb-0.5">Picture Position</label>
+                          <label className="block text-[10px] text-slate-400 mb-0.5">Media Position</label>
                           <select
                             value={sh.imagePosition || pages.home?.artShowsImagePosition || 'right'}
                             onChange={e => {
@@ -2819,7 +2845,7 @@ export default function Admin() {
                           </div>
                         </div>
                         <div>
-                          <label className="block text-[10px] text-slate-400 mb-0.5">Pic 2 (Optional URL or Pick)</label>
+                          <label className="block text-[10px] text-slate-400 mb-0.5">Pic 2 (Optional)</label>
                           <div className="flex gap-1">
                             <input
                               type="text"
@@ -2849,6 +2875,23 @@ export default function Admin() {
                               })}
                             </select>
                           </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-400 mb-0.5 flex items-center gap-1">
+                            <Youtube className="w-3 h-3 text-rose-400" />
+                            <span>Video URL (Optional)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={sh.videoUrl || ''}
+                            onChange={e => {
+                              const cur = [...(pages.home?.artShows || [])]
+                              cur[idx] = { ...cur[idx], videoUrl: cleanVideoUrl(e.target.value) }
+                              setPages({ ...pages, home: { ...(pages.home || {}), artShows: cur } })
+                            }}
+                            placeholder="https://www.youtube.com/watch?v=..."
+                            className="w-full bg-[#13111c] border border-white/10 rounded px-2 py-1 text-xs text-white"
+                          />
                         </div>
                       </div>
                     </div>

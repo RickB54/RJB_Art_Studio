@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Layers, Type, Image as ImageIcon, LayoutGrid, Info, ExternalLink } from 'lucide-react'
+import { Plus, Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Eye, EyeOff, Layers, Type, Image as ImageIcon, LayoutGrid, Info, ExternalLink, Youtube } from 'lucide-react'
 import PhotoDropZone from './PhotoDropZone'
+import { cleanVideoUrl } from './PageBlocks'
 
 export default function AdminBlockEditor({ blocks = [], onChange }) {
   const [selectedType, setSelectedType] = useState('text')
@@ -16,7 +17,7 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
     if (type === 'text') {
       newBlock = { ...newBlock, heading: 'Section Title', subtitle: 'Section Subtitle', text: 'Enter your custom paragraph text here.' }
     } else if (type === 'image-text') {
-      newBlock = { ...newBlock, heading: 'Image Section', subtitle: 'Visual Story', text: 'Enter your description here.', image: '', imageAlt: '', imagePosition: 'left', linkUrl: '', linkText: '' }
+      newBlock = { ...newBlock, heading: 'Image Section', subtitle: 'Visual Story', text: 'Enter your description here.', images: [], image: '', imageAlt: '', imagePosition: 'left', linkUrl: '', linkText: '' }
     } else if (type === 'cards') {
       newBlock = {
         ...newBlock,
@@ -36,7 +37,7 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
     } else if (type === 'video') {
       newBlock = { ...newBlock, heading: 'Featured Video Demonstration', subtitle: 'Studio Video', text: '', url: '' }
     } else if (type === 'photo') {
-      newBlock = { ...newBlock, image: '', caption: '', size: 'medium', align: 'center' }
+      newBlock = { ...newBlock, images: [], image: '', caption: '', size: 'medium', align: 'center', layout: 'row' }
     } else if (type === 'divider') {
       newBlock = { ...newBlock, style: 'standard' }
     }
@@ -69,14 +70,16 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
 
   const handleUpdateField = (index, field, value) => {
     const updated = [...blocks]
-    updated[index] = { ...updated[index], [field]: value }
+    const finalVal = field === 'videoUrl' ? cleanVideoUrl(value) : value
+    updated[index] = { ...updated[index], [field]: finalVal }
     updateBlocks(updated)
   }
 
   const handleUpdateCard = (blockIndex, cardIndex, field, value) => {
     const updated = [...blocks]
     const cardList = [...(updated[blockIndex].cards || [])]
-    cardList[cardIndex] = { ...cardList[cardIndex], [field]: value }
+    const finalVal = field === 'videoUrl' ? cleanVideoUrl(value) : value
+    cardList[cardIndex] = { ...cardList[cardIndex], [field]: finalVal }
     updated[blockIndex] = { ...updated[blockIndex], cards: cardList }
     updateBlocks(updated)
   }
@@ -102,6 +105,90 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
     const cardList = (updated[blockIndex].cards || []).filter((_, i) => i !== cardIndex)
     updated[blockIndex] = { ...updated[blockIndex], cards: cardList }
     updateBlocks(updated)
+  }
+
+  // --- Photo Block Helpers ---
+  const getBlockPhotos = (b) => {
+    if (Array.isArray(b.images) && b.images.length > 0) return b.images
+    if (b.image) {
+      return [{
+        id: b.id ? `${b.id}-img-1` : 'img-1',
+        url: b.image,
+        caption: b.caption || '',
+        size: b.size || 'medium',
+        align: b.align || 'center'
+      }]
+    }
+    return []
+  }
+
+  const handleUpdateBlockPhotos = (blockIndex, newPhotos, extra = {}) => {
+    const updated = [...blocks]
+    const first = newPhotos[0]
+    updated[blockIndex] = {
+      ...updated[blockIndex],
+      images: newPhotos,
+      image: first ? first.url : '',
+      caption: first ? (first.caption || '') : '',
+      size: first ? (first.size || 'medium') : (updated[blockIndex].size || 'medium'),
+      align: first ? (first.align || 'center') : (updated[blockIndex].align || 'center'),
+      ...extra
+    }
+    updateBlocks(updated)
+  }
+
+  const handleUpdatePhotoItem = (blockIndex, photoIndex, field, value) => {
+    const current = getBlockPhotos(blocks[blockIndex])
+    const newPhotos = [...current]
+    if (!newPhotos[photoIndex]) return
+    newPhotos[photoIndex] = { ...newPhotos[photoIndex], [field]: value }
+    handleUpdateBlockPhotos(blockIndex, newPhotos)
+  }
+
+  const handleAddPhotoItem = (blockIndex, photoData = {}) => {
+    const current = getBlockPhotos(blocks[blockIndex])
+    const newId = `img-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`
+    const newPhotos = [
+      ...current,
+      {
+        id: newId,
+        url: photoData.url || '',
+        caption: photoData.caption || '',
+        size: photoData.size || 'medium',
+        align: photoData.align || 'center'
+      }
+    ]
+    handleUpdateBlockPhotos(blockIndex, newPhotos)
+  }
+
+  const handleMovePhotoItem = (blockIndex, photoIndex, direction) => {
+    const current = getBlockPhotos(blocks[blockIndex])
+    const target = photoIndex + direction
+    if (target < 0 || target >= current.length) return
+    const newPhotos = [...current]
+    const temp = newPhotos[photoIndex]
+    newPhotos[photoIndex] = newPhotos[target]
+    newPhotos[target] = temp
+    handleUpdateBlockPhotos(blockIndex, newPhotos)
+  }
+
+  const handleRemovePhotoItem = (blockIndex, photoIndex) => {
+    const current = getBlockPhotos(blocks[blockIndex])
+    const newPhotos = current.filter((_, i) => i !== photoIndex)
+    handleUpdateBlockPhotos(blockIndex, newPhotos)
+  }
+
+  const handleBatchAddPhotos = (blockIndex, results) => {
+    if (!results || results.length === 0) return
+    const current = getBlockPhotos(blocks[blockIndex])
+    const newItems = results.map((r, i) => ({
+      id: `img-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+      url: r.url,
+      caption: '',
+      size: 'medium',
+      align: 'center'
+    }))
+    handleUpdateBlockPhotos(blockIndex, [...current, ...newItems])
   }
 
   return (
@@ -246,6 +333,29 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                         className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2 text-xs text-white"
                       />
                     </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
+                        <Youtube className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Video URL (Optional - in addition to or alongside text)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={block.videoUrl || ''}
+                        onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=... or direct .mp4"
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                      {block.videoUrl && (
+                        <div className="mt-1.5">
+                          <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster (for MP4 files — shown before play)</span>
+                          <PhotoDropZone
+                            value={block.videoPoster || ''}
+                            onChange={url => handleUpdateField(idx, 'videoPoster', url)}
+                            label="Upload Thumbnail Poster (Optional)"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -320,6 +430,29 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                           className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                         />
                       </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
+                        <Youtube className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Video URL (Optional - alongside pics & text)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={block.videoUrl || ''}
+                        onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=... or direct .mp4"
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                      {block.videoUrl && (
+                        <div className="mt-1.5">
+                          <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster (for MP4 files)</span>
+                          <PhotoDropZone
+                            value={block.videoPoster || ''}
+                            onChange={url => handleUpdateField(idx, 'videoPoster', url)}
+                            label="Upload Thumbnail Poster (Optional)"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -419,6 +552,25 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                               className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
                             />
                           </div>
+                          <div>
+                            <input
+                              type="text"
+                              value={card.videoUrl || ''}
+                              onChange={e => handleUpdateCard(idx, cIdx, 'videoUrl', e.target.value)}
+                              placeholder="Video URL (Optional - e.g. YouTube or MP4)"
+                              className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                            />
+                            {card.videoUrl && (
+                              <div className="mt-1.5">
+                                <span className="block text-[11px] text-slate-400 mb-1">Card Video Thumbnail (for MP4 files)</span>
+                                <PhotoDropZone
+                                  value={card.videoPoster || ''}
+                                  onChange={url => handleUpdateCard(idx, cIdx, 'videoPoster', url)}
+                                  label="Upload Thumbnail (Optional)"
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -466,6 +618,29 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                         onChange={e => handleUpdateField(idx, 'linkText', e.target.value)}
                         className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
+                        <Youtube className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Video URL (Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={block.videoUrl || ''}
+                        onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=... or direct .mp4"
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                      {block.videoUrl && (
+                        <div className="mt-1.5">
+                          <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster (for MP4 files)</span>
+                          <PhotoDropZone
+                            value={block.videoPoster || ''}
+                            onChange={url => handleUpdateField(idx, 'videoPoster', url)}
+                            label="Upload Thumbnail Poster (Optional)"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -630,59 +805,191 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                 )}
 
                 {/* 8. Photo Block */}
-                {block.type === 'photo' && (
-                  <div className="space-y-3 pt-3 border-t border-white/5">
-                    <div>
-                      <PhotoDropZone
-                        value={block.image || ''}
-                        onChange={url => handleUpdateField(idx, 'image', url)}
-                        label="Upload or Drop Photo"
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Caption (Optional)</label>
+                {block.type === 'photo' && (() => {
+                  const photos = getBlockPhotos(block)
+                  return (
+                    <div className="space-y-4 pt-3 border-t border-white/5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-white/5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-white">
+                            📷 {photos.length === 0 ? 'No Photos Added Yet' : `${photos.length} Photo${photos.length === 1 ? '' : 's'} in this Block`}
+                          </span>
+                          {photos.length > 1 && (
+                            <span className="text-[11px] text-studio-gold">
+                              (Set size & position per photo, or reorder with arrows)
+                            </span>
+                          )}
+                        </div>
+
+                        {photos.length > 1 && (
+                          <div className="flex items-center gap-1.5 bg-[#13111c] border border-white/10 rounded-lg p-1 text-[11px]">
+                            <span className="text-slate-400 px-1.5">Layout:</span>
+                            {[
+                              { id: 'row', label: 'Side-by-Side (Row)' },
+                              { id: 'stacked', label: 'Stacked (Column)' },
+                              { id: 'grid', label: 'Grid' },
+                            ].map(opt => (
+                              <button
+                                key={opt.id}
+                                type="button"
+                                onClick={() => handleUpdateField(idx, 'layout', opt.id)}
+                                className={`px-2 py-0.5 rounded text-[11px] font-medium transition ${
+                                  (block.layout || 'row') === opt.id
+                                    ? 'bg-studio-magenta text-white shadow-sm'
+                                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {photos.map((photo, pIdx) => (
+                        <div key={photo.id || pIdx} className="p-3.5 rounded-xl bg-black/40 border border-white/10 space-y-3">
+                          <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <span className="text-xs font-bold text-studio-gold">Photo #{pIdx + 1}</span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                disabled={pIdx === 0}
+                                onClick={() => handleMovePhotoItem(idx, pIdx, -1)}
+                                className={`p-1 rounded text-slate-400 hover:text-white transition ${pIdx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}`}
+                              >
+                                <ArrowLeft className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={pIdx === photos.length - 1}
+                                onClick={() => handleMovePhotoItem(idx, pIdx, 1)}
+                                className={`p-1 rounded text-slate-400 hover:text-white transition ${pIdx === photos.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}`}
+                              >
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRemovePhotoItem(idx, pIdx)}
+                                className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition ml-1"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <PhotoDropZone
+                            value={photo.url || ''}
+                            onChange={url => handleUpdatePhotoItem(idx, pIdx, 'url', url)}
+                            label="Upload or Drop Photo"
+                          />
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="sm:col-span-2">
+                              <label className="block text-[11px] font-medium text-slate-300 mb-1">Caption (Optional)</label>
+                              <input
+                                type="text"
+                                value={photo.caption || ''}
+                                onChange={e => handleUpdatePhotoItem(idx, pIdx, 'caption', e.target.value)}
+                                placeholder="e.g. Rick in the Methuen studio"
+                                className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[11px] font-medium text-slate-300 mb-1">Size</label>
+                              <select
+                                value={photo.size || 'medium'}
+                                onChange={e => handleUpdatePhotoItem(idx, pIdx, 'size', e.target.value)}
+                                className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                              >
+                                <option value="small">Small</option>
+                                <option value="medium">Medium</option>
+                                <option value="large">Large</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-medium text-slate-300 mb-1">Position / Alignment within block</label>
+                            <div className="flex items-center gap-4 text-xs text-slate-300">
+                              {['left', 'center', 'right'].map(align => (
+                                <label key={align} className="flex items-center gap-1.5 cursor-pointer capitalize">
+                                  <input
+                                    type="radio"
+                                    name={`photo-align-editor-${block.id || idx}-${photo.id || pIdx}`}
+                                    value={align}
+                                    checked={(photo.align || 'center') === align}
+                                    onChange={() => handleUpdatePhotoItem(idx, pIdx, 'align', align)}
+                                    className="accent-studio-magenta"
+                                  />
+                                  <span>{align}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      <div className="pt-1">
+                        {photos.length === 0 ? (
+                          <PhotoDropZone
+                            value=""
+                            allowMultiple={true}
+                            onChange={url => { if (url) handleAddPhotoItem(idx, { url }) }}
+                            onMultipleUpload={results => handleBatchAddPhotos(idx, results)}
+                            label="Upload or Drop Photo(s)"
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleAddPhotoItem(idx, {})}
+                            className="px-4 py-2 rounded-xl bg-studio-magenta/20 hover:bg-studio-magenta text-studio-magenta hover:text-white border border-studio-magenta/30 font-semibold text-xs transition flex items-center justify-center gap-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>Add Another Photo to this Block</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Video in this Block */}
+                      <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <label className="text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
+                            <Youtube className="w-3.5 h-3.5 text-rose-400" />
+                            <span>Video in this Block (Optional - YouTube or MP4)</span>
+                          </label>
+                          <div className="flex items-center gap-2 text-[11px] text-slate-300">
+                            <span className="text-slate-400">Position:</span>
+                            <select
+                              value={block.videoPosition || 'below'}
+                              onChange={e => handleUpdateField(idx, 'videoPosition', e.target.value)}
+                              className="bg-[#13111c] border border-white/15 rounded px-2 py-0.5 text-xs text-white"
+                            >
+                              <option value="below">Below Photos</option>
+                              <option value="above">Above Photos</option>
+                            </select>
+                          </div>
+                        </div>
                         <input
                           type="text"
-                          value={block.caption || ''}
-                          onChange={e => handleUpdateField(idx, 'caption', e.target.value)}
-                          placeholder="e.g. Rick in the Methuen studio"
+                          value={block.videoUrl || ''}
+                          onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
+                          placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
                           className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Size</label>
-                        <select
-                          value={block.size || 'medium'}
-                          onChange={e => handleUpdateField(idx, 'size', e.target.value)}
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        >
-                          <option value="small">Small</option>
-                          <option value="medium">Medium</option>
-                          <option value="large">Large</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-1">Alignment</label>
-                      <div className="flex items-center gap-4 text-xs text-slate-300">
-                        {['left', 'center', 'right'].map(align => (
-                          <label key={align} className="flex items-center gap-1.5 cursor-pointer capitalize">
-                            <input
-                              type="radio"
-                              name={`photo-align-editor-${block.id || idx}`}
-                              value={align}
-                              checked={(block.align || 'center') === align}
-                              onChange={() => handleUpdateField(idx, 'align', align)}
-                              className="accent-studio-magenta"
+                        {block.videoUrl && (
+                          <div className="mt-1.5">
+                            <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster (shown before play — for MP4 files)</span>
+                            <PhotoDropZone
+                              value={block.videoPoster || ''}
+                              onChange={url => handleUpdateField(idx, 'videoPoster', url)}
+                              label="Upload Thumbnail Poster (Optional)"
                             />
-                            <span>{align}</span>
-                          </label>
-                        ))}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )
+                })()}
 
                 {/* 9. Divider Block */}
                 {block.type === 'divider' && (

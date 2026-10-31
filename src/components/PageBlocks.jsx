@@ -1,9 +1,132 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Info, ArrowRight, ExternalLink, Sparkles } from 'lucide-react'
+import { Info, ArrowRight, ExternalLink, Sparkles, X, Play } from 'lucide-react'
 import GoogleFormEmbed from './GoogleFormEmbed'
 
+export function cleanPhotoUrl(raw) {
+  if (!raw || typeof raw !== 'string') return ''
+  const t = raw.trim()
+  if (!t) return ''
+  if (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('data:')) return t
+  return '/' + t.replace(/^(\.\/)?(public\/)?/, '').replace(/^\/+/, '')
+}
+
+export function cleanVideoUrl(raw) {
+  if (!raw || typeof raw !== 'string') return ''
+  let t = raw.trim()
+  if (!t) return ''
+  if (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('data:')) return t
+  // Normalize Windows backslashes
+  t = t.replace(/\\/g, '/')
+  // If user pasted a local file path containing 'public/'
+  const publicIdx = t.toLowerCase().lastIndexOf('/public/')
+  if (publicIdx !== -1) {
+    return t.substring(publicIdx + '/public'.length)
+  }
+  if (t.toLowerCase().startsWith('public/')) {
+    return '/' + t.substring('public/'.length)
+  }
+  // If it's an absolute path with drive letter like C:/...
+  if (/^[a-zA-Z]:\//.test(t)) {
+    const filename = t.substring(t.lastIndexOf('/') + 1)
+    return '/' + filename
+  }
+  if (!t.startsWith('/')) {
+    return '/' + t
+  }
+  return t
+}
+
+export function parseVideoEmbed(url) {
+  if (!url || typeof url !== 'string') return null
+  const trimmed = url.trim()
+  if (!trimmed) return null
+
+  // YouTube match (watch, shorts, embed, youtu.be)
+  const ytMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
+  if (ytMatch) {
+    return {
+      type: 'youtube',
+      id: ytMatch[1],
+      embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0`
+    }
+  }
+
+  // Vimeo match
+  const vimeoMatch = trimmed.match(/vimeo\.com\/(?:video\/)?(\d+)/i)
+  if (vimeoMatch) {
+    return {
+      type: 'vimeo',
+      id: vimeoMatch[1],
+      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}`
+    }
+  }
+
+  // Direct video file (.mp4, .webm, .mov, .m4v, .ogv)
+  const directClean = cleanVideoUrl(trimmed)
+  if (/\.(mp4|webm|ogv|mov|m4v)(\?.*)?$/i.test(directClean)) {
+    return {
+      type: 'direct',
+      url: directClean
+    }
+  }
+
+  return null
+}
+
+export function BlockVideoEmbed({ url, poster, title = 'Video', className = '' }) {
+  const parsed = parseVideoEmbed(url)
+  if (!parsed) return null
+
+  const posterUrl = cleanPhotoUrl(poster)
+
+  if (parsed.type === 'youtube' || parsed.type === 'vimeo') {
+    return (
+      <div className={`relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl ${className}`}>
+        <iframe
+          src={parsed.embedUrl}
+          title={title}
+          className="absolute inset-0 w-full h-full border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    )
+  }
+
+  if (parsed.type === 'direct') {
+    const videoSrc = parsed.url.includes('#t=') ? parsed.url : `${parsed.url}#t=1`
+    return (
+      <div className={`relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl ${className}`}>
+        <video
+          src={videoSrc}
+          poster={posterUrl || undefined}
+          controls
+          playsInline
+          preload="metadata"
+          className="w-full h-full object-contain"
+        >
+          Your browser does not support the video tag.
+        </video>
+      </div>
+    )
+  }
+
+  return null
+}
+
 export default function PageBlocks({ blocks }) {
+  const [lightboxImg, setLightboxImg] = useState(null)
+
+  useEffect(() => {
+    if (!lightboxImg) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') setLightboxImg(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [lightboxImg])
+
   if (!blocks || !Array.isArray(blocks) || blocks.length === 0) return null
 
   return (
@@ -11,7 +134,7 @@ export default function PageBlocks({ blocks }) {
       {blocks.filter(b => b && b.visible !== false).map((block, idx) => {
         const key = block.id || `block-${idx}`
 
-        // 1. Text Section
+        // 1. Text Section (with optional video URL)
         if (block.type === 'text') {
           return (
             <div key={key} className="glass-panel p-6 sm:p-10 rounded-3xl border border-white/10 space-y-4">
@@ -30,6 +153,15 @@ export default function PageBlocks({ blocks }) {
                   {block.text}
                 </div>
               )}
+              {block.videoUrl && (
+                <div className="pt-2 max-w-4xl">
+                  <BlockVideoEmbed
+                    url={block.videoUrl}
+                    poster={block.videoPoster}
+                    title={block.heading || 'Text Section Video'}
+                  />
+                </div>
+              )}
             </div>
           )
         }
@@ -37,17 +169,63 @@ export default function PageBlocks({ blocks }) {
         // 2. Image + Text
         if (block.type === 'image-text') {
           const isRight = block.imagePosition === 'right'
+          const itImages = (Array.isArray(block.images) && block.images.length > 0)
+            ? block.images.filter(img => img && img.url)
+            : (block.image ? [{ id: 'it-1', url: block.image, caption: block.imageAlt || '' }] : [])
+
           return (
             <div key={key} className="glass-panel p-6 sm:p-10 rounded-3xl border border-white/10">
               <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center ${isRight ? 'md:grid-flow-dense' : ''}`}>
-                {block.image && (
-                  <div className={`overflow-hidden rounded-2xl border border-white/10 bg-black/40 ${isRight ? 'md:col-start-2' : ''}`}>
-                    <img
-                      src={block.image}
-                      alt={block.imageAlt || block.heading || 'Custom Section Image'}
-                      className="w-full h-auto max-h-96 object-cover hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
+                {/* Media column: images + optional video */}
+                {(itImages.length > 0 || block.videoUrl) && (
+                  <div className={`space-y-3 ${isRight ? 'md:col-start-2' : ''}`}>
+                    {itImages.length === 1 && (
+                      <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-xl">
+                        <img
+                          src={cleanPhotoUrl(itImages[0].url)}
+                          alt={itImages[0].caption || itImages[0].alt || block.imageAlt || block.heading || 'Custom Section Image'}
+                          className="w-full h-auto max-h-96 object-cover hover:scale-105 transition-transform duration-500 cursor-zoom-in"
+                          onClick={() => setLightboxImg({ url: cleanPhotoUrl(itImages[0].url), caption: itImages[0].caption || itImages[0].alt || block.heading })}
+                          loading="lazy"
+                        />
+                        {itImages[0].caption && (
+                          <p className="p-2 text-xs text-slate-400 italic bg-black/40 text-center">{itImages[0].caption}</p>
+                        )}
+                      </div>
+                    )}
+                    {itImages.length > 1 && (
+                      <div className={`grid ${itImages.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2'} gap-3`}>
+                        {itImages.map((img, i) => {
+                          const imgUrl = cleanPhotoUrl(img.url)
+                          return (
+                            <div
+                              key={img.id || i}
+                              className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-md group cursor-zoom-in relative"
+                              onClick={() => setLightboxImg({ url: imgUrl, caption: img.caption || img.alt || block.heading })}
+                            >
+                              <img
+                                src={imgUrl}
+                                alt={img.caption || img.alt || `${block.heading || 'Section'} photo ${i + 1}`}
+                                className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy"
+                              />
+                              {img.caption && (
+                                <p className="p-1.5 text-[11px] text-slate-300 italic truncate bg-black/60 text-center">{img.caption}</p>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                    {block.videoUrl && (
+                      <div className="pt-1">
+                        <BlockVideoEmbed
+                          url={block.videoUrl}
+                          poster={block.videoPoster}
+                          title={block.heading || 'Section Video'}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="space-y-4">
@@ -114,6 +292,15 @@ export default function PageBlocks({ blocks }) {
                   )}
                 </div>
               )}
+              {block.videoUrl && (
+                <div className="max-w-4xl mx-auto pt-2">
+                  <BlockVideoEmbed
+                    url={block.videoUrl}
+                    poster={block.videoPoster}
+                    title={block.heading || 'Cards Video'}
+                  />
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {items.filter(c => c && c.visible !== false).map((card, cIdx) => (
                   <div key={card.id || cIdx} className="glass-panel p-6 rounded-2xl border border-white/10 flex flex-col justify-between space-y-4">
@@ -127,6 +314,15 @@ export default function PageBlocks({ blocks }) {
                         <h4 className="font-serif text-lg font-bold text-white">
                           {card.title}
                         </h4>
+                      )}
+                      {card.videoUrl && (
+                        <div className="py-2">
+                          <BlockVideoEmbed
+                            url={card.videoUrl}
+                            poster={card.videoPoster}
+                            title={card.title || 'Card Video'}
+                          />
+                        </div>
                       )}
                       {card.text && (
                         <p className="text-xs sm:text-sm text-slate-300 leading-relaxed whitespace-pre-line">
@@ -181,6 +377,15 @@ export default function PageBlocks({ blocks }) {
                 )}
                 {block.text && (
                   <span className="leading-relaxed whitespace-pre-line">{block.text}</span>
+                )}
+                {block.videoUrl && (
+                  <div className="pt-2 max-w-2xl">
+                    <BlockVideoEmbed
+                      url={block.videoUrl}
+                      poster={block.videoPoster}
+                      title={block.title || 'Notice Video'}
+                    />
+                  </div>
                 )}
                 {block.linkUrl && block.linkText && (
                   <span className="block pt-1">
@@ -285,53 +490,224 @@ export default function PageBlocks({ blocks }) {
               {block.text && (
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{block.text}</p>
               )}
-              {videoId ? (
-                <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl">
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0`}
-                    title={block.heading || 'Video'}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full border-0"
-                  />
-                </div>
+              {rawUrl ? (
+                <BlockVideoEmbed
+                  url={rawUrl}
+                  poster={block.poster || block.videoPoster}
+                  title={block.heading || 'Video'}
+                />
               ) : (
                 <div className="p-8 text-center text-xs text-slate-400 bg-white/5 rounded-2xl border border-white/10">
-                  Please enter a valid YouTube video URL to display this video block.
+                  Please enter a valid video URL to display this video block.
                 </div>
               )}
             </div>
           )
         }
 
-        // 8. Photo Block (Single image with optional caption, size small/medium/large, align left/center/right)
+        // 8. Photo Block (1 or multiple images with per-photo caption, size small/medium/large, align left/center/right)
         if (block.type === 'photo') {
-          const sizeClass = block.size === 'small' ? 'max-w-md' : block.size === 'large' ? 'max-w-5xl' : 'max-w-2xl'
-          const alignClass = block.align === 'left' ? 'mr-auto' : block.align === 'right' ? 'ml-auto' : 'mx-auto'
-          const textAlignClass = block.align === 'left' ? 'text-left' : block.align === 'right' ? 'text-right' : 'text-center'
-          return (
-            <div key={key} className="py-2">
+          const photos = (Array.isArray(block.images) && block.images.length > 0)
+            ? block.images.filter(p => p && p.url && p.url.trim())
+            : (block.image ? [{
+                id: 'img-1',
+                url: block.image,
+                caption: block.caption || '',
+                size: block.size || 'medium',
+                align: block.align || 'center'
+              }] : [])
+
+          const layout = block.layout || 'row'
+          const videoPosition = block.videoPosition || 'below'
+          const renderBlockVideo = () => block.videoUrl ? (
+            <div className="max-w-4xl mx-auto my-4">
+              <BlockVideoEmbed
+                url={block.videoUrl}
+                poster={block.videoPoster}
+                title={block.caption || 'Video in Photo Block'}
+              />
+            </div>
+          ) : null
+
+          if (photos.length === 0) {
+            if (block.videoUrl) {
+              return (
+                <div key={key} className="py-2 max-w-4xl mx-auto space-y-2">
+                  <BlockVideoEmbed
+                    url={block.videoUrl}
+                    poster={block.videoPoster}
+                    title={block.caption || 'Video in Photo Block'}
+                  />
+                  {block.caption && (
+                    <p className="text-xs text-slate-400 italic pt-1 text-center">{block.caption}</p>
+                  )}
+                </div>
+              )
+            }
+            return (
+              <div key={key} className="py-2 max-w-2xl mx-auto">
+                <div className="p-8 text-center text-xs text-slate-400 bg-white/5 rounded-2xl border border-dashed border-white/10">
+                  No photo or video selected
+                </div>
+              </div>
+            )
+          }
+
+          let photosContent = null
+
+          // Single photo
+          if (photos.length === 1) {
+            const photo = photos[0]
+            const pSize = photo.size || block.size || 'medium'
+            const pAlign = photo.align || block.align || 'center'
+            const sizeClass = pSize === 'small' ? 'max-w-md' : pSize === 'large' ? 'max-w-5xl' : 'max-w-2xl'
+            const alignClass = pAlign === 'left' ? 'mr-auto' : pAlign === 'right' ? 'ml-auto' : 'mx-auto'
+            const textAlignClass = pAlign === 'left' ? 'text-left' : pAlign === 'right' ? 'text-right' : 'text-center'
+            const photoUrl = cleanPhotoUrl(photo.url)
+
+            photosContent = (
               <figure className={`${sizeClass} ${alignClass} space-y-2`}>
-                {block.image ? (
-                  <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-xl">
-                    <img
-                      src={block.image}
-                      alt={block.caption || block.alt || 'Studio Photo'}
-                      className="w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-xs text-slate-400 bg-white/5 rounded-2xl border border-dashed border-white/10">
-                    No photo selected
-                  </div>
-                )}
-                {block.caption && (
+                <div
+                  className="rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-xl group cursor-zoom-in"
+                  onClick={() => setLightboxImg({ url: photoUrl, caption: photo.caption })}
+                >
+                  <img
+                    src={photoUrl}
+                    alt={photo.caption || 'Studio Photo'}
+                    className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                    loading="lazy"
+                  />
+                </div>
+                {photo.caption && (
                   <figcaption className={`text-xs text-slate-400 italic pt-1 ${textAlignClass}`}>
-                    {block.caption}
+                    {photo.caption}
                   </figcaption>
                 )}
               </figure>
+            )
+          } else if (layout === 'stacked') {
+            // Multiple photos: Stacked Layout
+            photosContent = (
+              <div className="space-y-6">
+                {photos.map((photo, pIdx) => {
+                  const pSize = photo.size || 'medium'
+                  const pAlign = photo.align || 'center'
+                  const sizeClass = pSize === 'small' ? 'max-w-md' : pSize === 'large' ? 'max-w-5xl' : 'max-w-2xl'
+                  const alignClass = pAlign === 'left' ? 'mr-auto' : pAlign === 'right' ? 'ml-auto' : 'mx-auto'
+                  const textAlignClass = pAlign === 'left' ? 'text-left' : pAlign === 'right' ? 'text-right' : 'text-center'
+                  const photoUrl = cleanPhotoUrl(photo.url)
+                  return (
+                    <figure key={photo.id || pIdx} className={`${sizeClass} ${alignClass} space-y-2`}>
+                      <div
+                        className="rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-xl group cursor-zoom-in"
+                        onClick={() => setLightboxImg({ url: photoUrl, caption: photo.caption })}
+                      >
+                        <img
+                          src={photoUrl}
+                          alt={photo.caption || `Photo ${pIdx + 1}`}
+                          className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
+                      {photo.caption && (
+                        <figcaption className={`text-xs text-slate-400 italic pt-1 ${textAlignClass}`}>
+                          {photo.caption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  )
+                })}
+              </div>
+            )
+          } else if (layout === 'grid') {
+            // Multiple photos: Grid Layout
+            const gridCols = photos.length === 2 ? 'sm:grid-cols-2 max-w-4xl' : 'sm:grid-cols-2 lg:grid-cols-3 max-w-6xl'
+            photosContent = (
+              <div className={`grid grid-cols-1 ${gridCols} gap-6 mx-auto`}>
+                {photos.map((photo, pIdx) => {
+                  const photoUrl = cleanPhotoUrl(photo.url)
+                  const textAlignClass = (photo.align || 'center') === 'left' ? 'text-left' : (photo.align || 'center') === 'right' ? 'text-right' : 'text-center'
+                  return (
+                    <figure key={photo.id || pIdx} className="space-y-2">
+                      <div
+                        className="rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-xl group cursor-zoom-in aspect-square sm:aspect-[4/3]"
+                        onClick={() => setLightboxImg({ url: photoUrl, caption: photo.caption })}
+                      >
+                        <img
+                          src={photoUrl}
+                          alt={photo.caption || `Photo ${pIdx + 1}`}
+                          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
+                      {photo.caption && (
+                        <figcaption className={`text-xs text-slate-400 italic pt-1 ${textAlignClass}`}>
+                          {photo.caption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  )
+                })}
+              </div>
+            )
+          } else {
+            // Multiple photos: Default Row / Side-by-Side Layout
+            const hasLeft = photos.some(p => (p.align || 'center') === 'left')
+            const hasRight = photos.some(p => (p.align || 'center') === 'right')
+            const allLeft = photos.every(p => (p.align || 'center') === 'left')
+            const allRight = photos.every(p => (p.align || 'center') === 'right')
+
+            const justifyClass = (hasLeft && hasRight)
+              ? 'justify-between'
+              : allLeft
+              ? 'justify-start'
+              : allRight
+              ? 'justify-end'
+              : 'justify-center'
+
+            photosContent = (
+              <div className={`w-full flex flex-wrap items-start ${justifyClass} gap-6 sm:gap-8`}>
+                {photos.map((photo, pIdx) => {
+                  const pSize = photo.size || 'medium'
+                  const pAlign = photo.align || 'center'
+                  const photoUrl = cleanPhotoUrl(photo.url)
+                  const widthClass = pSize === 'small'
+                    ? 'w-full sm:w-[320px] max-w-full'
+                    : pSize === 'large'
+                    ? 'w-full sm:w-[680px] max-w-full'
+                    : 'w-full sm:w-[480px] max-w-full'
+                  const textAlignClass = pAlign === 'left' ? 'text-left' : pAlign === 'right' ? 'text-right' : 'text-center'
+
+                  return (
+                    <figure key={photo.id || pIdx} className={`${widthClass} space-y-2 shrink-0`}>
+                      <div
+                        className="rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-xl group cursor-zoom-in"
+                        onClick={() => setLightboxImg({ url: photoUrl, caption: photo.caption })}
+                      >
+                        <img
+                          src={photoUrl}
+                          alt={photo.caption || `Photo ${pIdx + 1}`}
+                          className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
+                      {photo.caption && (
+                        <figcaption className={`text-xs text-slate-400 italic pt-1 ${textAlignClass}`}>
+                          {photo.caption}
+                        </figcaption>
+                      )}
+                    </figure>
+                  )
+                })}
+              </div>
+            )
+          }
+
+          return (
+            <div key={key} className="py-2 space-y-4">
+              {videoPosition === 'above' && renderBlockVideo()}
+              {photosContent}
+              {videoPosition === 'below' && renderBlockVideo()}
             </div>
           )
         }
@@ -349,6 +725,32 @@ export default function PageBlocks({ blocks }) {
 
         return null
       })}
+
+      {/* Lightbox Modal */}
+      {lightboxImg && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setLightboxImg(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white/70 hover:text-white p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
+            onClick={() => setLightboxImg(null)}
+            aria-label="Close"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="max-w-5xl max-h-[90vh] flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            <img
+              src={lightboxImg.url}
+              alt={lightboxImg.caption || 'Enlarged photo'}
+              className="max-h-[82vh] w-auto max-w-full rounded-2xl shadow-2xl object-contain border border-white/20"
+            />
+            {lightboxImg.caption && (
+              <p className="text-sm text-slate-300 mt-3 text-center italic">{lightboxImg.caption}</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -44,6 +44,11 @@ export default function PhotoDropZone({
     setUploading(true)
 
     try {
+      for (const file of files) {
+        if (file.size > 20 * 1024 * 1024) {
+          throw new Error(`"${file.name}" exceeds 20 MB limit (${(file.size / 1024 / 1024).toFixed(1)} MB). Upload rejected.`)
+        }
+      }
       if (files.length > 1 && onMultipleUpload) {
         const results = []
         for (const file of files) {

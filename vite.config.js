@@ -215,6 +215,12 @@ function adminApiPlugin() {
                 return
               }
               const buffer = Buffer.from(dataBase64, 'base64')
+              const MAX_UPLOAD_BYTES = 20 * 1024 * 1024 // 20 MB
+              if (buffer.length > MAX_UPLOAD_BYTES) {
+                res.statusCode = 413
+                res.end(JSON.stringify({ error: `File exceeds 20 MB limit (${(buffer.length / 1024 / 1024).toFixed(1)} MB). Upload rejected.` }))
+                return
+              }
               const outDir = path.resolve(__dirname, 'public/images/paintings')
               fs.mkdirSync(outDir, { recursive: true })
               const rawBase = path.basename(filename, path.extname(filename)).replace(/[^a-z0-9-_]/gi, '-').toLowerCase()
