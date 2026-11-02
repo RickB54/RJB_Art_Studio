@@ -455,7 +455,21 @@
     "bannerBtn": "Subscribe on YouTube",
     "playlistsHeader": "Featured Playlists",
     "browsePlaylists": "Browse Playlist",
-    "viewVideosBtn": "View Videos"
+    "viewVideosBtn": "View Videos",
+    "blockSlots": {
+      "top": [
+        {
+          "id": "block-1793631978190-bxje",
+          "type": "embed",
+          "visible": true,
+          "heading": "",
+          "subtitle": "",
+          "text": "",
+          "url": "https://drive.google.com/file/d/1bNea0tffhVG-Qi31rRjzKDRlVGsjItXp/view?usp=sharing",
+          "height": 850
+        }
+      ]
+    }
   },
   "contact": {
     "headerVisible": true,
