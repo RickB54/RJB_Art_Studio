@@ -15,6 +15,7 @@ const Commissions = React.lazy(() => import('./pages/Commissions'))
 const Videos = React.lazy(() => import('./pages/Videos'))
 const PlaylistDetail = React.lazy(() => import('./pages/PlaylistDetail'))
 const Contact = React.lazy(() => import('./pages/Contact'))
+const Memorial = React.lazy(() => import('./pages/Memorial'))
 const NotFound = React.lazy(() => import('./pages/NotFound'))
 
 // Load Admin ONLY in local development
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/videos" element={<Videos />} />
             <Route path="/videos/:playlistId" element={<PlaylistDetail />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/memorial" element={<Memorial />} />
             {import.meta.env.DEV && Admin && (
               <Route
                 path="/admin"

@@ -122,7 +122,9 @@
     "teaserImagePosition": "below",
     "blockSlots": {
       "after_teaser": [],
-      "after_featured": [
+      "after_featured": [],
+      "after_hero": [],
+      "top": [
         {
           "id": "block-1793388324278-wyv3",
           "type": "text",
@@ -457,18 +459,7 @@
     "browsePlaylists": "Browse Playlist",
     "viewVideosBtn": "View Videos",
     "blockSlots": {
-      "top": [
-        {
-          "id": "block-1793631978190-bxje",
-          "type": "embed",
-          "visible": true,
-          "heading": "",
-          "subtitle": "",
-          "text": "",
-          "url": "https://drive.google.com/file/d/1bNea0tffhVG-Qi31rRjzKDRlVGsjItXp/view?usp=sharing",
-          "height": 850
-        }
-      ]
+      "top": []
     }
   },
   "contact": {
@@ -563,5 +554,19 @@
       "location": "Merrimack Valley & North Shore, MA",
       "details": "Original paintings and prints available directly in person. Check back soon for exact booth dates and locations!"
     }
-  ]
+  ],
+  "memorial": {
+    "title": "In Loving Memory of Henry E. Berube",
+    "subtitle": "April 14, 1938 – September 24, 2026",
+    "dedication": "A loving father, grandfather, and friend. He lived with joy, gave with grace, and left us with a lifetime of beautiful memories.",
+    "heroVideoUrl": "https://drive.google.com/file/d/1bNea0tffhVG-Qi31rRjzKDRlVGsjItXp/view",
+    "heroVideoPoster": "",
+    "heroVideoAspectRatio": "16:9",
+    "blockSlots": {
+      "top": [],
+      "after_video": [],
+      "after_dedication": [],
+      "bottom": []
+    }
+  }
 }

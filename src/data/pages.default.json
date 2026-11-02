@@ -362,5 +362,19 @@
       "location": "Merrimack Valley & North Shore, MA",
       "details": "Original paintings and prints available directly in person. Check back soon for exact booth dates and locations!"
     }
-  ]
+  ],
+  "memorial": {
+    "title": "In Loving Memory of Henry E. Berube",
+    "subtitle": "April 14, 1938 – September 24, 2026",
+    "dedication": "A loving father, grandfather, and friend. He lived with joy, gave with grace, and left us with a lifetime of beautiful memories.",
+    "heroVideoUrl": "https://drive.google.com/file/d/1bNea0tffhVG-Qi31rRjzKDRlVGsjItXp/view",
+    "heroVideoPoster": "",
+    "heroVideoAspectRatio": "16:9",
+    "blockSlots": {
+      "top": [],
+      "after_video": [],
+      "after_dedication": [],
+      "bottom": []
+    }
+  }
 }

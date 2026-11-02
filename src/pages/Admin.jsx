@@ -59,6 +59,13 @@ const CONTACT_BLOCK_SLOTS = [
   { id: 'bottom', label: 'Bottom of Page' },
 ]
 
+const MEMORIAL_BLOCK_SLOTS = [
+  { id: 'top', label: 'Top of Page (Above Hero Video)' },
+  { id: 'after_video', label: 'After Hero Video' },
+  { id: 'after_dedication', label: 'After Dedication / Quote' },
+  { id: 'bottom', label: 'Bottom of Page' },
+]
+
 export default function Admin() {
   const [paintings, setPaintings] = useState(paintingsDataInitial)
   const [site, setSite] = useState(siteDataInitial)
@@ -962,6 +969,7 @@ export default function Admin() {
             <option value="commissions">Commissions & Prints</option>
             <option value="videos">Videos</option>
             <option value="contact">Contact</option>
+            <option value="memorial">🕯️ Memorial (Family)</option>
             <option value="footerHeader">Header & Footer</option>
           </select>
         </div>
@@ -1754,6 +1762,7 @@ export default function Admin() {
                   gallery: '🖼 Gallery Page',
                   videos: '🎬 Videos & Tutorials',
                   contact: '✉ Contact Page',
+                  memorial: '🕯️ Memorial Page',
                   paintingDetail: '🔍 Painting Detail',
                   notFound: '🚫 404 Not Found',
                   footerHeader: '⚓ Header & Footer'
@@ -4835,6 +4844,118 @@ export default function Admin() {
 
               {/* Custom Block Slots */}
               {renderBlockSlotsEditor('contact', CONTACT_BLOCK_SLOTS, 'Contact Page')}
+            </div>
+          )}
+
+          {/* SECTION: MEMORIAL PAGE */}
+          {editPageSection === 'memorial' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>🕯️</span>
+                    <span>Memorial Page Editor</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Private password-protected family memorial page. Set the password, hero video, dedication, and add blocks below.
+                  </p>
+                </div>
+              </div>
+
+              {/* Password & Access Settings */}
+              <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-400/20 space-y-3">
+                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block flex items-center gap-2">
+                  🔒 Access & Password Settings
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Family Password</label>
+                    <input
+                      type="text"
+                      value={site.memorial?.password !== undefined ? site.memorial.password : '8888'}
+                      onChange={e => setSite({ ...site, memorial: { ...(site.memorial || {}), password: e.target.value } })}
+                      placeholder="8888"
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono"
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1">Share this with family members only. Default is 8888.</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Nav Label</label>
+                    <input
+                      type="text"
+                      value={site.memorial?.navLabel || ''}
+                      onChange={e => setSite({ ...site, memorial: { ...(site.memorial || {}), navLabel: e.target.value } })}
+                      placeholder="In Memory"
+                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer mt-1">
+                  <input
+                    type="checkbox"
+                    checked={site.memorial?.enabled !== false}
+                    onChange={e => setSite({ ...site, memorial: { ...(site.memorial || {}), enabled: e.target.checked } })}
+                    className="rounded text-studio-magenta"
+                  />
+                  <span className="text-xs text-slate-300">Show "In Memory" link in navigation menu</span>
+                </label>
+              </div>
+
+              {/* Page Header */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">Page Header</span>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Full Name / Title</label>
+                  <input
+                    type="text"
+                    value={pages.memorial?.title || ''}
+                    onChange={e => setPages({ ...pages, memorial: { ...(pages.memorial || {}), title: e.target.value } })}
+                    placeholder="In Loving Memory of Henry E. Berube"
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Dates / Subtitle</label>
+                  <input
+                    type="text"
+                    value={pages.memorial?.subtitle || ''}
+                    onChange={e => setPages({ ...pages, memorial: { ...(pages.memorial || {}), subtitle: e.target.value } })}
+                    placeholder="April 14, 1938 – September 24, 2026"
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Dedication / Quote</label>
+                  <textarea
+                    rows={3}
+                    value={pages.memorial?.dedication || ''}
+                    onChange={e => setPages({ ...pages, memorial: { ...(pages.memorial || {}), dedication: e.target.value } })}
+                    placeholder="A loving father, grandfather, and friend..."
+                    className="w-full bg-[#13111c] border border-white/10 rounded-lg p-2.5 text-xs text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Hero Video */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">Hero / Feature Video (shown at top)</span>
+                <AdminMediaField
+                  label="Hero Video URL"
+                  url={pages.memorial?.heroVideoUrl || ''}
+                  poster={pages.memorial?.heroVideoPoster || ''}
+                  aspectRatio={pages.memorial?.heroVideoAspectRatio || '16:9'}
+                  fallbackLinkText={pages.memorial?.heroFallbackLinkText || ''}
+                  hideFallbackLink={pages.memorial?.heroHideFallbackLink || false}
+                  onUrlChange={val => setPages({ ...pages, memorial: { ...(pages.memorial || {}), heroVideoUrl: cleanVideoUrl(val) } })}
+                  onPosterChange={val => setPages({ ...pages, memorial: { ...(pages.memorial || {}), heroVideoPoster: val } })}
+                  onAspectRatioChange={val => setPages({ ...pages, memorial: { ...(pages.memorial || {}), heroVideoAspectRatio: val } })}
+                  onFallbackLinkTextChange={val => setPages({ ...pages, memorial: { ...(pages.memorial || {}), heroFallbackLinkText: val } })}
+                  onHideFallbackLinkChange={val => setPages({ ...pages, memorial: { ...(pages.memorial || {}), heroHideFallbackLink: val } })}
+                />
+              </div>
+
+              {/* Custom Block Slots */}
+              {renderBlockSlotsEditor('memorial', MEMORIAL_BLOCK_SLOTS, 'Memorial Page')}
             </div>
           )}
 

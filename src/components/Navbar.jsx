@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Youtube, Palette } from 'lucide-react'
+import { Menu, X, Youtube, Heart } from 'lucide-react'
 import siteData from '../data/site.json'
 import initialPages from '../data/pages.json'
 
@@ -17,6 +17,8 @@ export default function Navbar() {
   }, [])
 
   const hd = pages.header || {}
+  const memorialCfg = pages.memorial_config || siteData.memorial || {}
+  const showMemorial = memorialCfg.enabled !== false
 
   const navLinks = [
     { name: hd.navHome || 'Home', path: '/' },
@@ -26,6 +28,10 @@ export default function Navbar() {
     { name: hd.navVideos || 'Videos', path: '/videos' },
     { name: hd.navContact || 'Contact', path: '/contact' },
   ]
+
+  if (showMemorial) {
+    navLinks.push({ name: memorialCfg.navLabel || 'In Memory', path: '/memorial', memorial: true })
+  }
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/'
@@ -68,11 +74,16 @@ export default function Navbar() {
                   key={link.path}
                   to={link.path}
                   className={`px-3.5 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                    active
+                    link.memorial
+                      ? active
+                        ? 'text-amber-300 bg-amber-500/15 shadow-sm border border-amber-400/25'
+                        : 'text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10 border border-transparent'
+                      : active
                       ? 'text-white bg-white/10 shadow-sm border border-white/10'
                       : 'text-slate-300 hover:text-white hover:bg-white/5'
-                  }`}
+                  } flex items-center gap-1.5`}
                 >
+                  {link.memorial && <Heart className="w-3.5 h-3.5 fill-current" />}
                   {link.name}
                 </Link>
               )
@@ -116,12 +127,17 @@ export default function Navbar() {
               key={link.path}
               to={link.path}
               onClick={() => setMobileMenuOpen(false)}
-              className={`block px-3 py-2.5 rounded-lg text-base font-medium ${
-                isActive(link.path)
+              className={`block px-3 py-2.5 rounded-lg text-base font-medium flex items-center gap-2 ${
+                link.memorial
+                  ? isActive(link.path)
+                    ? 'text-amber-300 bg-amber-500/15 border border-amber-400/25'
+                    : 'text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10'
+                  : isActive(link.path)
                   ? 'text-white bg-white/10 border border-white/10'
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
               }`}
             >
+              {link.memorial && <Heart className="w-4 h-4 fill-current" />}
               {link.name}
             </Link>
           ))}
