@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Plus, Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Eye, EyeOff, Layers, Type, Image as ImageIcon, LayoutGrid, Info, ExternalLink, Youtube } from 'lucide-react'
 import PhotoDropZone from './PhotoDropZone'
+import AdminMediaField from './AdminMediaField'
 import { cleanVideoUrl } from './PageBlocks'
 
 export default function AdminBlockEditor({ blocks = [], onChange }) {
@@ -334,34 +335,52 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
-                        <Youtube className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Video URL (Optional - in addition to or alongside text)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={block.videoUrl || ''}
-                        onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=... or direct .mp4"
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      <AdminMediaField
+                        label="Video URL in Text Section (Optional)"
+                        url={block.videoUrl || ''}
+                        poster={block.videoPoster || ''}
+                        aspectRatio={block.aspectRatio || '16:9'}
+                        fallbackLinkText={block.fallbackLinkText || ''}
+                        hideFallbackLink={block.hideFallbackLink || false}
+                        onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                        onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                        onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                        onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                        onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
                       />
-                      {block.videoUrl && (
-                        <div className="mt-1.5">
-                          <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster (for MP4 files — shown before play)</span>
-                          <PhotoDropZone
-                            value={block.videoPoster || ''}
-                            onChange={url => handleUpdateField(idx, 'videoPoster', url)}
-                            label="Upload Thumbnail Poster (Optional)"
-                          />
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
 
                 {/* TYPE 2: Image + Text */}
                 {block.type === 'image-text' && (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
+                    {/* Photo vs Video Switch */}
+                    <div className="flex items-center gap-2 p-1 bg-[#13111c] border border-white/10 rounded-xl w-fit">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateField(idx, 'mediaType', 'photo')}
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                          (block.mediaType || 'photo') === 'photo'
+                            ? 'bg-studio-magenta text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        📷 Photo next to text
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateField(idx, 'mediaType', 'video')}
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                          block.mediaType === 'video'
+                            ? 'bg-studio-magenta text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        🎬 Video next to text
+                      </button>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-[11px] font-medium text-slate-300 mb-1">Heading</label>
@@ -382,13 +401,47 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                         />
                       </div>
                     </div>
-                    <div>
-                      <PhotoDropZone
-                        value={block.image || ''}
-                        onChange={url => handleUpdateField(idx, 'image', url)}
-                        label="Section Image (Drop or Browse)"
+
+                    {/* Media next to text */}
+                    {block.mediaType === 'video' ? (
+                      <AdminMediaField
+                        label="Section Video (displayed next to text)"
+                        url={block.videoUrl || ''}
+                        poster={block.videoPoster || ''}
+                        aspectRatio={block.aspectRatio || '16:9'}
+                        fallbackLinkText={block.fallbackLinkText || ''}
+                        hideFallbackLink={block.hideFallbackLink || false}
+                        onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                        onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                        onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                        onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                        onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
                       />
-                    </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div>
+                          <PhotoDropZone
+                            value={block.image || ''}
+                            onChange={url => handleUpdateField(idx, 'image', url)}
+                            label="Section Image (Drop or Browse)"
+                          />
+                        </div>
+                        <AdminMediaField
+                          label="Additional Video (Optional - alongside pics & text)"
+                          url={block.videoUrl || ''}
+                          poster={block.videoPoster || ''}
+                          aspectRatio={block.aspectRatio || '16:9'}
+                          fallbackLinkText={block.fallbackLinkText || ''}
+                          hideFallbackLink={block.hideFallbackLink || false}
+                          onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                          onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                          onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                          onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                          onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
+                        />
+                      </div>
+                    )}
+
                     <div>
                       <label className="block text-[11px] font-medium text-slate-300 mb-1">Description Text</label>
                       <textarea
@@ -400,7 +453,7 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Image Position</label>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Media Position</label>
                         <select
                           value={block.imagePosition || 'left'}
                           onChange={e => handleUpdateField(idx, 'imagePosition', e.target.value)}
@@ -430,29 +483,6 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                           className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                         />
                       </div>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
-                        <Youtube className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Video URL (Optional - alongside pics & text)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={block.videoUrl || ''}
-                        onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=... or direct .mp4"
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                      />
-                      {block.videoUrl && (
-                        <div className="mt-1.5">
-                          <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster (for MP4 files)</span>
-                          <PhotoDropZone
-                            value={block.videoPoster || ''}
-                            onChange={url => handleUpdateField(idx, 'videoPoster', url)}
-                            label="Upload Thumbnail Poster (Optional)"
-                          />
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
@@ -552,24 +582,20 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                               className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
                             />
                           </div>
-                          <div>
-                            <input
-                              type="text"
-                              value={card.videoUrl || ''}
-                              onChange={e => handleUpdateCard(idx, cIdx, 'videoUrl', e.target.value)}
-                              placeholder="Video URL (Optional - e.g. YouTube or MP4)"
-                              className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                          <div className="pt-1">
+                            <AdminMediaField
+                              label="Card Video (Optional - YouTube, Drive, Vimeo, MP4)"
+                              url={card.videoUrl || ''}
+                              poster={card.videoPoster || ''}
+                              aspectRatio={card.aspectRatio || '16:9'}
+                              fallbackLinkText={card.fallbackLinkText || ''}
+                              hideFallbackLink={card.hideFallbackLink || false}
+                              onUrlChange={val => handleUpdateCard(idx, cIdx, 'videoUrl', cleanVideoUrl(val))}
+                              onPosterChange={val => handleUpdateCard(idx, cIdx, 'videoPoster', val)}
+                              onAspectRatioChange={val => handleUpdateCard(idx, cIdx, 'aspectRatio', val)}
+                              onFallbackLinkTextChange={val => handleUpdateCard(idx, cIdx, 'fallbackLinkText', val)}
+                              onHideFallbackLinkChange={val => handleUpdateCard(idx, cIdx, 'hideFallbackLink', val)}
                             />
-                            {card.videoUrl && (
-                              <div className="mt-1.5">
-                                <span className="block text-[11px] text-slate-400 mb-1">Card Video Thumbnail (for MP4 files)</span>
-                                <PhotoDropZone
-                                  value={card.videoPoster || ''}
-                                  onChange={url => handleUpdateCard(idx, cIdx, 'videoPoster', url)}
-                                  label="Upload Thumbnail (Optional)"
-                                />
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))}
@@ -620,27 +646,19 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
-                        <Youtube className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Video URL (Optional)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={block.videoUrl || ''}
-                        onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=... or direct .mp4"
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      <AdminMediaField
+                        label="Notice Video (Optional - YouTube, Drive, Vimeo, MP4)"
+                        url={block.videoUrl || ''}
+                        poster={block.videoPoster || ''}
+                        aspectRatio={block.aspectRatio || '16:9'}
+                        fallbackLinkText={block.fallbackLinkText || ''}
+                        hideFallbackLink={block.hideFallbackLink || false}
+                        onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                        onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                        onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                        onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                        onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
                       />
-                      {block.videoUrl && (
-                        <div className="mt-1.5">
-                          <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster (for MP4 files)</span>
-                          <PhotoDropZone
-                            value={block.videoPoster || ''}
-                            onChange={url => handleUpdateField(idx, 'videoPoster', url)}
-                            label="Upload Thumbnail Poster (Optional)"
-                          />
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
@@ -726,33 +744,22 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                         className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                       />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                          Embed URL or &lt;iframe&gt; code
-                        </label>
-                        <input
-                          type="text"
-                          value={block.url || ''}
-                          onChange={e => {
-                            const val = e.target.value
-                            const match = val.match(/src=["']([^"']+)["']/i)
-                            handleUpdateField(idx, 'url', match ? match[1] : val.trim())
-                          }}
-                          placeholder="https://docs.google.com/forms/d/e/.../viewform?embedded=true"
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Height (px)</label>
-                        <input
-                          type="number"
-                          value={block.height || 850}
-                          onChange={e => handleUpdateField(idx, 'height', parseInt(e.target.value, 10) || 850)}
-                          placeholder="850"
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                      </div>
+                    <div>
+                      <AdminMediaField
+                        label="Embed URL, Google Drive Video, Google Form, or <iframe> code"
+                        url={block.url || ''}
+                        poster={block.poster || block.videoPoster || ''}
+                        aspectRatio={block.aspectRatio || (block.height ? 'custom' : '16:9')}
+                        height={block.height || 850}
+                        fallbackLinkText={block.fallbackLinkText || ''}
+                        hideFallbackLink={block.hideFallbackLink || false}
+                        onUrlChange={val => handleUpdateField(idx, 'url', cleanVideoUrl(val))}
+                        onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                        onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                        onHeightChange={val => handleUpdateField(idx, 'height', val)}
+                        onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                        onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
+                      />
                     </div>
                   </div>
                 )}
@@ -790,15 +797,26 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                        YouTube Video URL
-                      </label>
-                      <input
-                        type="url"
-                        value={block.url || ''}
-                        onChange={e => handleUpdateField(idx, 'url', e.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      <AdminMediaField
+                        label="Video URL (YouTube, Google Drive, Vimeo, MP4)"
+                        url={block.url || block.videoUrl || ''}
+                        poster={block.poster || block.videoPoster || ''}
+                        aspectRatio={block.aspectRatio || '16:9'}
+                        height={block.height}
+                        fallbackLinkText={block.fallbackLinkText || ''}
+                        hideFallbackLink={block.hideFallbackLink || false}
+                        onUrlChange={val => {
+                          handleUpdateField(idx, 'url', cleanVideoUrl(val))
+                          handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))
+                        }}
+                        onPosterChange={val => {
+                          handleUpdateField(idx, 'poster', val)
+                          handleUpdateField(idx, 'videoPoster', val)
+                        }}
+                        onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                        onHeightChange={val => handleUpdateField(idx, 'height', val)}
+                        onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                        onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
                       />
                     </div>
                   </div>
@@ -951,12 +969,9 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                       </div>
 
                       {/* Video in this Block */}
-                      <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-2">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <label className="text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
-                            <Youtube className="w-3.5 h-3.5 text-rose-400" />
-                            <span>Video in this Block (Optional - YouTube or MP4)</span>
-                          </label>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between pb-1">
+                          <span className="text-xs font-semibold text-slate-200">Video in this Block:</span>
                           <div className="flex items-center gap-2 text-[11px] text-slate-300">
                             <span className="text-slate-400">Position:</span>
                             <select
@@ -969,23 +984,19 @@ export default function AdminBlockEditor({ blocks = [], onChange }) {
                             </select>
                           </div>
                         </div>
-                        <input
-                          type="text"
-                          value={block.videoUrl || ''}
-                          onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
-                          placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        <AdminMediaField
+                          label="Block Video URL (YouTube, Drive, Vimeo, MP4)"
+                          url={block.videoUrl || ''}
+                          poster={block.videoPoster || ''}
+                          aspectRatio={block.aspectRatio || '16:9'}
+                          fallbackLinkText={block.fallbackLinkText || ''}
+                          hideFallbackLink={block.hideFallbackLink || false}
+                          onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                          onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                          onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                          onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                          onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
                         />
-                        {block.videoUrl && (
-                          <div className="mt-1.5">
-                            <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster (shown before play — for MP4 files)</span>
-                            <PhotoDropZone
-                              value={block.videoPoster || ''}
-                              onChange={url => handleUpdateField(idx, 'videoPoster', url)}
-                              label="Upload Thumbnail Poster (Optional)"
-                            />
-                          </div>
-                        )}
                       </div>
                     </div>
                   )

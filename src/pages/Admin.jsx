@@ -8,6 +8,7 @@ import pagesDefaultInitial from '../data/pages.default.json'
 import PhotoDropZone from '../components/PhotoDropZone'
 import AdminBlockSlot from '../components/AdminBlockSlot'
 import PriceListModal from '../components/PriceListModal'
+import AdminMediaField from '../components/AdminMediaField'
 import { cleanVideoUrl } from '../components/PageBlocks'
 
 const HOME_BLOCK_SLOTS = [
@@ -2614,29 +2615,16 @@ export default function Admin() {
                   </div>
 
                   {/* Video URL in Teaser Block */}
-                  <div className="p-3 rounded-xl bg-black/20 border border-white/5 space-y-2">
-                    <label className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
-                      <Youtube className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Video URL in this Block (Optional - YouTube or MP4)</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="https://www.youtube.com/watch?v=... or /video.mp4"
-                      value={pages.home?.teaserVideoUrl || ''}
-                      onChange={e => setPages({ ...pages, home: { ...(pages.home || {}), teaserVideoUrl: cleanVideoUrl(e.target.value) } })}
-                      className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
-                    />
-                    {pages.home?.teaserVideoUrl && (
-                      <div className="mt-1.5">
-                        <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster Image (shown before play — useful for local MP4 files)</span>
-                        <PhotoDropZone
-                          value={pages.home?.teaserVideoPoster || ''}
-                          onChange={url => setPages({ ...pages, home: { ...(pages.home || {}), teaserVideoPoster: url } })}
-                          label="Upload Thumbnail Poster (Optional)"
-                        />
-                      </div>
-                    )}
-                  </div>
+                  <AdminMediaField
+                    label="Teaser Video URL (Optional)"
+                    url={pages.home?.teaserVideoUrl || ''}
+                    poster={pages.home?.teaserVideoPoster || ''}
+                    aspectRatio={pages.home?.teaserVideoAspectRatio || '16:9'}
+                    onUrlChange={val => setPages({ ...pages, home: { ...(pages.home || {}), teaserVideoUrl: cleanVideoUrl(val) } })}
+                    onPosterChange={val => setPages({ ...pages, home: { ...(pages.home || {}), teaserVideoPoster: val } })}
+                    onAspectRatioChange={val => setPages({ ...pages, home: { ...(pages.home || {}), teaserVideoAspectRatio: val } })}
+                    showFallbackControls={false}
+                  />
                 </div>
               </div>
 

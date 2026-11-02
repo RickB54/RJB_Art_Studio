@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { Info, ArrowRight, ExternalLink, Sparkles, X, Play } from 'lucide-react'
 import GoogleFormEmbed from './GoogleFormEmbed'
 
+import MediaEmbed, { normalizeMediaUrl } from './MediaEmbed'
+
+export { MediaEmbed, normalizeMediaUrl }
+
 export function cleanPhotoUrl(raw) {
   if (!raw || typeof raw !== 'string') return ''
   const t = raw.trim()
@@ -38,81 +42,31 @@ export function cleanVideoUrl(raw) {
 }
 
 export function parseVideoEmbed(url) {
-  if (!url || typeof url !== 'string') return null
-  const trimmed = url.trim()
-  if (!trimmed) return null
-
-  // YouTube match (watch, shorts, embed, youtu.be)
-  const ytMatch = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
-  if (ytMatch) {
-    return {
-      type: 'youtube',
-      id: ytMatch[1],
-      embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0`
-    }
-  }
-
-  // Vimeo match
-  const vimeoMatch = trimmed.match(/vimeo\.com\/(?:video\/)?(\d+)/i)
-  if (vimeoMatch) {
-    return {
-      type: 'vimeo',
-      id: vimeoMatch[1],
-      embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}`
-    }
-  }
-
-  // Direct video file (.mp4, .webm, .mov, .m4v, .ogv)
-  const directClean = cleanVideoUrl(trimmed)
-  if (/\.(mp4|webm|ogv|mov|m4v)(\?.*)?$/i.test(directClean)) {
-    return {
-      type: 'direct',
-      url: directClean
-    }
-  }
-
-  return null
+  return normalizeMediaUrl(url)
 }
 
-export function BlockVideoEmbed({ url, poster, title = 'Video', className = '' }) {
-  const parsed = parseVideoEmbed(url)
-  if (!parsed) return null
-
-  const posterUrl = cleanPhotoUrl(poster)
-
-  if (parsed.type === 'youtube' || parsed.type === 'vimeo') {
-    return (
-      <div className={`relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl ${className}`}>
-        <iframe
-          src={parsed.embedUrl}
-          title={title}
-          className="absolute inset-0 w-full h-full border-0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
-    )
-  }
-
-  if (parsed.type === 'direct') {
-    const videoSrc = parsed.url.includes('#t=') ? parsed.url : `${parsed.url}#t=1`
-    return (
-      <div className={`relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl ${className}`}>
-        <video
-          src={videoSrc}
-          poster={posterUrl || undefined}
-          controls
-          playsInline
-          preload="metadata"
-          className="w-full h-full object-contain"
-        >
-          Your browser does not support the video tag.
-        </video>
-      </div>
-    )
-  }
-
-  return null
+export function BlockVideoEmbed({
+  url,
+  poster,
+  title = 'Video',
+  aspectRatio = '16:9',
+  height,
+  fallbackLinkText,
+  hideFallbackLink = false,
+  className = ''
+}) {
+  return (
+    <MediaEmbed
+      url={url}
+      poster={poster}
+      title={title}
+      aspectRatio={aspectRatio}
+      height={height}
+      fallbackLinkText={fallbackLinkText}
+      hideFallbackLink={hideFallbackLink}
+      className={className}
+    />
+  )
 }
 
 export default function PageBlocks({ blocks }) {
@@ -176,55 +130,70 @@ export default function PageBlocks({ blocks }) {
           return (
             <div key={key} className="glass-panel p-6 sm:p-10 rounded-3xl border border-white/10">
               <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center ${isRight ? 'md:grid-flow-dense' : ''}`}>
-                {/* Media column: images + optional video */}
-                {(itImages.length > 0 || block.videoUrl) && (
+                {/* Media column: photo(s) OR video based on mediaType switch */}
+                {(block.mediaType === 'video' ? block.videoUrl : (itImages.length > 0 || block.videoUrl)) && (
                   <div className={`space-y-3 ${isRight ? 'md:col-start-2' : ''}`}>
-                    {itImages.length === 1 && (
-                      <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-xl">
-                        <img
-                          src={cleanPhotoUrl(itImages[0].url)}
-                          alt={itImages[0].caption || itImages[0].alt || block.imageAlt || block.heading || 'Custom Section Image'}
-                          className="w-full h-auto max-h-96 object-cover hover:scale-105 transition-transform duration-500 cursor-zoom-in"
-                          onClick={() => setLightboxImg({ url: cleanPhotoUrl(itImages[0].url), caption: itImages[0].caption || itImages[0].alt || block.heading })}
-                          loading="lazy"
-                        />
-                        {itImages[0].caption && (
-                          <p className="p-2 text-xs text-slate-400 italic bg-black/40 text-center">{itImages[0].caption}</p>
+                    {block.mediaType === 'video' ? (
+                      <MediaEmbed
+                        url={block.videoUrl}
+                        poster={block.videoPoster}
+                        aspectRatio={block.aspectRatio || '16:9'}
+                        title={block.heading || 'Section Video'}
+                        fallbackLinkText={block.fallbackLinkText}
+                        hideFallbackLink={block.hideFallbackLink}
+                      />
+                    ) : (
+                      <>
+                        {itImages.length === 1 && (
+                          <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-xl">
+                            <img
+                              src={cleanPhotoUrl(itImages[0].url)}
+                              alt={itImages[0].caption || itImages[0].alt || block.imageAlt || block.heading || 'Custom Section Image'}
+                              className="w-full h-auto max-h-96 object-cover hover:scale-105 transition-transform duration-500 cursor-zoom-in"
+                              onClick={() => setLightboxImg({ url: cleanPhotoUrl(itImages[0].url), caption: itImages[0].caption || itImages[0].alt || block.heading })}
+                              loading="lazy"
+                            />
+                            {itImages[0].caption && (
+                              <p className="p-2 text-xs text-slate-400 italic bg-black/40 text-center">{itImages[0].caption}</p>
+                            )}
+                          </div>
                         )}
-                      </div>
-                    )}
-                    {itImages.length > 1 && (
-                      <div className={`grid ${itImages.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2'} gap-3`}>
-                        {itImages.map((img, i) => {
-                          const imgUrl = cleanPhotoUrl(img.url)
-                          return (
-                            <div
-                              key={img.id || i}
-                              className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-md group cursor-zoom-in relative"
-                              onClick={() => setLightboxImg({ url: imgUrl, caption: img.caption || img.alt || block.heading })}
-                            >
-                              <img
-                                src={imgUrl}
-                                alt={img.caption || img.alt || `${block.heading || 'Section'} photo ${i + 1}`}
-                                className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-500"
-                                loading="lazy"
-                              />
-                              {img.caption && (
-                                <p className="p-1.5 text-[11px] text-slate-300 italic truncate bg-black/60 text-center">{img.caption}</p>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-                    {block.videoUrl && (
-                      <div className="pt-1">
-                        <BlockVideoEmbed
-                          url={block.videoUrl}
-                          poster={block.videoPoster}
-                          title={block.heading || 'Section Video'}
-                        />
-                      </div>
+                        {itImages.length > 1 && (
+                          <div className={`grid ${itImages.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2'} gap-3`}>
+                            {itImages.map((img, i) => {
+                              const imgUrl = cleanPhotoUrl(img.url)
+                              return (
+                                <div
+                                  key={img.id || i}
+                                  className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-md group cursor-zoom-in relative"
+                                  onClick={() => setLightboxImg({ url: imgUrl, caption: img.caption || img.alt || block.heading })}
+                                >
+                                  <img
+                                    src={imgUrl}
+                                    alt={img.caption || img.alt || `${block.heading || 'Section'} photo ${i + 1}`}
+                                    className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                                    loading="lazy"
+                                  />
+                                  {img.caption && (
+                                    <p className="p-1.5 text-[11px] text-slate-300 italic truncate bg-black/60 text-center">{img.caption}</p>
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                        {block.videoUrl && (
+                          <div className="pt-1">
+                            <BlockVideoEmbed
+                              url={block.videoUrl}
+                              poster={block.videoPoster}
+                              title={block.heading || 'Section Video'}
+                              fallbackLinkText={block.fallbackLinkText}
+                              hideFallbackLink={block.hideFallbackLink}
+                            />
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}
@@ -436,8 +405,9 @@ export default function PageBlocks({ blocks }) {
           )
         }
 
-        // 6. Embed Block (URL + height for Google Forms, etc.)
+        // 6. Embed Block (URL + height for Google Drive videos, Google Forms, YouTube, Vimeo, etc.)
         if (block.type === 'embed') {
+          const embedUrl = block.url || block.embedUrl
           return (
             <div key={key} className="glass-panel p-4 sm:p-8 rounded-3xl border border-white/10 space-y-4">
               {(block.heading || block.subtitle) && (
@@ -457,20 +427,28 @@ export default function PageBlocks({ blocks }) {
               {block.text && (
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{block.text}</p>
               )}
-              <GoogleFormEmbed
-                url={block.url || block.embedUrl}
-                height={parseInt(block.height, 10) || 850}
-                title={block.heading || 'Embedded Form'}
-              />
+              {embedUrl ? (
+                <MediaEmbed
+                  url={embedUrl}
+                  poster={block.poster || block.videoPoster}
+                  aspectRatio={block.aspectRatio || (block.height ? 'custom' : '16:9')}
+                  height={block.height}
+                  title={block.heading || 'Embedded Content'}
+                  fallbackLinkText={block.fallbackLinkText}
+                  hideFallbackLink={block.hideFallbackLink}
+                />
+              ) : (
+                <div className="p-8 text-center text-xs text-slate-400 bg-white/5 rounded-2xl border border-white/10">
+                  Please enter an embed or video URL to display this block.
+                </div>
+              )}
             </div>
           )
         }
 
-        // 7. Video Block (YouTube responsive)
+        // 7. Video Block (Responsive video embed for Drive, YouTube, Vimeo, direct MP4)
         if (block.type === 'video') {
-          const rawUrl = block.url || block.youtubeUrl || ''
-          const vidMatch = rawUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
-          const videoId = vidMatch ? vidMatch[1] : (block.videoId || '')
+          const rawUrl = block.url || block.youtubeUrl || block.videoUrl || ''
           return (
             <div key={key} className="glass-panel p-4 sm:p-8 rounded-3xl border border-white/10 space-y-4">
               {(block.heading || block.subtitle) && (
@@ -491,10 +469,14 @@ export default function PageBlocks({ blocks }) {
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{block.text}</p>
               )}
               {rawUrl ? (
-                <BlockVideoEmbed
+                <MediaEmbed
                   url={rawUrl}
                   poster={block.poster || block.videoPoster}
+                  aspectRatio={block.aspectRatio || '16:9'}
+                  height={block.height}
                   title={block.heading || 'Video'}
+                  fallbackLinkText={block.fallbackLinkText}
+                  hideFallbackLink={block.hideFallbackLink}
                 />
               ) : (
                 <div className="p-8 text-center text-xs text-slate-400 bg-white/5 rounded-2xl border border-white/10">

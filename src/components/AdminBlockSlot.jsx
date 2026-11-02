@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Plus, Trash2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Eye, EyeOff, Layers, X, ExternalLink, Sparkles, Youtube } from 'lucide-react'
 import PhotoDropZone from './PhotoDropZone'
+import AdminMediaField from './AdminMediaField'
 import { cleanVideoUrl } from './PageBlocks'
 
 const BLOCK_TYPES = [
@@ -375,27 +376,19 @@ export default function AdminBlockSlot({
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
-                        <Youtube className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Video URL (Optional - YouTube or MP4)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={block.videoUrl || ''}
-                        onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      <AdminMediaField
+                        label="Video URL in Text Section (Optional)"
+                        url={block.videoUrl || ''}
+                        poster={block.videoPoster || ''}
+                        aspectRatio={block.aspectRatio || '16:9'}
+                        fallbackLinkText={block.fallbackLinkText || ''}
+                        hideFallbackLink={block.hideFallbackLink || false}
+                        onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                        onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                        onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                        onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                        onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
                       />
-                      {block.videoUrl && (
-                        <div className="mt-1.5">
-                          <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail / Poster (shown before play — useful for local MP4 files)</span>
-                          <PhotoDropZone
-                            value={block.videoPoster || ''}
-                            onChange={url => handleUpdateField(idx, 'videoPoster', url)}
-                            label="Upload Thumbnail Poster Image (Optional)"
-                          />
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
@@ -585,12 +578,9 @@ export default function AdminBlockSlot({
                       </div>
 
                       {/* Video URL in Photo Block */}
-                      <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-2">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <label className="text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
-                            <Youtube className="w-3.5 h-3.5 text-rose-400" />
-                            <span>Video in this Block (Optional - YouTube or MP4)</span>
-                          </label>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between pb-1">
+                          <span className="text-xs font-semibold text-slate-200">Video in this Block:</span>
                           <div className="flex items-center gap-2 text-[11px] text-slate-300">
                             <span className="text-slate-400">Position:</span>
                             <select
@@ -603,23 +593,19 @@ export default function AdminBlockSlot({
                             </select>
                           </div>
                         </div>
-                        <input
-                          type="text"
-                          value={block.videoUrl || ''}
-                          onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
-                          placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        <AdminMediaField
+                          label="Block Video URL (YouTube, Drive, Vimeo, MP4)"
+                          url={block.videoUrl || ''}
+                          poster={block.videoPoster || ''}
+                          aspectRatio={block.aspectRatio || '16:9'}
+                          fallbackLinkText={block.fallbackLinkText || ''}
+                          hideFallbackLink={block.hideFallbackLink || false}
+                          onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                          onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                          onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                          onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                          onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
                         />
-                        {block.videoUrl && (
-                          <div className="mt-1.5">
-                            <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail (shown before play — for local MP4 files)</span>
-                            <PhotoDropZone
-                              value={block.videoPoster || ''}
-                              onChange={url => handleUpdateField(idx, 'videoPoster', url)}
-                              label="Upload Thumbnail Poster (Optional)"
-                            />
-                          </div>
-                        )}
                       </div>
                     </div>
                   )
@@ -651,80 +637,138 @@ export default function AdminBlockSlot({
                         </div>
                       </div>
 
-                      {/* Image(s) in Section */}
-                      <div className="space-y-2 pt-1">
-                        <div className="flex items-center justify-between">
-                          <label className="block text-[11px] font-medium text-slate-300">
-                            Section Photo{itPhotos.length > 1 ? 's' : ''} ({itPhotos.length})
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => handleAddImageTextPhoto(idx, {})}
-                            className="text-[11px] text-studio-magenta hover:underline flex items-center gap-1 font-semibold"
-                          >
-                            <Plus className="w-3 h-3" />
-                            <span>Add Photo</span>
-                          </button>
-                        </div>
+                      {/* Photo vs Video Switch */}
+                      <div className="flex items-center gap-2 p-1 bg-[#13111c] border border-white/10 rounded-xl w-fit">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateField(idx, 'mediaType', 'photo')}
+                          className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                            (block.mediaType || 'photo') === 'photo'
+                              ? 'bg-studio-magenta text-white shadow-sm'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          📷 Photo(s) next to text
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateField(idx, 'mediaType', 'video')}
+                          className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                            block.mediaType === 'video'
+                              ? 'bg-studio-magenta text-white shadow-sm'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          🎬 Video next to text
+                        </button>
+                      </div>
 
-                        {itPhotos.map((img, iIdx) => (
-                          <div key={img.id || iIdx} className="p-2.5 rounded-xl bg-black/40 border border-white/10 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[11px] font-semibold text-studio-gold">
-                                Photo #{iIdx + 1}
-                              </span>
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  disabled={iIdx === 0}
-                                  onClick={() => handleMoveImageTextPhoto(idx, iIdx, -1)}
-                                  className={`p-1 rounded text-slate-400 hover:text-white transition ${iIdx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}`}
-                                >
-                                  <ArrowUp className="w-3 h-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={iIdx === itPhotos.length - 1}
-                                  onClick={() => handleMoveImageTextPhoto(idx, iIdx, 1)}
-                                  className={`p-1 rounded text-slate-400 hover:text-white transition ${iIdx === itPhotos.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}`}
-                                >
-                                  <ArrowDown className="w-3 h-3" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveImageTextPhoto(idx, iIdx)}
-                                  className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition ml-1"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
+                      {/* Media next to text */}
+                      {block.mediaType === 'video' ? (
+                        <AdminMediaField
+                          label="Section Video (displayed next to text)"
+                          url={block.videoUrl || ''}
+                          poster={block.videoPoster || ''}
+                          aspectRatio={block.aspectRatio || '16:9'}
+                          fallbackLinkText={block.fallbackLinkText || ''}
+                          hideFallbackLink={block.hideFallbackLink || false}
+                          onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                          onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                          onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                          onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                          onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
+                        />
+                      ) : (
+                        <div className="space-y-2 pt-1">
+                          <div className="flex items-center justify-between">
+                            <label className="block text-[11px] font-medium text-slate-300">
+                              Section Photo{itPhotos.length > 1 ? 's' : ''} ({itPhotos.length})
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleAddImageTextPhoto(idx, {})}
+                              className="text-[11px] text-studio-magenta hover:underline flex items-center gap-1 font-semibold"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>Add Photo</span>
+                            </button>
+                          </div>
+
+                          {itPhotos.map((img, iIdx) => (
+                            <div key={img.id || iIdx} className="p-2.5 rounded-xl bg-black/40 border border-white/10 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-semibold text-studio-gold">
+                                  Photo #{iIdx + 1}
+                                </span>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    disabled={iIdx === 0}
+                                    onClick={() => handleMoveImageTextPhoto(idx, iIdx, -1)}
+                                    className={`p-1 rounded text-slate-400 hover:text-white transition ${iIdx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}`}
+                                  >
+                                    <ArrowUp className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={iIdx === itPhotos.length - 1}
+                                    onClick={() => handleMoveImageTextPhoto(idx, iIdx, 1)}
+                                    className={`p-1 rounded text-slate-400 hover:text-white transition ${iIdx === itPhotos.length - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-white/10'}`}
+                                  >
+                                    <ArrowDown className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveImageTextPhoto(idx, iIdx)}
+                                    className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition ml-1"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
                               </div>
+                              <PhotoDropZone
+                                value={img.url || ''}
+                                onChange={url => handleUpdateImageTextPhotoItem(idx, iIdx, 'url', url)}
+                                label="Upload or Drop Photo"
+                              />
+                              <input
+                                type="text"
+                                value={img.caption || img.alt || ''}
+                                onChange={e => {
+                                  handleUpdateImageTextPhotoItem(idx, iIdx, 'caption', e.target.value)
+                                  handleUpdateImageTextPhotoItem(idx, iIdx, 'alt', e.target.value)
+                                }}
+                                placeholder="Photo caption / alt description (Optional)"
+                                className="w-full bg-[#13111c] border border-white/10 rounded px-2.5 py-1 text-xs text-white"
+                              />
                             </div>
+                          ))}
+
+                          {itPhotos.length === 0 && (
                             <PhotoDropZone
-                              value={img.url || ''}
-                              onChange={url => handleUpdateImageTextPhotoItem(idx, iIdx, 'url', url)}
-                              label="Upload or Drop Photo"
+                              value=""
+                              onChange={url => { if (url) handleAddImageTextPhoto(idx, { url }) }}
+                              label="Upload or Drop Section Photo"
                             />
-                            <input
-                              type="text"
-                              value={img.caption || img.alt || ''}
-                              onChange={e => {
-                                handleUpdateImageTextPhotoItem(idx, iIdx, 'caption', e.target.value)
-                                handleUpdateImageTextPhotoItem(idx, iIdx, 'alt', e.target.value)
-                              }}
-                              placeholder="Photo caption / alt description (Optional)"
-                              className="w-full bg-[#13111c] border border-white/10 rounded px-2.5 py-1 text-xs text-white"
+                          )}
+
+                          <div className="pt-2">
+                            <AdminMediaField
+                              label="Additional Video (Optional - alongside pics & text)"
+                              url={block.videoUrl || ''}
+                              poster={block.videoPoster || ''}
+                              aspectRatio={block.aspectRatio || '16:9'}
+                              fallbackLinkText={block.fallbackLinkText || ''}
+                              hideFallbackLink={block.hideFallbackLink || false}
+                              onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                              onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                              onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                              onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                              onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
                             />
                           </div>
-                        ))}
-
-                        {itPhotos.length === 0 && (
-                          <PhotoDropZone
-                            value=""
-                            onChange={url => { if (url) handleAddImageTextPhoto(idx, { url }) }}
-                            label="Upload or Drop Section Photo"
-                          />
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       <div>
                         <label className="block text-[11px] font-medium text-slate-300 mb-1">Description Text</label>
@@ -737,7 +781,7 @@ export default function AdminBlockSlot({
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-[11px] font-medium text-slate-300 mb-1">Image Position</label>
+                          <label className="block text-[11px] font-medium text-slate-300 mb-1">Media Position</label>
                           <select
                             value={block.imagePosition || 'left'}
                             onChange={e => handleUpdateField(idx, 'imagePosition', e.target.value)}
@@ -767,29 +811,6 @@ export default function AdminBlockSlot({
                             className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
                           />
                         </div>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
-                          <Youtube className="w-3.5 h-3.5 text-rose-400" />
-                          <span>Section Video URL (Optional - YouTube or MP4)</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={block.videoUrl || ''}
-                          onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
-                          placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                        {block.videoUrl && (
-                          <div className="mt-1.5">
-                            <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail (shown before play — for local MP4 files)</span>
-                            <PhotoDropZone
-                              value={block.videoPoster || ''}
-                              onChange={url => handleUpdateField(idx, 'videoPoster', url)}
-                              label="Upload Thumbnail Poster (Optional)"
-                            />
-                          </div>
-                        )}
                       </div>
                     </div>
                   )
@@ -868,23 +889,19 @@ export default function AdminBlockSlot({
                             className="w-full bg-[#13111c] border border-white/10 rounded p-2 text-xs text-white"
                           />
                           <div>
-                            <input
-                              type="text"
-                              value={card.videoUrl || ''}
-                              onChange={e => handleUpdateCard(idx, cIdx, 'videoUrl', e.target.value)}
-                              placeholder="Card Video URL (Optional - YouTube)"
-                              className="w-full bg-[#13111c] border border-white/10 rounded px-2.5 py-1 text-xs text-white"
+                            <AdminMediaField
+                              label="Card Video (Optional - YouTube, Drive, Vimeo, MP4)"
+                              url={card.videoUrl || ''}
+                              poster={card.videoPoster || ''}
+                              aspectRatio={card.aspectRatio || '16:9'}
+                              fallbackLinkText={card.fallbackLinkText || ''}
+                              hideFallbackLink={card.hideFallbackLink || false}
+                              onUrlChange={val => handleUpdateCard(idx, cIdx, 'videoUrl', cleanVideoUrl(val))}
+                              onPosterChange={val => handleUpdateCard(idx, cIdx, 'videoPoster', val)}
+                              onAspectRatioChange={val => handleUpdateCard(idx, cIdx, 'aspectRatio', val)}
+                              onFallbackLinkTextChange={val => handleUpdateCard(idx, cIdx, 'fallbackLinkText', val)}
+                              onHideFallbackLinkChange={val => handleUpdateCard(idx, cIdx, 'hideFallbackLink', val)}
                             />
-                            {card.videoUrl && (
-                              <div className="mt-1.5">
-                                <span className="block text-[11px] text-slate-400 mb-1">Card Video Thumbnail (for MP4 files)</span>
-                                <PhotoDropZone
-                                  value={card.videoPoster || ''}
-                                  onChange={url => handleUpdateCard(idx, cIdx, 'videoPoster', url)}
-                                  label="Upload Thumbnail (Optional)"
-                                />
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))}
@@ -935,29 +952,19 @@ export default function AdminBlockSlot({
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
-                        <Youtube className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Notice Video URL (Optional - YouTube or MP4)</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={block.videoUrl || ''}
-                        onChange={e => handleUpdateField(idx, 'videoUrl', e.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                      />
-                      {block.videoUrl && (
-                        <div className="mt-1.5">
-                          <span className="block text-[11px] text-slate-400 mb-1">Video Thumbnail (for MP4 files)</span>
-                          <PhotoDropZone
-                            value={block.videoPoster || ''}
-                            onChange={url => handleUpdateField(idx, 'videoPoster', url)}
-                            label="Upload Thumbnail Poster (Optional)"
-                          />
-                        </div>
-                      )}
-                    </div>
+                    <AdminMediaField
+                      label="Notice Video (Optional - YouTube, Drive, Vimeo, MP4)"
+                      url={block.videoUrl || ''}
+                      poster={block.videoPoster || ''}
+                      aspectRatio={block.aspectRatio || '16:9'}
+                      fallbackLinkText={block.fallbackLinkText || ''}
+                      hideFallbackLink={block.hideFallbackLink || false}
+                      onUrlChange={val => handleUpdateField(idx, 'videoUrl', cleanVideoUrl(val))}
+                      onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                      onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                      onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                      onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
+                    />
                   </div>
                 )}
 
@@ -1034,31 +1041,24 @@ export default function AdminBlockSlot({
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="sm:col-span-2">
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Embed URL (or &lt;iframe&gt; code)</label>
-                        <input
-                          type="text"
-                          value={block.url || ''}
-                          onChange={e => {
-                            const val = e.target.value
-                            const match = val.match(/src=["']([^"']+)["']/i)
-                            handleUpdateField(idx, 'url', match ? match[1] : val.trim())
-                          }}
-                          placeholder="https://docs.google.com/forms/..."
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Height (px)</label>
-                        <input
-                          type="number"
-                          value={block.height || 850}
-                          onChange={e => handleUpdateField(idx, 'height', parseInt(e.target.value, 10) || 850)}
-                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                        />
-                      </div>
-                    </div>
+                    <AdminMediaField
+                      label="Embed / Video / Form URL"
+                      url={block.url || ''}
+                      poster={block.videoPoster || ''}
+                      aspectRatio={block.aspectRatio || (block.height ? 'custom' : '16:9')}
+                      customHeight={block.height || 850}
+                      fallbackLinkText={block.fallbackLinkText || ''}
+                      hideFallbackLink={block.hideFallbackLink || false}
+                      onUrlChange={val => {
+                        const match = (val || '').match(/src=["']([^"']+)["']/i)
+                        handleUpdateField(idx, 'url', cleanVideoUrl(match ? match[1] : (val || '').trim()))
+                      }}
+                      onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                      onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                      onCustomHeightChange={val => handleUpdateField(idx, 'height', val)}
+                      onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                      onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
+                    />
                   </div>
                 )}
 
@@ -1085,16 +1085,19 @@ export default function AdminBlockSlot({
                         />
                       </div>
                     </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-300 mb-1">YouTube Video URL</label>
-                      <input
-                        type="url"
-                        value={block.url || ''}
-                        onChange={e => handleUpdateField(idx, 'url', e.target.value)}
-                        placeholder="https://www.youtube.com/watch?v=..."
-                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
-                      />
-                    </div>
+                    <AdminMediaField
+                      label="Video URL"
+                      url={block.url || ''}
+                      poster={block.videoPoster || ''}
+                      aspectRatio={block.aspectRatio || '16:9'}
+                      fallbackLinkText={block.fallbackLinkText || ''}
+                      hideFallbackLink={block.hideFallbackLink || false}
+                      onUrlChange={val => handleUpdateField(idx, 'url', cleanVideoUrl(val))}
+                      onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
+                      onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
+                      onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
+                      onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
+                    />
                   </div>
                 )}
 

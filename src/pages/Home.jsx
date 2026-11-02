@@ -4,7 +4,7 @@ import { ArrowRight, Sparkles, ExternalLink, Brush, Calendar, ShoppingBag } from
 import siteData from '../data/site.json'
 import paintingsData from '../data/paintings.json'
 import pagesData from '../data/pages.json'
-import PageBlocks, { BlockVideoEmbed } from '../components/PageBlocks'
+import PageBlocks, { BlockVideoEmbed, MediaEmbed } from '../components/PageBlocks'
 
 export default function Home() {
   const [paintings, setPaintings] = useState(paintingsData)
@@ -312,7 +312,7 @@ export default function Home() {
               )}
               {teaserVideo && (
                 <div className="w-full">
-                  <BlockVideoEmbed
+                  <MediaEmbed
                     url={teaserVideo}
                     poster={homeText.teaserVideoPoster}
                     title={homeText.teaserTitle || 'Portrait Video'}
@@ -411,7 +411,7 @@ export default function Home() {
                   ))}
                   {showVideo && (
                     <div className="w-full sm:w-48 aspect-video shrink-0">
-                      <BlockVideoEmbed
+                      <MediaEmbed
                         url={showVideo}
                         poster={show.videoPoster}
                         title={show.title}

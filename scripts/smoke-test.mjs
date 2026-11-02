@@ -220,6 +220,35 @@ if (hasSitemap) {
   check('Sitemap has contact URL', sitemapContent.includes('/contact'))
 }
 
+// ── 9. MEDIA EMBED & DRIVE NORMALIZATION ──────
+console.log('\n── 9. Media embed & Drive URL normalization ──')
+
+const { normalizeMediaUrl } = await import('../src/utils/mediaUrl.js')
+const driveTestId = '1bNea0tffhVG-Qi31rRjzKDRlVGsjItXp'
+const testDriveView = normalizeMediaUrl(`https://drive.google.com/file/d/${driveTestId}/view`)
+check('Drive /view converts to /preview', testDriveView?.embedUrl === `https://drive.google.com/file/d/${driveTestId}/preview`)
+
+const testDriveEdit = normalizeMediaUrl(`https://drive.google.com/file/d/${driveTestId}/edit`)
+check('Drive /edit converts to /preview', testDriveEdit?.embedUrl === `https://drive.google.com/file/d/${driveTestId}/preview`)
+
+const testDriveOpen = normalizeMediaUrl(`https://drive.google.com/open?id=${driveTestId}`)
+check('Drive open?id= converts to /preview', testDriveOpen?.embedUrl === `https://drive.google.com/file/d/${driveTestId}/preview`)
+
+const testDriveUc = normalizeMediaUrl(`https://drive.google.com/uc?id=${driveTestId}`)
+check('Drive uc?id= converts to /preview', testDriveUc?.embedUrl === `https://drive.google.com/file/d/${driveTestId}/preview`)
+
+const testYt = normalizeMediaUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+check('YouTube converts to youtube-nocookie embed', testYt?.embedUrl?.includes('youtube-nocookie.com/embed/dQw4w9WgXcQ'))
+
+const testVimeo = normalizeMediaUrl('https://vimeo.com/76979871')
+check('Vimeo converts to player.vimeo.com', testVimeo?.embedUrl === 'https://player.vimeo.com/video/76979871')
+
+const testForm = normalizeMediaUrl('https://docs.google.com/forms/d/e/123/viewform')
+check('Google Forms keeps/adds embedded=true', testForm?.embedUrl?.includes('embedded=true'))
+
+const testMp4 = normalizeMediaUrl('Henry_E._Berube.mp4')
+check('Direct mp4 recognized as native direct video', testMp4?.type === 'direct' && testMp4?.isIframe === false)
+
 // ── SUMMARY ───────────────────────────────────
 console.log('\n════════════════════════════════════════')
 console.log(`  Results: ${passed} passed, ${failed} failed`)
