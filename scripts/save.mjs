@@ -18,6 +18,9 @@ function getOutput(cmd) {
 }
 
 try {
+  console.log('── Running syntax check ──')
+  run('node scripts/check-syntax.mjs')
+
   console.log('── Staging all changes ──')
   run('git add -A')
 

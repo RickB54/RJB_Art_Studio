@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/check-syntax.mjs && vite",
     "build": "node scripts/generate-sitemap.mjs && vite build",
     "preview": "vite preview",
-    "check": "node scripts/check-sizes.mjs && node scripts/smoke-test.mjs",
+    "check": "node scripts/check-syntax.mjs && node scripts/check-sizes.mjs && node scripts/smoke-test.mjs",
     "import-videos": "node scripts/import-videos.mjs",
     "sync-playlists": "node scripts/sync-playlists.mjs",
     "deploy": "npm run build && npx -y netlify deploy --prod --dir=dist",

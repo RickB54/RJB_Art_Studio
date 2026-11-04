@@ -1131,7 +1131,7 @@ export default function AdminBlockSlot({
                         rows={3}
                         value={block.albumUrl || ''}
                         onChange={e => handleUpdateField(idx, 'albumUrl', e.target.value)}
-                        placeholder="https://photos.app.goo.gl/... or full <div class=\"pa-gallery-player-widget\"...> snippet"
+                        placeholder="https://photos.app.goo.gl/... or the full PublicAlbum embed snippet"
                         className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono resize-none"
                       />
                     </div>
