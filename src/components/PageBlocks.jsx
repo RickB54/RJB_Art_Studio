@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Info, ArrowRight, ExternalLink, Sparkles, X, Play } from 'lucide-react'
 import GoogleFormEmbed from './GoogleFormEmbed'
+import GooglePhotosAlbum from './GooglePhotosAlbum'
 
 import MediaEmbed, { normalizeMediaUrl } from './MediaEmbed'
 
@@ -704,7 +705,29 @@ export default function PageBlocks({ blocks }) {
           )
         }
 
-        // 9. Divider Block
+        // 9. Google Photos Album Block
+        if (block.type === 'google-photos') {
+          return (
+            <div key={key} className="py-4">
+              <GooglePhotosAlbum
+                albumUrl={block.albumUrl || ''}
+                mode={block.mode || 'player'}
+                height={block.height ?? 480}
+                delay={block.delay ?? 3}
+                repeat={block.repeat !== false}
+                background={block.background || '#000'}
+                heading={block.heading || ''}
+                title={block.title || ''}
+                tips={block.tips ?? 'Click any photo to view it full size. Use the arrows to browse.'}
+                hideTips={block.hideTips || false}
+                fallbackLinkText={block.fallbackLinkText || 'Open the album in Google Photos'}
+                hideFallbackLink={block.hideFallbackLink || false}
+              />
+            </div>
+          )
+        }
+
+        // 10. Divider Block
         if (block.type === 'divider') {
           return (
             <div key={key} className="py-6 flex items-center justify-center">

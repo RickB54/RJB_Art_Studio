@@ -11,7 +11,8 @@
     "import-videos": "node scripts/import-videos.mjs",
     "sync-playlists": "node scripts/sync-playlists.mjs",
     "deploy": "npm run build && npx -y netlify deploy --prod --dir=dist",
-    "publish": "node scripts/publish.mjs"
+    "publish": "node scripts/publish.mjs",
+    "save": "node scripts/save.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.11.17",

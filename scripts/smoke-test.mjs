@@ -249,11 +249,6 @@ check('Google Forms keeps/adds embedded=true', testForm?.embedUrl?.includes('emb
 const testMp4 = normalizeMediaUrl('Henry_E._Berube.mp4')
 check('Direct mp4 recognized as native direct video', testMp4?.type === 'direct' && testMp4?.isIframe === false)
 
-const testPublicAlbum = normalizeMediaUrl('https://www.publicalbum.org/carousel/embed?url=https%3A%2F%2Fphotos.app.goo.gl%2Fabc')
-check('PublicAlbum embed URL recognized', testPublicAlbum?.type === 'publicalbum' && testPublicAlbum?.isIframe === true)
-
-const testGPhotos = normalizeMediaUrl('https://photos.app.goo.gl/abc123xyz')
-check('Google Photos link routes to PublicAlbum embed', testGPhotos?.type === 'publicalbum' && testGPhotos?.embedUrl?.includes('publicalbum.org/carousel/embed'))
 
 // ── SUMMARY ───────────────────────────────────
 console.log('\n════════════════════════════════════════')

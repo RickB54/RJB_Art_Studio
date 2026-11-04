@@ -102,31 +102,7 @@ export function normalizeMediaUrl(raw) {
     }
   }
 
-  // 5. PublicAlbum / Google Photos Album Embed
-  if (/publicalbum\.org\/(?:carousel|webapp)/i.test(trimmed)) {
-    let embedUrl = trimmed
-    if (/publicalbum\.org\/carousel(?!\/embed)/i.test(embedUrl)) {
-      embedUrl = embedUrl.replace(/publicalbum\.org\/carousel/i, 'publicalbum.org/carousel/embed')
-    }
-    return {
-      type: 'publicalbum',
-      embedUrl,
-      originalUrl: trimmed,
-      isIframe: true,
-      label: 'Google Photos Album (PublicAlbum)'
-    }
-  }
 
-  // 6. Direct Google Photos shared link (automatically route through PublicAlbum embed player)
-  if (/(?:photos\.app\.goo\.gl|photos\.google\.com\/(?:share|album))/i.test(trimmed)) {
-    return {
-      type: 'publicalbum',
-      embedUrl: `https://www.publicalbum.org/carousel/embed?url=${encodeURIComponent(trimmed)}`,
-      originalUrl: trimmed,
-      isIframe: true,
-      label: 'Google Photos Album'
-    }
-  }
 
   // 5. Direct video files (.mp4, .webm, .ogv, .mov, .m4v) or local clean path
   let cleanedDirect = trimmed.replace(/\\/g, '/')

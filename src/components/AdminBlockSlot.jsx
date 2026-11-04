@@ -11,7 +11,8 @@ const BLOCK_TYPES = [
   { type: 'cards', label: '🗂 Cards Row' },
   { type: 'notice', label: '🔔 Notice Box' },
   { type: 'button', label: '🔘 Button Link' },
-  { type: 'embed', label: '📋 Embed (Google Photos, Slides, Forms, URL)' },
+  { type: 'embed', label: '📋 Embed (Slides, Forms, iFrame URL)' },
+  { type: 'google-photos', label: '📸 Google Photos Album' },
   { type: 'video', label: '🎬 Video (YouTube)' },
   { type: 'divider', label: '➖ Divider' }
 ]
@@ -52,6 +53,22 @@ export default function AdminBlockSlot({
       newBlock = { ...newBlock, text: 'Learn More', url: '/gallery', subtitle: '', align: 'center' }
     } else if (type === 'embed') {
       newBlock = { ...newBlock, heading: '', subtitle: '', text: '', url: '', height: 850 }
+    } else if (type === 'google-photos') {
+      newBlock = {
+        ...newBlock,
+        albumUrl: '',
+        mode: 'player',
+        height: 480,
+        delay: 3,
+        repeat: true,
+        background: '#000000',
+        heading: '',
+        title: '',
+        tips: 'Click any photo to view it full size. Use the arrows to browse.',
+        hideTips: false,
+        fallbackLinkText: 'Open the album in Google Photos',
+        hideFallbackLink: false
+      }
     } else if (type === 'video') {
       newBlock = { ...newBlock, heading: '', subtitle: '', text: '', url: '' }
     } else if (type === 'divider') {
@@ -1101,7 +1118,153 @@ export default function AdminBlockSlot({
                   </div>
                 )}
 
-                {/* 9. Divider Block */}
+                {/* 9. Google Photos Album Block */}
+                {block.type === 'google-photos' && (
+                  <div className="space-y-3">
+                    <div className="p-2 rounded-lg bg-blue-900/20 border border-blue-500/20 text-[11px] text-blue-300">
+                      📸 Paste a <strong>Google Photos shared album</strong> link (<code>photos.app.goo.gl/…</code> or <code>photos.google.com/share/…</code>) or a full snippet from <a href="https://www.publicalbum.org/webapp/embed-player/" target="_blank" rel="noopener" className="underline text-studio-gold">publicalbum.org</a>. The album must be shared with &quot;Anyone with the link&quot;.
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1">Album URL / PublicAlbum Snippet</label>
+                      <textarea
+                        rows={3}
+                        value={block.albumUrl || ''}
+                        onChange={e => handleUpdateField(idx, 'albumUrl', e.target.value)}
+                        placeholder="https://photos.app.goo.gl/... or full <div class=\"pa-gallery-player-widget\"...> snippet"
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono resize-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Mode</label>
+                        <select
+                          value={block.mode || 'player'}
+                          onChange={e => handleUpdateField(idx, 'mode', e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white"
+                        >
+                          <option value="player">Slideshow Player</option>
+                          <option value="carousel">Carousel</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Height (px)</label>
+                        <input
+                          type="number"
+                          min={200}
+                          max={1200}
+                          value={block.height ?? 480}
+                          onChange={e => handleUpdateField(idx, 'height', parseInt(e.target.value) || 480)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Slide Delay (sec)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={block.delay ?? 3}
+                          onChange={e => handleUpdateField(idx, 'delay', parseInt(e.target.value) || 3)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Background Color</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={block.background || '#000000'}
+                            onChange={e => handleUpdateField(idx, 'background', e.target.value)}
+                            className="w-8 h-7 rounded cursor-pointer border-0"
+                          />
+                          <input
+                            type="text"
+                            value={block.background || '#000000'}
+                            onChange={e => handleUpdateField(idx, 'background', e.target.value)}
+                            className="flex-1 bg-[#13111c] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 pt-5">
+                        <input
+                          type="checkbox"
+                          id={`gp-repeat-${block.id}`}
+                          checked={block.repeat !== false}
+                          onChange={e => handleUpdateField(idx, 'repeat', e.target.checked)}
+                          className="accent-studio-magenta"
+                        />
+                        <label htmlFor={`gp-repeat-${block.id}`} className="text-[11px] text-slate-300">Auto-repeat</label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Heading above album (optional)</label>
+                        <input
+                          type="text"
+                          value={block.heading || ''}
+                          onChange={e => handleUpdateField(idx, 'heading', e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-slate-300 mb-1">Widget title (optional)</label>
+                        <input
+                          type="text"
+                          value={block.title || ''}
+                          onChange={e => handleUpdateField(idx, 'title', e.target.value)}
+                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[11px] font-medium text-slate-300">Quick Tips text</label>
+                        <label className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                          <input
+                            type="checkbox"
+                            checked={block.hideTips || false}
+                            onChange={e => handleUpdateField(idx, 'hideTips', e.target.checked)}
+                            className="accent-studio-magenta"
+                          />
+                          Hide tips
+                        </label>
+                      </div>
+                      <input
+                        type="text"
+                        value={block.tips ?? 'Click any photo to view it full size. Use the arrows to browse.'}
+                        onChange={e => handleUpdateField(idx, 'tips', e.target.value)}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[11px] font-medium text-slate-300">Fallback link text</label>
+                        <label className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                          <input
+                            type="checkbox"
+                            checked={block.hideFallbackLink || false}
+                            onChange={e => handleUpdateField(idx, 'hideFallbackLink', e.target.checked)}
+                            className="accent-studio-magenta"
+                          />
+                          Hide fallback link
+                        </label>
+                      </div>
+                      <input
+                        type="text"
+                        value={block.fallbackLinkText || 'Open the album in Google Photos'}
+                        onChange={e => handleUpdateField(idx, 'fallbackLinkText', e.target.value)}
+                        className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 10. Divider Block */}
                 {block.type === 'divider' && (
                   <div className="py-2 text-center text-xs text-slate-400 border border-white/5 rounded-xl bg-black/20">
                     <span className="text-studio-gold">◆</span> Clean separator line with studio accent
