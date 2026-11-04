@@ -19,6 +19,16 @@ export function cleanVideoUrl(raw) {
   if (!raw || typeof raw !== 'string') return ''
   let t = raw.trim()
   if (!t) return ''
+  // Extract URL from iframe, object, or data-link snippets
+  const snippetMatch = t.match(/(?:src|data)=["']([^"']+)["']/i)
+  if (snippetMatch) {
+    t = snippetMatch[1].trim()
+  } else {
+    const dlMatch = t.match(/data-link=["']([^"']+)["']/i)
+    if (dlMatch) {
+      t = `https://www.publicalbum.org/carousel/embed?url=${encodeURIComponent(dlMatch[1].trim())}`
+    }
+  }
   if (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('data:')) return t
   // Normalize Windows backslashes
   t = t.replace(/\\/g, '/')

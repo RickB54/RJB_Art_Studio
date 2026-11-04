@@ -564,7 +564,19 @@
     "heroVideoAspectRatio": "16:9",
     "blockSlots": {
       "top": [],
-      "after_video": [],
+      "after_video": [
+        {
+          "id": "block-1793640377054-4s75",
+          "type": "photo",
+          "visible": true,
+          "images": [],
+          "image": "",
+          "caption": "",
+          "size": "medium",
+          "align": "center",
+          "layout": "row"
+        }
+      ],
       "after_dedication": [],
       "bottom": []
     }

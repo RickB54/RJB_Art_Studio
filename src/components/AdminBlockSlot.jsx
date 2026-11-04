@@ -11,7 +11,7 @@ const BLOCK_TYPES = [
   { type: 'cards', label: '🗂 Cards Row' },
   { type: 'notice', label: '🔔 Notice Box' },
   { type: 'button', label: '🔘 Button Link' },
-  { type: 'embed', label: '📋 Embed (Google Forms / URL)' },
+  { type: 'embed', label: '📋 Embed (Google Photos, Slides, Forms, URL)' },
   { type: 'video', label: '🎬 Video (YouTube)' },
   { type: 'divider', label: '➖ Divider' }
 ]
@@ -1042,23 +1042,23 @@ export default function AdminBlockSlot({
                       </div>
                     </div>
                     <AdminMediaField
-                      label="Embed / Video / Form URL"
+                      label="Embed URL / Code (Google Photos via PublicAlbum, Google Slides, Google Forms, etc.)"
                       url={block.url || ''}
                       poster={block.videoPoster || ''}
                       aspectRatio={block.aspectRatio || (block.height ? 'custom' : '16:9')}
                       customHeight={block.height || 850}
                       fallbackLinkText={block.fallbackLinkText || ''}
                       hideFallbackLink={block.hideFallbackLink || false}
-                      onUrlChange={val => {
-                        const match = (val || '').match(/src=["']([^"']+)["']/i)
-                        handleUpdateField(idx, 'url', cleanVideoUrl(match ? match[1] : (val || '').trim()))
-                      }}
+                      onUrlChange={val => handleUpdateField(idx, 'url', cleanVideoUrl(val))}
                       onPosterChange={val => handleUpdateField(idx, 'videoPoster', val)}
                       onAspectRatioChange={val => handleUpdateField(idx, 'aspectRatio', val)}
                       onCustomHeightChange={val => handleUpdateField(idx, 'height', val)}
                       onFallbackLinkTextChange={val => handleUpdateField(idx, 'fallbackLinkText', val)}
                       onHideFallbackLinkChange={val => handleUpdateField(idx, 'hideFallbackLink', val)}
                     />
+                    <p className="text-[11px] text-slate-400">
+                      💡 Paste any PublicAlbum link (e.g. <code className="text-studio-gold">https://www.publicalbum.org/carousel/embed?url=...</code>), full <code className="text-slate-300">&lt;iframe&gt;</code> code, Google Slides link, or Google Forms link.
+                    </p>
                   </div>
                 )}
 

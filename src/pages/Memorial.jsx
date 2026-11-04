@@ -172,7 +172,7 @@ export default function Memorial() {
       </div>
 
       {/* ── Hero Video ── */}
-      {heroUrl && (
+      {heroUrl ? (
         <section className="space-y-4">
           <MediaEmbed
             url={heroUrl}
@@ -183,13 +183,15 @@ export default function Memorial() {
           />
           <PageBlocks blocks={memData.blockSlots?.after_video} />
         </section>
+      ) : (
+        <PageBlocks blocks={memData.blockSlots?.after_video} />
       )}
 
       {/* ── Dedication slot ── */}
       <PageBlocks blocks={memData.blockSlots?.after_dedication} />
 
       {/* ── Bottom slot ── */}
-      <PageBlocks blocks={memData.blockSlots?.bottom} />
+      <PageBlocks blocks={memData.blockSlots?.bottom || memData.blocks || memData.extraBlocks} />
 
       {/* Lock again button */}
       <div className="flex justify-center pt-4">

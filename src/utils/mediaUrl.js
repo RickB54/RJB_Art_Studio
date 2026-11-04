@@ -22,10 +22,15 @@ export function normalizeMediaUrl(raw) {
   let trimmed = raw.trim()
   if (!trimmed) return null
 
-  // If user pasted an entire <iframe> embed code, extract the src URL
-  const iframeMatch = trimmed.match(/src=["']([^"']+)["']/i)
+  // If user pasted an entire <iframe>, <object>, or widget snippet, extract the embed URL
+  const iframeMatch = trimmed.match(/(?:src|data)=["']([^"']+)["']/i)
   if (iframeMatch) {
     trimmed = iframeMatch[1].trim()
+  } else {
+    const dataLinkMatch = trimmed.match(/data-link=["']([^"']+)["']/i)
+    if (dataLinkMatch) {
+      trimmed = `https://www.publicalbum.org/carousel/embed?url=${encodeURIComponent(dataLinkMatch[1].trim())}`
+    }
   }
 
   // 1. Google Drive
@@ -94,6 +99,32 @@ export function normalizeMediaUrl(raw) {
       originalUrl: trimmed,
       isIframe: true,
       label: 'Google Document / Form'
+    }
+  }
+
+  // 5. PublicAlbum / Google Photos Album Embed
+  if (/publicalbum\.org\/(?:carousel|webapp)/i.test(trimmed)) {
+    let embedUrl = trimmed
+    if (/publicalbum\.org\/carousel(?!\/embed)/i.test(embedUrl)) {
+      embedUrl = embedUrl.replace(/publicalbum\.org\/carousel/i, 'publicalbum.org/carousel/embed')
+    }
+    return {
+      type: 'publicalbum',
+      embedUrl,
+      originalUrl: trimmed,
+      isIframe: true,
+      label: 'Google Photos Album (PublicAlbum)'
+    }
+  }
+
+  // 6. Direct Google Photos shared link (automatically route through PublicAlbum embed player)
+  if (/(?:photos\.app\.goo\.gl|photos\.google\.com\/(?:share|album))/i.test(trimmed)) {
+    return {
+      type: 'publicalbum',
+      embedUrl: `https://www.publicalbum.org/carousel/embed?url=${encodeURIComponent(trimmed)}`,
+      originalUrl: trimmed,
+      isIframe: true,
+      label: 'Google Photos Album'
     }
   }
 
