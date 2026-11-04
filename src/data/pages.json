@@ -566,26 +566,21 @@
       "top": [],
       "after_video": [
         {
-          "id": "block-1793640377054-4s75",
-          "type": "photo",
+          "id": "block-1793763784038-tlj9",
+          "type": "google-photos",
           "visible": true,
-          "images": [],
-          "image": "",
-          "caption": "",
-          "size": "medium",
-          "align": "center",
-          "layout": "row"
-        },
-        {
-          "id": "block-1793751649348-8oy8",
-          "type": "embed",
-          "visible": true,
-          "heading": "",
-          "subtitle": "",
-          "text": "",
-          "url": "https://photos.app.goo.gl/8wLZzmQhesEXnc2q8",
-          "height": 850,
-          "aspectRatio": "16:9"
+          "albumUrl": "https://photos.app.goo.gl/mSytpbhj4bpGC7fKA ",
+          "mode": "player",
+          "height": 480,
+          "delay": 3,
+          "repeat": true,
+          "background": "#000000",
+          "heading": "Pics of dad",
+          "title": "",
+          "tips": "Click any photo to view it full size. Use the arrows to browse.",
+          "hideTips": false,
+          "fallbackLinkText": "Open the album in Google Photos",
+          "hideFallbackLink": false
         }
       ],
       "after_dedication": [],
