@@ -41,6 +41,7 @@ export default function MediaEmbed({
   autoPlayOnClick = true
 }) {
   const [isPlaying, setIsPlaying] = useState(false)
+  const [useIframeFallback, setUseIframeFallback] = useState(false)
   const media = normalizeMediaUrl(url)
 
   if (!media) return null
@@ -76,6 +77,28 @@ export default function MediaEmbed({
           preload={posterUrl ? 'none' : 'metadata'}
           className="w-full h-full object-contain bg-black"
         >
+          Your browser does not support the video tag.
+        </video>
+      )
+    }
+
+    // B. Google Drive Video: Native HTML5 playback avoids Google Drive's mobile web overlay
+    // (which causes a black screen with audio only until a second click). Falls back to iframe if needed.
+    if (media.type === 'gdrive' && !useIframeFallback) {
+      const driveDirectUrl = `https://drive.usercontent.google.com/download?id=${media.id}&export=download&confirm=t`
+      const driveBackupUrl = `https://drive.google.com/uc?export=download&id=${media.id}`
+
+      return (
+        <video
+          poster={posterUrl || undefined}
+          controls
+          playsInline
+          preload="metadata"
+          className="w-full h-full object-contain bg-black absolute inset-0"
+          onError={() => setUseIframeFallback(true)}
+        >
+          <source src={driveDirectUrl} type="video/mp4" />
+          <source src={driveBackupUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       )
