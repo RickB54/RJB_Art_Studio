@@ -10,61 +10,15 @@ import AdminBlockSlot from '../components/AdminBlockSlot'
 import PriceListModal from '../components/PriceListModal'
 import AdminMediaField from '../components/AdminMediaField'
 import { cleanVideoUrl } from '../components/PageBlocks'
-
-const HOME_BLOCK_SLOTS = [
-  { id: 'top', label: 'Top of Page (Above Hero)' },
-  { id: 'after_hero', label: 'After Hero Section' },
-  { id: 'after_featured', label: 'After Featured Artworks' },
-  { id: 'after_teaser', label: 'After About Rick Teaser' },
-  { id: 'bottom', label: 'Bottom of Page' },
-]
-
-const ABOUT_BLOCK_SLOTS = [
-  { id: 'top', label: 'Top of Page' },
-  { id: 'after_header', label: 'After Header / Bio' },
-  { id: 'after_journey', label: 'After Artistic Journey' },
-  { id: 'after_awards', label: 'After Awards & Recognitions' },
-  { id: 'after_studio', label: 'After Studio Tour & Process' },
-  { id: 'after_cta', label: 'After Inquiries & Commissions Banner' },
-  { id: 'bottom', label: 'Bottom of Page' },
-]
-
-const COMMISSIONS_BLOCK_SLOTS = [
-  { id: 'top', label: 'Top of Page' },
-  { id: 'after_header', label: 'After Header' },
-  { id: 'after_cards', label: 'After Service Cards' },
-  { id: 'after_watercolor', label: 'After Watercolor Notice' },
-  { id: 'after_process', label: 'After 4-Step Process' },
-  { id: 'after_pricing_notice', label: 'After Pricing Notice' },
-  { id: 'after_form', label: 'After Request Form' },
-  { id: 'bottom', label: 'Bottom of Page' },
-]
-
-const GALLERY_BLOCK_SLOTS = [
-  { id: 'top', label: 'Top of Page' },
-  { id: 'after_filters', label: 'After Search & Filters' },
-  { id: 'bottom', label: 'Bottom of Page' },
-]
-
-const VIDEOS_BLOCK_SLOTS = [
-  { id: 'top', label: 'Top of Page' },
-  { id: 'after_header', label: 'After Header' },
-  { id: 'bottom', label: 'Bottom of Page' },
-]
-
-const CONTACT_BLOCK_SLOTS = [
-  { id: 'top', label: 'Top of Page' },
-  { id: 'after_header', label: 'After Header' },
-  { id: 'after_form', label: 'After Form & Channels' },
-  { id: 'bottom', label: 'Bottom of Page' },
-]
-
-const MEMORIAL_BLOCK_SLOTS = [
-  { id: 'top', label: 'Top of Page (Above Hero Video)' },
-  { id: 'after_video', label: 'After Hero Video' },
-  { id: 'after_dedication', label: 'After Dedication / Quote' },
-  { id: 'bottom', label: 'Bottom of Page' },
-]
+import {
+  HOME_BLOCK_SLOTS,
+  ABOUT_BLOCK_SLOTS,
+  COMMISSIONS_BLOCK_SLOTS,
+  GALLERY_BLOCK_SLOTS,
+  VIDEOS_BLOCK_SLOTS,
+  CONTACT_BLOCK_SLOTS,
+  MEMORIAL_BLOCK_SLOTS
+} from '../blocks/pageSlots'
 
 export default function Admin() {
   const [paintings, setPaintings] = useState(paintingsDataInitial)
