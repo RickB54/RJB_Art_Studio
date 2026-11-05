@@ -12,6 +12,12 @@ import * as GooglePhotosBlock from './types/GooglePhotosBlock'
 import * as VideoBlock from './types/VideoBlock'
 import * as DividerBlock from './types/DividerBlock'
 import * as GalleryBlock from './types/GalleryBlock'
+import * as AccordionBlock from './types/AccordionBlock'
+import * as ColumnsBlock from './types/ColumnsBlock'
+import * as QuoteBlock from './types/QuoteBlock'
+import * as AudioBlock from './types/AudioBlock'
+import * as SpacerBlock from './types/SpacerBlock'
+import * as SocialLinksBlock from './types/SocialLinksBlock'
 
 export const BLOCK_REGISTRY = [
   TextBlock,
@@ -19,12 +25,18 @@ export const BLOCK_REGISTRY = [
   GalleryBlock,
   ImageTextBlock,
   CardsBlock,
+  ColumnsBlock,
+  AccordionBlock,
+  QuoteBlock,
+  AudioBlock,
   NoticeBlock,
   ButtonBlock,
+  SocialLinksBlock,
+  SpacerBlock,
+  DividerBlock,
   EmbedBlock,
   GooglePhotosBlock,
   VideoBlock,
-  DividerBlock,
 ]
 
 export const BLOCK_TYPES = BLOCK_REGISTRY.map(b => ({
