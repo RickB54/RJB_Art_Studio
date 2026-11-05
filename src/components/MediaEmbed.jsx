@@ -7,19 +7,23 @@ export { normalizeMediaUrl }
 /**
  * Aspect ratio classes or style helper
  */
-function getAspectRatioStyle(aspectRatio = '16:9', customHeight) {
+function getAspectRatioStyle(aspectRatio = '16:9', customHeight, isGDrive = false) {
   if (aspectRatio === 'custom' || customHeight) {
     const h = typeof customHeight === 'number' ? `${customHeight}px` : customHeight || '500px'
     return { className: 'relative w-full', style: { height: h, minHeight: h } }
   }
+  // Google Drive preview embeds have an internal top header and player controls that
+  // compress the video and cut off the bottom third on mobile if constrained strictly to 16:9 height (~180px).
+  // A mobile min-height of 320px gives clearance on phones while keeping 16:9 on desktop.
+  const gDriveMobileClass = isGDrive ? 'min-h-[320px] sm:min-h-0 ' : ''
   if (aspectRatio === '4:3') {
-    return { className: 'relative w-full aspect-[4/3]', style: {} }
+    return { className: `relative w-full ${gDriveMobileClass}aspect-[4/3]`, style: {} }
   }
   if (aspectRatio === '9:16') {
-    return { className: 'relative w-full aspect-[9/16] max-w-sm mx-auto', style: {} }
+    return { className: `relative w-full ${gDriveMobileClass}aspect-[9/16] max-w-sm mx-auto`, style: {} }
   }
   // Default: 16:9
-  return { className: 'relative w-full aspect-video', style: {} }
+  return { className: `relative w-full ${gDriveMobileClass}aspect-video`, style: {} }
 }
 
 /**
@@ -42,7 +46,7 @@ export default function MediaEmbed({
   if (!media) return null
 
   const posterUrl = poster ? (poster.startsWith('http') || poster.startsWith('data:') ? poster : (poster.startsWith('/') ? poster : `/${poster}`)) : ''
-  const aspectConfig = getAspectRatioStyle(aspectRatio, height)
+  const aspectConfig = getAspectRatioStyle(aspectRatio, height, media.type === 'gdrive')
 
   const effectiveFallbackText = fallbackLinkText || (
     media.type === 'gdrive'
