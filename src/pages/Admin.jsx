@@ -11,6 +11,7 @@ import PriceListModal from '../components/PriceListModal'
 import AdminMediaField from '../components/AdminMediaField'
 import { cleanVideoUrl } from '../components/PageBlocks'
 import SectionSpacingEditor from '../components/SectionSpacingEditor'
+import PageLayoutOutline from '../components/PageLayoutOutline'
 import {
   HOME_BLOCK_SLOTS,
   ABOUT_BLOCK_SLOTS,
@@ -776,6 +777,14 @@ export default function Admin() {
       }
     })
   }
+
+  const renderPageOutline = (pageKey) => (
+    <PageLayoutOutline
+      pageKey={pageKey}
+      pageData={pages[pageKey] || {}}
+      onUpdatePage={newPage => setPages(prev => ({ ...prev, [pageKey]: newPage }))}
+    />
+  )
 
   const renderSectionSpacingEditor = (pageKey) => (
     <SectionSpacingEditor
@@ -1783,6 +1792,9 @@ export default function Admin() {
                   <span>Restore Default Text</span>
                 </button>
               </div>
+
+              {/* Page Layout Outline */}
+              {renderPageOutline('home')}
 
               {/* 1. Section Visibility Toggles */}
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
@@ -2901,6 +2913,9 @@ export default function Admin() {
                 </button>
               </div>
 
+              {/* Page Layout Outline */}
+              {renderPageOutline('about')}
+
               {/* 1. Section Visibility Toggles */}
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
                 <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
@@ -3556,6 +3571,9 @@ export default function Admin() {
                   <span>Restore Default Text</span>
                 </button>
               </div>
+
+              {/* Page Layout Outline */}
+              {renderPageOutline('commissions')}
 
               {/* 1. Section Visibility Toggles */}
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
@@ -4267,6 +4285,9 @@ export default function Admin() {
                 </button>
               </div>
 
+              {/* Page Layout Outline */}
+              {renderPageOutline('gallery')}
+
               {/* 1. Section Visibility Toggles */}
               <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
                 <span className="text-xs font-bold text-studio-gold uppercase tracking-wider block">
@@ -4569,6 +4590,9 @@ export default function Admin() {
                 </button>
               </div>
 
+              {/* Page Layout Outline */}
+              {renderPageOutline('videos')}
+
               {/* Visibility Toggles */}
               <div className="flex flex-wrap gap-3">
                 {[
@@ -4675,6 +4699,9 @@ export default function Admin() {
                   <span>Restore Default Text</span>
                 </button>
               </div>
+
+              {/* Page Layout Outline */}
+              {renderPageOutline('contact')}
 
               {/* Visibility Toggle */}
               <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 bg-white/5 px-3 py-2 rounded-lg border border-white/10 hover:border-studio-magenta/40 w-fit">
@@ -4849,6 +4876,9 @@ export default function Admin() {
                   </p>
                 </div>
               </div>
+
+              {/* Page Layout Outline */}
+              {renderPageOutline('memorial')}
 
               {/* Password & Access Settings */}
               <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-400/20 space-y-3">
