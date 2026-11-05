@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 import MediaEmbed, { normalizeMediaUrl } from './MediaEmbed'
 import { cleanPhotoUrl, cleanVideoUrl, parseVideoEmbed, BlockVideoEmbed } from '../blocks/helpers'
 import { getBlockDefinition } from '../blocks/registry'
+import BlockWrap from '../blocks/BlockWrap'
 
 export { MediaEmbed, normalizeMediaUrl, cleanPhotoUrl, cleanVideoUrl, parseVideoEmbed, BlockVideoEmbed }
 
@@ -34,10 +35,12 @@ export default function PageBlocks({ blocks }) {
         const BlockComp = def.Component
         return (
           <div key={key}>
-            <BlockComp
-              block={block}
-              onOpenLightbox={setLightboxImg}
-            />
+            <BlockWrap block={block}>
+              <BlockComp
+                block={block}
+                onOpenLightbox={setLightboxImg}
+              />
+            </BlockWrap>
           </div>
         )
       })}

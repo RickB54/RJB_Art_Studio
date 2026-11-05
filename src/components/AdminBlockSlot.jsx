@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, X } from 'lucide-react'
 import { cleanVideoUrl } from '../blocks/helpers'
 import { BLOCK_REGISTRY, getBlockDefinition, createDefaultBlock } from '../blocks/registry'
+import BlockStyleEditor from '../blocks/BlockStyleEditor'
 
 export default function AdminBlockSlot({
   slotId,
@@ -146,6 +147,12 @@ export default function AdminBlockSlot({
                     Unknown block type: {block.type}
                   </div>
                 )}
+
+                {/* Shared Layout & Spacing Settings */}
+                <BlockStyleEditor
+                  style={block.style || {}}
+                  onChange={(newStyle) => handleUpdateField(idx, 'style', newStyle)}
+                />
               </div>
             )
           })}
