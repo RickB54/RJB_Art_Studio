@@ -11,10 +11,12 @@ import * as EmbedBlock from './types/EmbedBlock'
 import * as GooglePhotosBlock from './types/GooglePhotosBlock'
 import * as VideoBlock from './types/VideoBlock'
 import * as DividerBlock from './types/DividerBlock'
+import * as GalleryBlock from './types/GalleryBlock'
 
 export const BLOCK_REGISTRY = [
   TextBlock,
   PhotoBlock,
+  GalleryBlock,
   ImageTextBlock,
   CardsBlock,
   NoticeBlock,

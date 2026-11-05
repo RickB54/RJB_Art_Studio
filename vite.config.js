@@ -200,7 +200,7 @@ function adminApiPlugin() {
           req.on('data', chunk => { body += chunk })
           req.on('end', async () => {
             try {
-              const { filename, dataBase64 } = JSON.parse(body)
+              const { filename, dataBase64, folder } = JSON.parse(body)
               if (!filename || !dataBase64) {
                 res.statusCode = 400
                 res.end(JSON.stringify({ error: 'filename and dataBase64 required' }))
@@ -221,7 +221,8 @@ function adminApiPlugin() {
                 res.end(JSON.stringify({ error: `File exceeds 20 MB limit (${(buffer.length / 1024 / 1024).toFixed(1)} MB). Upload rejected.` }))
                 return
               }
-              const outDir = path.resolve(__dirname, 'public/images/paintings')
+              const subFolder = folder === 'gallery' ? 'images/gallery' : 'images/paintings'
+              const outDir = path.resolve(__dirname, 'public', subFolder)
               fs.mkdirSync(outDir, { recursive: true })
               const rawBase = path.basename(filename, path.extname(filename)).replace(/[^a-z0-9-_]/gi, '-').toLowerCase()
               const base = `${rawBase}-${Date.now().toString().slice(-6)}`
@@ -243,8 +244,8 @@ function adminApiPlugin() {
 
               res.end(JSON.stringify({
                 success: true,
-                url: `/images/paintings/${base}.webp`,
-                thumbnailUrl: `/images/paintings/${base}-thumb.webp`,
+                url: `/${subFolder}/${base}.webp`,
+                thumbnailUrl: `/${subFolder}/${base}-thumb.webp`,
                 size: fullSize,
                 warning
               }))
