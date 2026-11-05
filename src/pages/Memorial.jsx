@@ -4,6 +4,7 @@ import pagesData from '../data/pages.json'
 import siteData from '../data/site.json'
 import PageBlocks from '../components/PageBlocks'
 import MediaEmbed from '../components/MediaEmbed'
+import SectionWrap from '../components/SectionWrap'
 
 const SESSION_KEY = 'rjb_memorial_unlocked'
 
@@ -148,41 +149,57 @@ export default function Memorial() {
       <PageBlocks blocks={memData.blockSlots?.top} />
 
       {/* ── Header ── */}
-      <div className="text-center space-y-5">
-        <div className="flex justify-center">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/30 to-orange-600/20 border border-amber-400/30 flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.2)]">
-            <Flame className="w-8 h-8 text-amber-400" />
+      <SectionWrap
+        id="memorial-header"
+        spaceAbove={memData.sectionSpacing?.header?.spaceAbove}
+        spaceBelow={memData.sectionSpacing?.header?.spaceBelow}
+        customSpaceAbove={memData.sectionSpacing?.header?.customSpaceAbove}
+        customSpaceBelow={memData.sectionSpacing?.header?.customSpaceBelow}
+      >
+        <div className="text-center space-y-5">
+          <div className="flex justify-center">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/30 to-orange-600/20 border border-amber-400/30 flex items-center justify-center shadow-[0_0_30px_rgba(251,191,36,0.2)]">
+              <Flame className="w-8 h-8 text-amber-400" />
+            </div>
           </div>
-        </div>
-        <div>
-          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
-            {memData.title || 'In Loving Memory'}
-          </h1>
-          {memData.subtitle && (
-            <p className="mt-3 font-serif italic text-xl text-studio-gold">
-              {memData.subtitle}
+          <div>
+            <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white tracking-tight leading-tight">
+              {memData.title || 'In Loving Memory'}
+            </h1>
+            {memData.subtitle && (
+              <p className="mt-3 font-serif italic text-xl text-studio-gold">
+                {memData.subtitle}
+              </p>
+            )}
+          </div>
+          {memData.dedication && (
+            <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-300 leading-relaxed font-serif italic border-l-4 border-amber-400/50 pl-5 text-left">
+              "{memData.dedication}"
             </p>
           )}
         </div>
-        {memData.dedication && (
-          <p className="max-w-2xl mx-auto text-base sm:text-lg text-slate-300 leading-relaxed font-serif italic border-l-4 border-amber-400/50 pl-5 text-left">
-            "{memData.dedication}"
-          </p>
-        )}
-      </div>
+      </SectionWrap>
 
       {/* ── Hero Video ── */}
       {heroUrl ? (
-        <section className="space-y-4">
-          <MediaEmbed
-            url={heroUrl}
-            poster={heroPoster}
-            aspectRatio={heroAR}
-            title={memData.title || 'Memorial Video'}
-            className="rounded-3xl overflow-hidden shadow-2xl"
-          />
-          <PageBlocks blocks={memData.blockSlots?.after_video} />
-        </section>
+        <SectionWrap
+          id="memorial-hero-video"
+          spaceAbove={memData.sectionSpacing?.heroVideo?.spaceAbove}
+          spaceBelow={memData.sectionSpacing?.heroVideo?.spaceBelow}
+          customSpaceAbove={memData.sectionSpacing?.heroVideo?.customSpaceAbove}
+          customSpaceBelow={memData.sectionSpacing?.heroVideo?.customSpaceBelow}
+        >
+          <section className="space-y-4">
+            <MediaEmbed
+              url={heroUrl}
+              poster={heroPoster}
+              aspectRatio={heroAR}
+              title={memData.title || 'Memorial Video'}
+              className="rounded-3xl overflow-hidden shadow-2xl"
+            />
+            <PageBlocks blocks={memData.blockSlots?.after_video} />
+          </section>
+        </SectionWrap>
       ) : (
         <PageBlocks blocks={memData.blockSlots?.after_video} />
       )}

@@ -5,6 +5,7 @@ import siteData from '../data/site.json'
 import initialPlaylists from '../data/playlists.json'
 import initialPages from '../data/pages.json'
 import PageBlocks from '../components/PageBlocks'
+import SectionWrap from '../components/SectionWrap'
 
 export default function Videos() {
   const [playlists, setPlaylists] = useState(initialPlaylists)
@@ -37,7 +38,14 @@ export default function Videos() {
       <PageBlocks blocks={vt.blockSlots?.top} />
 
       {/* Page Header */}
-      {vt.headerVisible !== false && (
+      <SectionWrap
+        id="videos-header"
+        spaceAbove={vt.sectionSpacing?.header?.spaceAbove}
+        spaceBelow={vt.sectionSpacing?.header?.spaceBelow}
+        customSpaceAbove={vt.sectionSpacing?.header?.customSpaceAbove}
+        customSpaceBelow={vt.sectionSpacing?.header?.customSpaceBelow}
+        visible={vt.headerVisible !== false}
+      >
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs uppercase tracking-widest font-semibold text-red-500 flex items-center justify-center gap-1.5">
             <Youtube className="w-4 h-4" />
@@ -50,13 +58,20 @@ export default function Videos() {
             {vt.intro || 'Select any collection below to browse full-length demonstrations, time lapses, and painting techniques categorized directly from my YouTube channel.'}
           </p>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After header */}
       <PageBlocks blocks={vt.blockSlots?.after_header} />
 
       {/* Featured Channel Banner */}
-      {vt.bannerVisible !== false && (
+      <SectionWrap
+        id="videos-banner"
+        spaceAbove={vt.sectionSpacing?.banner?.spaceAbove}
+        spaceBelow={vt.sectionSpacing?.banner?.spaceBelow}
+        customSpaceAbove={vt.sectionSpacing?.banner?.customSpaceAbove}
+        customSpaceBelow={vt.sectionSpacing?.banner?.customSpaceBelow}
+        visible={vt.bannerVisible !== false}
+      >
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-red-500/20 bg-gradient-to-r from-red-950/30 via-studio-card to-studio-surface flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-red-600 flex items-center justify-center text-white shadow-lg shrink-0">
@@ -79,96 +94,105 @@ export default function Videos() {
             <ExternalLink className="w-4 h-4" />
           </a>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Playlists Grid: EXACTLY ONE CARD PER PLAYLIST */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between border-b border-white/5 pb-3">
-          <h3 className="font-serif text-xl font-bold text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-studio-magenta" />
-            <span>{vt.playlistsHeader || 'Featured Playlists'}</span>
-          </h3>
-          <span className="text-xs text-slate-400">{visiblePlaylists.length} Playlists</span>
-        </div>
+      <SectionWrap
+        id="videos-grid"
+        spaceAbove={vt.sectionSpacing?.grid?.spaceAbove}
+        spaceBelow={vt.sectionSpacing?.grid?.spaceBelow}
+        customSpaceAbove={vt.sectionSpacing?.grid?.customSpaceAbove}
+        customSpaceBelow={vt.sectionSpacing?.grid?.customSpaceBelow}
+        visible={vt.gridVisible !== false}
+      >
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-white/5 pb-3">
+            <h3 className="font-serif text-xl font-bold text-white flex items-center gap-2">
+              <Layers className="w-5 h-5 text-studio-magenta" />
+              <span>{vt.playlistsHeader || 'Featured Playlists'}</span>
+            </h3>
+            <span className="text-xs text-slate-400">{visiblePlaylists.length} Playlists</span>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {visiblePlaylists.map((pl) => {
-            const coverVideoId = pl.coverVideoId || (pl.videos && pl.videos[0]?.id)
-            const hasVideos = pl.videos && pl.videos.length > 0
-            const totalCount = pl.videoCount || (pl.videos ? pl.videos.length : 0)
-            const coverThumbnail = coverVideoId
-              ? `https://i.ytimg.com/vi/${coverVideoId}/mqdefault.jpg`
-              : null
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {visiblePlaylists.map((pl) => {
+              const coverVideoId = pl.coverVideoId || (pl.videos && pl.videos[0]?.id)
+              const hasVideos = pl.videos && pl.videos.length > 0
+              const totalCount = pl.videoCount || (pl.videos ? pl.videos.length : 0)
+              const coverThumbnail = coverVideoId
+                ? `https://i.ytimg.com/vi/${coverVideoId}/mqdefault.jpg`
+                : null
 
-            return (
-              <Link
-                key={pl.playlistId}
-                to={`/videos/${pl.playlistId}`}
-                className="glass-panel glass-panel-hover rounded-2xl overflow-hidden flex flex-col group transition-all duration-300"
-              >
-                {/* Single Cover Thumbnail */}
-                <div className="relative aspect-video bg-studio-surface overflow-hidden flex items-center justify-center">
-                  {coverThumbnail ? (
-                    <img
-                      src={coverThumbnail}
-                      alt={pl.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-studio-card via-studio-surface to-black flex flex-col items-center justify-center p-4 text-center">
-                      <PlaySquare className="w-10 h-10 text-white/20 mb-2" />
-                      <span className="text-xs text-slate-400 font-serif">{pl.title}</span>
-                    </div>
-                  )}
+              return (
+                <Link
+                  key={pl.playlistId}
+                  to={`/videos/${pl.playlistId}`}
+                  className="glass-panel glass-panel-hover rounded-2xl overflow-hidden flex flex-col group transition-all duration-300"
+                >
+                  {/* Single Cover Thumbnail */}
+                  <div className="relative aspect-video bg-studio-surface overflow-hidden flex items-center justify-center">
+                    {coverThumbnail ? (
+                      <img
+                        src={coverThumbnail}
+                        alt={pl.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-studio-card via-studio-surface to-black flex flex-col items-center justify-center p-4 text-center">
+                        <PlaySquare className="w-10 h-10 text-white/20 mb-2" />
+                        <span className="text-xs text-slate-400 font-serif">{pl.title}</span>
+                      </div>
+                    )}
 
-                  {/* Video count overlay badge */}
-                  <div className="absolute top-3 right-3 z-10">
-                    <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-black/80 text-white border border-white/10 backdrop-blur-md flex items-center gap-1.5 shadow">
-                      <Layers className="w-3 h-3 text-studio-gold" />
-                      <span>{totalCount} {totalCount === 1 ? 'video' : 'videos'}</span>
-                    </span>
-                  </div>
-
-                  {/* Sync status overlay */}
-                  {!hasVideos && (
-                    <div className="absolute bottom-3 left-3 z-10">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-950/80 text-amber-300 border border-amber-500/30 backdrop-blur-sm flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>Sync needed</span>
+                    {/* Video count overlay badge */}
+                    <div className="absolute top-3 right-3 z-10">
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-black/80 text-white border border-white/10 backdrop-blur-md flex items-center gap-1.5 shadow">
+                        <Layers className="w-3 h-3 text-studio-gold" />
+                        <span>{totalCount} {totalCount === 1 ? 'video' : 'videos'}</span>
                       </span>
                     </div>
-                  )}
 
-                  {/* Hover overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-                    <span className="px-4 py-1.5 rounded-full text-xs font-semibold bg-studio-magenta text-white shadow-glow-magenta flex items-center gap-1.5 transform group-hover:scale-105 transition-transform">
-                      <span>{vt.browsePlaylists || 'Browse Playlist'}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </div>
+                    {/* Sync status overlay */}
+                    {!hasVideos && (
+                      <div className="absolute bottom-3 left-3 z-10">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-950/80 text-amber-300 border border-amber-500/30 backdrop-blur-sm flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>Sync needed</span>
+                        </span>
+                      </div>
+                    )}
 
-                {/* Card Info */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-2">
-                  <div>
-                    <h4 className="font-serif text-lg font-bold text-white group-hover:text-studio-gold transition-colors">
-                      {pl.title}
-                    </h4>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {totalCount} videos in playlist
-                    </p>
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                      <span className="px-4 py-1.5 rounded-full text-xs font-semibold bg-studio-magenta text-white shadow-glow-magenta flex items-center gap-1.5 transform group-hover:scale-105 transition-transform">
+                        <span>{vt.browsePlaylists || 'Browse Playlist'}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
                   </div>
-                  <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs text-studio-magenta font-semibold">
-                    <span>{vt.viewVideosBtn || 'View Videos'}</span>
-                    <span>→</span>
+
+                  {/* Card Info */}
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-2">
+                    <div>
+                      <h4 className="font-serif text-lg font-bold text-white group-hover:text-studio-gold transition-colors">
+                        {pl.title}
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {totalCount} videos in playlist
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-white/5 flex items-center justify-between text-xs text-studio-magenta font-semibold">
+                      <span>{vt.viewVideosBtn || 'View Videos'}</span>
+                      <span>→</span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            )
-          })}
+                </Link>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      </SectionWrap>
 
       {/* Slot: Bottom of page */}
       <PageBlocks blocks={vt.blockSlots?.bottom || vt.extraBlocks} />

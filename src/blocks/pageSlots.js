@@ -66,6 +66,54 @@ export const PAGE_SLOTS = {
   memorial: MEMORIAL_BLOCK_SLOTS,
 }
 
+export const PAGE_BUILTIN_SECTIONS = {
+  home: [
+    { id: 'hero', label: 'Hero & Studio Highlights' },
+    { id: 'featured', label: 'Featured Artworks Showcase' },
+    { id: 'teaser', label: 'About Rick Teaser' },
+    { id: 'artShows', label: 'Art Shows & Appearances' },
+  ],
+  about: [
+    { id: 'header', label: 'Page Header & Badge' },
+    { id: 'journey', label: 'Artistic Journey Card' },
+    { id: 'awards', label: 'Awards & Recognition' },
+    { id: 'studio', label: 'Studio Story & Video Cards' },
+    { id: 'cta', label: 'Inquiries & Commissions Banner' },
+  ],
+  commissions: [
+    { id: 'header', label: 'Page Header & Intro' },
+    { id: 'cards', label: 'Service Cards & Price Lists' },
+    { id: 'watercolor', label: 'Watercolor Notice' },
+    { id: 'process', label: '4-Step Commission Process' },
+    { id: 'pricing', label: 'Pricing Policy Notice' },
+    { id: 'form', label: 'Commission Request Form' },
+  ],
+  gallery: [
+    { id: 'header', label: 'Page Header' },
+    { id: 'filters', label: 'Search & Category Filters' },
+    { id: 'grid', label: 'Artworks Gallery Grid' },
+  ],
+  videos: [
+    { id: 'header', label: 'Page Header' },
+    { id: 'banner', label: 'YouTube Channel Banner' },
+    { id: 'grid', label: 'Playlists Grid' },
+  ],
+  contact: [
+    { id: 'header', label: 'Page Header' },
+    { id: 'channels', label: 'Direct Email & Channels' },
+    { id: 'form', label: 'Contact Form' },
+  ],
+  memorial: [
+    { id: 'header', label: 'Memorial Header & Dedication' },
+    { id: 'heroVideo', label: 'Memorial Hero Video' },
+  ],
+}
+
 export function getPageSlots(pageKey) {
   return PAGE_SLOTS[pageKey] || []
 }
+
+export function getPageBuiltinSections(pageKey) {
+  return PAGE_BUILTIN_SECTIONS[pageKey] || []
+}
+

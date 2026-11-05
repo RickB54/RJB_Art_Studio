@@ -4,6 +4,7 @@ import { Award, Palette, Home, Heart, ArrowRight, Play, ExternalLink, Film } fro
 import siteData from '../data/site.json'
 import pagesData from '../data/pages.json'
 import PageBlocks from '../components/PageBlocks'
+import SectionWrap from '../components/SectionWrap'
 
 function getYouTubeVideoId(url) {
   if (!url) return null
@@ -37,7 +38,14 @@ export default function About() {
       <PageBlocks blocks={aboutText.blockSlots?.top} />
 
       {/* Header */}
-      {aboutText.headerVisible !== false && (
+      <SectionWrap
+        id="about-header"
+        spaceAbove={aboutText.sectionSpacing?.header?.spaceAbove}
+        spaceBelow={aboutText.sectionSpacing?.header?.spaceBelow}
+        customSpaceAbove={aboutText.sectionSpacing?.header?.customSpaceAbove}
+        customSpaceBelow={aboutText.sectionSpacing?.header?.customSpaceBelow}
+        visible={aboutText.headerVisible !== false}
+      >
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
             {aboutText.badge || "The Artist & Studio"}
@@ -49,13 +57,20 @@ export default function About() {
             "{aboutText.tagline || siteData.artist.tagline}"
           </p>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After Header */}
       <PageBlocks blocks={aboutText.blockSlots?.after_header} />
 
       {/* Main Bio Card */}
-      {aboutText.journeyVisible !== false && (
+      <SectionWrap
+        id="about-journey"
+        spaceAbove={aboutText.sectionSpacing?.journey?.spaceAbove}
+        spaceBelow={aboutText.sectionSpacing?.journey?.spaceBelow}
+        customSpaceAbove={aboutText.sectionSpacing?.journey?.customSpaceAbove}
+        customSpaceBelow={aboutText.sectionSpacing?.journey?.customSpaceBelow}
+        visible={aboutText.journeyVisible !== false}
+      >
         <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-6">
           <div className="flex items-center gap-3 border-b border-white/5 pb-4">
             <div className="w-10 h-10 rounded-full bg-studio-magenta/20 flex items-center justify-center text-studio-magenta border border-studio-magenta/30">
@@ -91,14 +106,21 @@ export default function About() {
             )}
           </div>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: Under Artistic Journey */}
       <PageBlocks blocks={aboutText.blockSlots?.after_journey} />
 
       {/* Mayoral Awards & Honors */}
-      {aboutText.awardsVisible !== false && awards.length > 0 && (
-        <div id="awards" className="space-y-6 scroll-mt-28">
+      <SectionWrap
+        id="awards"
+        spaceAbove={aboutText.sectionSpacing?.awards?.spaceAbove}
+        spaceBelow={aboutText.sectionSpacing?.awards?.spaceBelow}
+        customSpaceAbove={aboutText.sectionSpacing?.awards?.customSpaceAbove}
+        customSpaceBelow={aboutText.sectionSpacing?.awards?.customSpaceBelow}
+        visible={aboutText.awardsVisible !== false && awards.length > 0}
+      >
+        <div className="space-y-6 scroll-mt-28">
           <div className="flex items-center gap-3">
             <Award className="w-6 h-6 text-studio-gold" />
             <div>
@@ -147,14 +169,21 @@ export default function About() {
             ))}
           </div>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After Awards & Recognition */}
       <PageBlocks blocks={aboutText.blockSlots?.after_awards} />
 
       {/* The Studio Story */}
-      {aboutText.studioVisible !== false && (
-        <div id="the-studio" className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-6 scroll-mt-28">
+      <SectionWrap
+        id="the-studio"
+        spaceAbove={aboutText.sectionSpacing?.studio?.spaceAbove}
+        spaceBelow={aboutText.sectionSpacing?.studio?.spaceBelow}
+        customSpaceAbove={aboutText.sectionSpacing?.studio?.customSpaceAbove}
+        customSpaceBelow={aboutText.sectionSpacing?.studio?.customSpaceBelow}
+        visible={aboutText.studioVisible !== false}
+      >
+        <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-6 scroll-mt-28">
           <div className="flex items-center gap-3 border-b border-white/5 pb-4">
             <div className="w-10 h-10 rounded-full bg-studio-cobalt/20 flex items-center justify-center text-studio-cobalt border border-studio-cobalt/30">
               <Home className="w-5 h-5" />
@@ -265,13 +294,20 @@ export default function About() {
             })}
           </div>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After Studio */}
       <PageBlocks blocks={aboutText.blockSlots?.after_studio} />
 
       {/* Call to Action Bar */}
-      {aboutText.ctaVisible !== false && (
+      <SectionWrap
+        id="about-cta"
+        spaceAbove={aboutText.sectionSpacing?.cta?.spaceAbove}
+        spaceBelow={aboutText.sectionSpacing?.cta?.spaceBelow}
+        customSpaceAbove={aboutText.sectionSpacing?.cta?.customSpaceAbove}
+        customSpaceBelow={aboutText.sectionSpacing?.cta?.customSpaceBelow}
+        visible={aboutText.ctaVisible !== false}
+      >
         <div className="glass-panel p-8 rounded-2xl border border-studio-magenta/30 bg-gradient-to-r from-studio-purple/20 via-studio-card to-studio-surface text-center space-y-4">
           <h3 className="font-serif text-2xl font-bold text-white">
             {aboutText.ctaTitle || "Interested in working together or purchasing art?"}
@@ -294,7 +330,7 @@ export default function About() {
             </Link>
           </div>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After CTA */}
       <PageBlocks blocks={aboutText.blockSlots?.after_cta} />

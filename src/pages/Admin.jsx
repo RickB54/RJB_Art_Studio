@@ -10,6 +10,7 @@ import AdminBlockSlot from '../components/AdminBlockSlot'
 import PriceListModal from '../components/PriceListModal'
 import AdminMediaField from '../components/AdminMediaField'
 import { cleanVideoUrl } from '../components/PageBlocks'
+import SectionSpacingEditor from '../components/SectionSpacingEditor'
 import {
   HOME_BLOCK_SLOTS,
   ABOUT_BLOCK_SLOTS,
@@ -17,7 +18,8 @@ import {
   GALLERY_BLOCK_SLOTS,
   VIDEOS_BLOCK_SLOTS,
   CONTACT_BLOCK_SLOTS,
-  MEMORIAL_BLOCK_SLOTS
+  MEMORIAL_BLOCK_SLOTS,
+  getPageBuiltinSections
 } from '../blocks/pageSlots'
 
 export default function Admin() {
@@ -774,6 +776,20 @@ export default function Admin() {
       }
     })
   }
+
+  const renderSectionSpacingEditor = (pageKey) => (
+    <SectionSpacingEditor
+      sections={getPageBuiltinSections(pageKey)}
+      spacing={pages[pageKey]?.sectionSpacing || {}}
+      onChange={newSpacing => setPages(prev => ({
+        ...prev,
+        [pageKey]: {
+          ...(prev[pageKey] || {}),
+          sectionSpacing: newSpacing
+        }
+      }))}
+    />
+  )
 
   const renderBlockSlotsEditor = (sectionKey, slotsList, sectionTitle) => (
     <div className="pt-6 border-t border-white/10 space-y-4">
@@ -2850,6 +2866,9 @@ export default function Admin() {
                 </div>
               </div>
 
+              {/* Section Spacing Controls */}
+              {renderSectionSpacingEditor('home')}
+
               {/* Custom Block Slots */}
               {renderBlockSlotsEditor('home', HOME_BLOCK_SLOTS, 'Home Page')}
             </div>
@@ -3502,6 +3521,9 @@ export default function Admin() {
                   </div>
                 </div>
               </div>
+
+              {/* Section Spacing Controls */}
+              {renderSectionSpacingEditor('about')}
 
               {/* Custom Block Slots */}
               {renderBlockSlotsEditor('about', ABOUT_BLOCK_SLOTS, 'About & Studio Page')}
@@ -4210,6 +4232,9 @@ export default function Admin() {
                 </div>
               </div>
 
+              {/* Section Spacing Controls */}
+              {renderSectionSpacingEditor('commissions')}
+
               {/* Custom Block Slots */}
               {renderBlockSlotsEditor('commissions', COMMISSIONS_BLOCK_SLOTS, 'Commissions & Prints Page')}
             </div>
@@ -4515,6 +4540,9 @@ export default function Admin() {
                 </div>
               </div>
 
+              {/* Section Spacing Controls */}
+              {renderSectionSpacingEditor('gallery')}
+
               {/* Custom Block Slots */}
               {renderBlockSlotsEditor('gallery', GALLERY_BLOCK_SLOTS, 'Gallery Page')}
             </div>
@@ -4618,6 +4646,9 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
+
+              {/* Section Spacing Controls */}
+              {renderSectionSpacingEditor('videos')}
 
               {/* Custom Block Slots */}
               {renderBlockSlotsEditor('videos', VIDEOS_BLOCK_SLOTS, 'Videos Page')}
@@ -4796,6 +4827,9 @@ export default function Admin() {
                 </p>
               </div>
 
+              {/* Section Spacing Controls */}
+              {renderSectionSpacingEditor('contact')}
+
               {/* Custom Block Slots */}
               {renderBlockSlotsEditor('contact', CONTACT_BLOCK_SLOTS, 'Contact Page')}
             </div>
@@ -4907,6 +4941,9 @@ export default function Admin() {
                   onHideFallbackLinkChange={val => setPages({ ...pages, memorial: { ...(pages.memorial || {}), heroHideFallbackLink: val } })}
                 />
               </div>
+
+              {/* Section Spacing Controls */}
+              {renderSectionSpacingEditor('memorial')}
 
               {/* Custom Block Slots */}
               {renderBlockSlotsEditor('memorial', MEMORIAL_BLOCK_SLOTS, 'Memorial Page')}

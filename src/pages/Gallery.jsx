@@ -6,6 +6,7 @@ import initialPlaylists from '../data/playlists.json'
 import initialSite from '../data/site.json'
 import pagesData from '../data/pages.json'
 import PageBlocks from '../components/PageBlocks'
+import SectionWrap from '../components/SectionWrap'
 import { matchesSearch } from '../utils/search'
 
 const PAGE_SIZE = 24
@@ -298,7 +299,14 @@ export default function Gallery() {
       <PageBlocks blocks={galleryText.blockSlots?.top} />
 
       {/* Page Header */}
-      {galleryText.headerVisible !== false && (
+      <SectionWrap
+        id="gallery-header"
+        spaceAbove={galleryText.sectionSpacing?.header?.spaceAbove}
+        spaceBelow={galleryText.sectionSpacing?.header?.spaceBelow}
+        customSpaceAbove={galleryText.sectionSpacing?.header?.customSpaceAbove}
+        customSpaceBelow={galleryText.sectionSpacing?.header?.customSpaceBelow}
+        visible={galleryText.headerVisible !== false}
+      >
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
             {galleryText.badge || "Original Fine Art Collection & Demos"}
@@ -310,10 +318,17 @@ export default function Gallery() {
             {galleryText.description || "Explore original paintings, demonstrations, and tutorials from Rick J Berube Art Studio. Click any piece to watch the creation video, view details, or inquire."}
           </p>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Filter and Search Bar */}
-      {galleryText.filtersVisible !== false && (
+      <SectionWrap
+        id="gallery-filters"
+        spaceAbove={galleryText.sectionSpacing?.filters?.spaceAbove}
+        spaceBelow={galleryText.sectionSpacing?.filters?.spaceBelow}
+        customSpaceAbove={galleryText.sectionSpacing?.filters?.customSpaceAbove}
+        customSpaceBelow={galleryText.sectionSpacing?.filters?.customSpaceBelow}
+        visible={galleryText.filtersVisible !== false}
+      >
         <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-5">
           
           {/* Search & Status Controls */}
@@ -462,13 +477,21 @@ export default function Gallery() {
         </div>
 
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After filters */}
       <PageBlocks blocks={galleryText.blockSlots?.after_filters} />
 
       {/* Gallery Grid */}
-      {filteredPaintings.length === 0 ? (
+      <SectionWrap
+        id="gallery-grid"
+        spaceAbove={galleryText.sectionSpacing?.grid?.spaceAbove}
+        spaceBelow={galleryText.sectionSpacing?.grid?.spaceBelow}
+        customSpaceAbove={galleryText.sectionSpacing?.grid?.customSpaceAbove}
+        customSpaceBelow={galleryText.sectionSpacing?.grid?.customSpaceBelow}
+        visible={galleryText.gridVisible !== false}
+      >
+        {filteredPaintings.length === 0 ? (
         <div className="text-center py-20 glass-panel rounded-2xl border border-white/10 space-y-3">
           {debouncedQuery.trim() ? (
             <>
@@ -682,6 +705,7 @@ export default function Gallery() {
           )}
         </div>
       )}
+      </SectionWrap>
 
       {/* Lightbox Modal */}
       {activePainting && (

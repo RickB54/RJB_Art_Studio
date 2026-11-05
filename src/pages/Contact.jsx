@@ -4,6 +4,7 @@ import siteData from '../data/site.json'
 import { EmailChooser } from '../components/Footer'
 import GoogleFormEmbed from '../components/GoogleFormEmbed'
 import PageBlocks from '../components/PageBlocks'
+import SectionWrap from '../components/SectionWrap'
 import initialPages from '../data/pages.json'
 
 export default function Contact() {
@@ -31,7 +32,14 @@ export default function Contact() {
       <PageBlocks blocks={ct.blockSlots?.top} />
 
       {/* Header */}
-      {ct.headerVisible !== false && (
+      <SectionWrap
+        id="contact-header"
+        spaceAbove={ct.sectionSpacing?.header?.spaceAbove}
+        spaceBelow={ct.sectionSpacing?.header?.spaceBelow}
+        customSpaceAbove={ct.sectionSpacing?.header?.customSpaceAbove}
+        customSpaceBelow={ct.sectionSpacing?.header?.customSpaceBelow}
+        visible={ct.headerVisible !== false}
+      >
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
             {ct.badge || 'Studio Inquiries'}
@@ -43,7 +51,7 @@ export default function Contact() {
             {ct.intro || 'Inquire about available paintings, fine art prints, upcoming exhibitions, or general artistic collaborations.'}
           </p>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After header */}
       <PageBlocks blocks={ct.blockSlots?.after_header} />
@@ -51,8 +59,14 @@ export default function Contact() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Direct Email & Studio Channels */}
-        <div className="space-y-6">
-          
+        <SectionWrap
+          id="contact-channels"
+          spaceAbove={ct.sectionSpacing?.channels?.spaceAbove}
+          spaceBelow={ct.sectionSpacing?.channels?.spaceBelow}
+          customSpaceAbove={ct.sectionSpacing?.channels?.customSpaceAbove}
+          customSpaceBelow={ct.sectionSpacing?.channels?.customSpaceBelow}
+          className="space-y-6"
+        >
           {/* Direct Email Card */}
           <div className="glass-panel p-6 rounded-2xl border border-studio-gold/30 bg-gradient-to-br from-studio-card to-studio-surface space-y-3">
             <div className="flex items-center gap-2 text-studio-gold">
@@ -137,10 +151,17 @@ export default function Contact() {
               {ct.privacyText || 'Your details are only used to respond to your inquiry.'}
             </p>
           </div>
-        </div>
+        </SectionWrap>
 
         {/* Right Column: Embedded Google Form */}
-        <div className="lg:col-span-2 space-y-4">
+        <SectionWrap
+          id="contact-form"
+          spaceAbove={ct.sectionSpacing?.form?.spaceAbove}
+          spaceBelow={ct.sectionSpacing?.form?.spaceBelow}
+          customSpaceAbove={ct.sectionSpacing?.form?.customSpaceAbove}
+          customSpaceBelow={ct.sectionSpacing?.form?.customSpaceBelow}
+          className="lg:col-span-2 space-y-4"
+        >
           <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-studio-magenta/20 shadow-glow-magenta space-y-4">
             {(ct.formTitle || ct.formSubtitle) && (
               <div className="space-y-1">
@@ -164,7 +185,7 @@ export default function Contact() {
               fallbackEmail={site.contact?.email || 'rjbartstudio@gmail.com'}
             />
           </div>
-        </div>
+        </SectionWrap>
 
       </div>
 

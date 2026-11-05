@@ -7,6 +7,7 @@ import { PRICE_LISTS, getPriceList } from '../data/priceLists'
 import PriceListModal from '../components/PriceListModal'
 import PageBlocks from '../components/PageBlocks'
 import GoogleFormEmbed from '../components/GoogleFormEmbed'
+import SectionWrap from '../components/SectionWrap'
 
 export default function Commissions() {
   const [pageText, setPageText] = useState(pagesData.commissions || {})
@@ -35,7 +36,14 @@ export default function Commissions() {
       <PageBlocks blocks={pageText.blockSlots?.top} />
 
       {/* Header */}
-      {pageText.heroVisible !== false && (
+      <SectionWrap
+        id="commissions-header"
+        spaceAbove={pageText.sectionSpacing?.header?.spaceAbove}
+        spaceBelow={pageText.sectionSpacing?.header?.spaceBelow}
+        customSpaceAbove={pageText.sectionSpacing?.header?.customSpaceAbove}
+        customSpaceBelow={pageText.sectionSpacing?.header?.customSpaceBelow}
+        visible={pageText.heroVisible !== false}
+      >
         <div className="text-center max-w-3xl mx-auto space-y-3">
           <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
             {pageText.badge || 'Custom Artwork & Portrait Services'}
@@ -47,13 +55,20 @@ export default function Commissions() {
             {pageText.intro || 'Order a personalized original oil painting, acrylic artwork, or expressive charcoal portrait of loved ones or pets. Every custom commission includes a signed and dated Certificate of Authenticity.'}
           </p>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After header */}
       <PageBlocks blocks={pageText.blockSlots?.after_header} />
 
       {/* Services Grid with In-Card Thumbnails */}
-      {pageText.cardsVisible !== false && (
+      <SectionWrap
+        id="commissions-cards"
+        spaceAbove={pageText.sectionSpacing?.cards?.spaceAbove}
+        spaceBelow={pageText.sectionSpacing?.cards?.spaceBelow}
+        customSpaceAbove={pageText.sectionSpacing?.cards?.customSpaceAbove}
+        customSpaceBelow={pageText.sectionSpacing?.cards?.customSpaceBelow}
+        visible={pageText.cardsVisible !== false}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {cardsList.filter(svc => svc && svc.visible !== false).map((svc) => {
             const pl = getPriceList(svc)
@@ -107,13 +122,20 @@ export default function Commissions() {
             )
           })}
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After cards */}
       <PageBlocks blocks={pageText.blockSlots?.after_cards} />
 
       {/* Watercolor Note */}
-      {(pageText.watercolorNotice?.visible !== false) && (
+      <SectionWrap
+        id="commissions-watercolor"
+        spaceAbove={pageText.sectionSpacing?.watercolor?.spaceAbove}
+        spaceBelow={pageText.sectionSpacing?.watercolor?.spaceBelow}
+        customSpaceAbove={pageText.sectionSpacing?.watercolor?.customSpaceAbove}
+        customSpaceBelow={pageText.sectionSpacing?.watercolor?.customSpaceBelow}
+        visible={pageText.watercolorNotice?.visible !== false}
+      >
         <div className="p-4 sm:p-5 rounded-2xl bg-studio-purple/15 border border-studio-purple/30 flex items-start sm:items-center gap-3 text-xs sm:text-sm text-slate-200">
           <Info className="w-5 h-5 text-studio-gold shrink-0 mt-0.5 sm:mt-0" />
           <p className="leading-relaxed">
@@ -130,13 +152,20 @@ export default function Commissions() {
             {pageText.watercolorNotice?.suffix ?? '.'}
           </p>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After watercolor notice */}
       <PageBlocks blocks={pageText.blockSlots?.after_watercolor} />
 
       {/* The 4-Step Commission Process */}
-      {pageText.processVisible !== false && (
+      <SectionWrap
+        id="commissions-process"
+        spaceAbove={pageText.sectionSpacing?.process?.spaceAbove}
+        spaceBelow={pageText.sectionSpacing?.process?.spaceBelow}
+        customSpaceAbove={pageText.sectionSpacing?.process?.customSpaceAbove}
+        customSpaceBelow={pageText.sectionSpacing?.process?.customSpaceBelow}
+        visible={pageText.processVisible !== false}
+      >
         <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-white/10 space-y-8">
           <div className="text-center max-w-2xl mx-auto">
             <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white">
@@ -168,13 +197,20 @@ export default function Commissions() {
             })}
           </div>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After process steps */}
       <PageBlocks blocks={pageText.blockSlots?.after_process} />
 
       {/* Pricing Policy Notice */}
-      {(pageText.pricingPolicyVisible !== false) && (
+      <SectionWrap
+        id="commissions-pricing"
+        spaceAbove={pageText.sectionSpacing?.pricing?.spaceAbove}
+        spaceBelow={pageText.sectionSpacing?.pricing?.spaceBelow}
+        customSpaceAbove={pageText.sectionSpacing?.pricing?.customSpaceAbove}
+        customSpaceBelow={pageText.sectionSpacing?.pricing?.customSpaceBelow}
+        visible={pageText.pricingPolicyVisible !== false}
+      >
         <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-studio-gold/30 space-y-3">
           <div className="flex items-center gap-2 text-studio-gold font-semibold text-xs sm:text-sm">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -184,13 +220,20 @@ export default function Commissions() {
             {pageText.pricingPolicy || 'Pricing follows my price lists: choose the size price, then add the commission fee for each extra subject. Watercolor commissions are quoted individually. Every quote is confirmed before painting begins.'}
           </p>
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After pricing notice */}
       <PageBlocks blocks={pageText.blockSlots?.after_pricing_notice} />
 
       {/* Commission Request Form (Embedded Google Form) */}
-      {pageText.formVisible !== false && (
+      <SectionWrap
+        id="commissions-form"
+        spaceAbove={pageText.sectionSpacing?.form?.spaceAbove}
+        spaceBelow={pageText.sectionSpacing?.form?.spaceBelow}
+        customSpaceAbove={pageText.sectionSpacing?.form?.customSpaceAbove}
+        customSpaceBelow={pageText.sectionSpacing?.form?.customSpaceBelow}
+        visible={pageText.formVisible !== false}
+      >
         <div className="glass-panel p-6 sm:p-10 rounded-3xl border border-studio-magenta/30 shadow-glow-magenta space-y-6">
           <div>
             <span className="text-xs uppercase tracking-widest font-semibold text-studio-magenta">
@@ -211,7 +254,7 @@ export default function Commissions() {
             fallbackEmail={site.contact?.email || 'rjbartstudio@gmail.com'}
           />
         </div>
-      )}
+      </SectionWrap>
 
       {/* Slot: After the form */}
       <PageBlocks blocks={pageText.blockSlots?.after_form} />

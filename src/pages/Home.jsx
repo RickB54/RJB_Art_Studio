@@ -5,6 +5,7 @@ import siteData from '../data/site.json'
 import paintingsData from '../data/paintings.json'
 import pagesData from '../data/pages.json'
 import PageBlocks, { BlockVideoEmbed, MediaEmbed } from '../components/PageBlocks'
+import SectionWrap from '../components/SectionWrap'
 
 export default function Home() {
   const [paintings, setPaintings] = useState(paintingsData)
@@ -71,8 +72,15 @@ export default function Home() {
       <PageBlocks blocks={homeText.blockSlots?.top} />
 
       {/* Hero Section */}
-      {homeText.heroVisible !== false && (
-        <section className="relative pt-12 pb-16 sm:pt-20 sm:pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <SectionWrap
+        id="hero"
+        spaceAbove={homeText.sectionSpacing?.hero?.spaceAbove}
+        spaceBelow={homeText.sectionSpacing?.hero?.spaceBelow}
+        customSpaceAbove={homeText.sectionSpacing?.hero?.customSpaceAbove}
+        customSpaceBelow={homeText.sectionSpacing?.hero?.customSpaceBelow}
+        visible={homeText.heroVisible !== false}
+      >
+        <section className="relative pt-12 pb-6 sm:pt-20 sm:pb-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           
           {/* Pill Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-studio-card/80 border border-studio-magenta/30 text-xs sm:text-sm font-medium text-studio-magenta mb-8 shadow-glow-magenta backdrop-blur-md">
@@ -137,13 +145,20 @@ export default function Home() {
           )}
 
         </section>
-      )}
+      </SectionWrap>
 
       {/* Slot: After Hero */}
       <PageBlocks blocks={homeText.blockSlots?.after_hero} />
 
       {/* Featured Paintings Section */}
-      {homeText.featuredVisible !== false && (
+      <SectionWrap
+        id="featured"
+        spaceAbove={homeText.sectionSpacing?.featured?.spaceAbove}
+        spaceBelow={homeText.sectionSpacing?.featured?.spaceBelow}
+        customSpaceAbove={homeText.sectionSpacing?.featured?.customSpaceAbove}
+        customSpaceBelow={homeText.sectionSpacing?.featured?.customSpaceBelow}
+        visible={homeText.featuredVisible !== false}
+      >
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
             <div>
@@ -245,13 +260,13 @@ export default function Home() {
             ))}
           </div>
         </section>
-      )}
+      </SectionWrap>
 
       {/* Slot: After Featured */}
       <PageBlocks blocks={homeText.blockSlots?.after_featured} />
 
       {/* Commissions & Prints Teaser Banner */}
-      {homeText.teaserVisible !== false && (() => {
+      {(() => {
         const teaserImg1 = cleanPhotoUrl(homeText.teaserImage)
         const teaserImg2 = cleanPhotoUrl(homeText.teaserImage2)
         const teaserImages = [teaserImg1, teaserImg2].filter(Boolean)
@@ -324,36 +339,45 @@ export default function Home() {
         }
 
         return (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="glass-panel rounded-3xl p-8 sm:p-12 border border-studio-magenta/20 bg-gradient-to-r from-studio-purple/10 via-studio-card to-studio-surface relative overflow-hidden">
-              {!hasTeaserMedia ? (
-                <div className="max-w-2xl relative z-10">
-                  {renderTeaserContent()}
-                </div>
-              ) : teaserPos === 'above' ? (
-                <div className="relative z-10 space-y-8">
-                  {renderTeaserMedia()}
-                  <div className="max-w-3xl">{renderTeaserContent()}</div>
-                </div>
-              ) : teaserPos === 'below' ? (
-                <div className="relative z-10 space-y-8">
-                  <div className="max-w-3xl">{renderTeaserContent()}</div>
-                  {renderTeaserMedia()}
-                </div>
-              ) : teaserPos === 'left' ? (
-                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                  <div className="order-2 lg:order-1">{renderTeaserMedia()}</div>
-                  <div className="order-1 lg:order-2">{renderTeaserContent()}</div>
-                </div>
-              ) : (
-                /* default: right */
-                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                  <div className="order-1">{renderTeaserContent()}</div>
-                  <div className="order-2">{renderTeaserMedia()}</div>
-                </div>
-              )}
-            </div>
-          </section>
+          <SectionWrap
+            id="teaser"
+            spaceAbove={homeText.sectionSpacing?.teaser?.spaceAbove}
+            spaceBelow={homeText.sectionSpacing?.teaser?.spaceBelow}
+            customSpaceAbove={homeText.sectionSpacing?.teaser?.customSpaceAbove}
+            customSpaceBelow={homeText.sectionSpacing?.teaser?.customSpaceBelow}
+            visible={homeText.teaserVisible !== false}
+          >
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="glass-panel rounded-3xl p-8 sm:p-12 border border-studio-magenta/20 bg-gradient-to-r from-studio-purple/10 via-studio-card to-studio-surface relative overflow-hidden">
+                {!hasTeaserMedia ? (
+                  <div className="max-w-2xl relative z-10">
+                    {renderTeaserContent()}
+                  </div>
+                ) : teaserPos === 'above' ? (
+                  <div className="relative z-10 space-y-8">
+                    {renderTeaserMedia()}
+                    <div className="max-w-3xl">{renderTeaserContent()}</div>
+                  </div>
+                ) : teaserPos === 'below' ? (
+                  <div className="relative z-10 space-y-8">
+                    <div className="max-w-3xl">{renderTeaserContent()}</div>
+                    {renderTeaserMedia()}
+                  </div>
+                ) : teaserPos === 'left' ? (
+                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                    <div className="order-2 lg:order-1">{renderTeaserMedia()}</div>
+                    <div className="order-1 lg:order-2">{renderTeaserContent()}</div>
+                  </div>
+                ) : (
+                  /* default: right */
+                  <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                    <div className="order-1">{renderTeaserContent()}</div>
+                    <div className="order-2">{renderTeaserMedia()}</div>
+                  </div>
+                )}
+              </div>
+            </section>
+          </SectionWrap>
         )
       })()}
 
@@ -361,7 +385,14 @@ export default function Home() {
       <PageBlocks blocks={homeText.blockSlots?.after_teaser} />
 
       {/* Upcoming Shows & Events */}
-      {homeText.artShowsVisible !== false && artShows.length > 0 && (
+      <SectionWrap
+        id="artShows"
+        spaceAbove={homeText.sectionSpacing?.artShows?.spaceAbove}
+        spaceBelow={homeText.sectionSpacing?.artShows?.spaceBelow}
+        customSpaceAbove={homeText.sectionSpacing?.artShows?.customSpaceAbove}
+        customSpaceBelow={homeText.sectionSpacing?.artShows?.customSpaceBelow}
+        visible={homeText.artShowsVisible !== false && artShows.length > 0}
+      >
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
           {artShows.map((show, idx) => {
             const showImg1 = cleanPhotoUrl(show.image)
@@ -467,7 +498,7 @@ export default function Home() {
             )
           })}
         </section>
-      )}
+      </SectionWrap>
 
       {/* Slot: After Shows / Bottom */}
       <PageBlocks blocks={homeText.blockSlots?.bottom || homeText.extraBlocks} />
