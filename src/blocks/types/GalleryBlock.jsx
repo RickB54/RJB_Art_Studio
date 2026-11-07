@@ -193,6 +193,20 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
   }
 
   const isOver60 = items.length >= 60
+  const photoItems = items.filter(it => it.type !== 'video')
+  const photoCount = photoItems.length
+  const isSlideshow = block.layout === 'slideshow'
+  const WARN_LIMIT = isSlideshow ? 30 : 40
+  const isOverLimit = photoCount > WARN_LIMIT
+
+  // Budget: estimate sizes (use item.size if stored, else assume avg 200 KB full + 40 KB thumb)
+  const AVG_FULL = 200 * 1024
+  const AVG_THUMB = 40 * 1024
+  const estimatedBytes = photoCount * (AVG_FULL + AVG_THUMB)
+  const estimatedMB = (estimatedBytes / (1024 * 1024)).toFixed(1)
+  const creditsPerGb = 20
+  const gbPerVisit = estimatedBytes / (1024 * 1024 * 1024)
+  const creditsPer1k = (gbPerVisit * 1000 * creditsPerGb).toFixed(2)
 
   return (
     <div className="space-y-4">
@@ -281,13 +295,48 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
         )}
       </div>
 
-      {/* 60 Items Warning */}
-      {isOver60 && (
+      {/* Media Budget Panel */}
+      {photoCount > 0 && (
+        <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-2">
+          <div className="flex items-center gap-2 text-[11px] font-bold text-studio-gold uppercase tracking-wider">
+            <Layers className="w-3.5 h-3.5" />
+            <span>Media Budget</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+            <div className="bg-white/5 rounded-lg p-2">
+              <p className="text-[10px] text-slate-400">Photos</p>
+              <p className="text-sm font-bold text-white">{photoCount}</p>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2">
+              <p className="text-[10px] text-slate-400">Est. Size</p>
+              <p className="text-sm font-bold text-studio-gold">~{estimatedMB} MB</p>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2">
+              <p className="text-[10px] text-slate-400">Transfer / Visit</p>
+              <p className="text-sm font-bold text-sky-300">~{(gbPerVisit * 1024).toFixed(0)} KB</p>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2">
+              <p className="text-[10px] text-slate-400">Credits / 1k Visits</p>
+              <p className="text-sm font-bold text-emerald-400">~{creditsPer1k}</p>
+            </div>
+          </div>
+          <p className="text-[10px] text-slate-500">Estimates based on avg 200 KB full + 40 KB thumb per photo, {creditsPerGb} Netlify credits/GB.</p>
+        </div>
+      )}
+
+      {/* Item count warnings */}
+      {isOverLimit && (
         <div className="p-3 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-200 text-xs flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
           <span>
-            <strong>Performance Warning:</strong> This gallery has {items.length} items. Galleries with 60+ items may impact page load speed. Consider splitting into multiple blocks or pages.
+            <strong>Performance Warning:</strong> This {isSlideshow ? 'slideshow' : 'gallery'} has {photoCount} photos (limit: {WARN_LIMIT}). Consider splitting into multiple galleries for better performance.
           </span>
+        </div>
+      )}
+      {isOver60 && !isOverLimit && (
+        <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+          <span><strong>Heavy Gallery:</strong> {items.length} items may significantly impact page load. Split into multiple blocks.</span>
         </div>
       )}
 
@@ -328,7 +377,7 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
           {isUploading ? 'Resizing and uploading photos...' : 'Drag & drop photos here, or click to browse'}
         </p>
         <p className="text-[11px] text-slate-400">
-          Upload many files at once. Photos are automatically resized to 1600px WebP + 500px thumb (max 20 MB per file, saved under public/images/gallery).
+          Auto-resized to 1400px ≤250 KB WebP + 480px ≤50 KB thumb. Max 20 MB per file. Duplicates are detected automatically.
         </p>
       </div>
 

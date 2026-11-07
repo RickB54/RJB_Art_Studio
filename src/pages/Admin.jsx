@@ -1921,6 +1921,36 @@ export default function Admin() {
             </div>
           </div>
 
+          {/* Page-level media budget warning: show if estimated gallery/photo media > 2MB */}
+          {(() => {
+            const AVG_FULL = 200 * 1024, AVG_THUMB = 40 * 1024
+            let totalPhotos = 0
+            const section = pages[editPageSection] || {}
+            const blockSlots = section.blockSlots || {}
+            Object.values(blockSlots).forEach(slotBlocks => {
+              if (!Array.isArray(slotBlocks)) return
+              slotBlocks.forEach(b => {
+                if (!b) return
+                const imgs = Array.isArray(b.items) ? b.items.filter(i => i.type !== 'video').length
+                  : Array.isArray(b.images) ? b.images.length
+                  : (b.image ? 1 : 0)
+                totalPhotos += imgs
+              })
+            })
+            const estimatedBytes = totalPhotos * (AVG_FULL + AVG_THUMB)
+            if (estimatedBytes > 2 * 1024 * 1024) {
+              return (
+                <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs mt-1">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                  <span>
+                    <strong>Page media budget warning:</strong> ~{(estimatedBytes / (1024 * 1024)).toFixed(1)} MB estimated across {totalPhotos} photos on this page. First load &gt;2 MB may feel slow on mobile.
+                  </span>
+                </div>
+              )
+            }
+            return null
+          })()}
+
           {/* PREVIEW OVERLAY VIEWPORT */}
           {previewOpen && (
             <div className="fixed inset-x-0 bottom-0 top-[60px] z-30 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-2 sm:p-4 animate-fade-in">
