@@ -34,6 +34,8 @@ function adminApiPlugin() {
         const pagesDraftPath = path.resolve(__dirname, 'src/data/pages.draft.json')
 
         res.setHeader('Content-Type', 'application/json')
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        res.setHeader('Pragma', 'no-cache')
 
         // Helper to read JSON request body
         const readBody = () => new Promise((resolve) => {
