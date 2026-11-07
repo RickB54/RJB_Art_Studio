@@ -291,6 +291,18 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
                 className="w-full bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
               />
             </div>
+            <div className="col-span-2 sm:col-span-4 flex items-center gap-2 mt-1">
+              <input
+                type="checkbox"
+                id={`stop-one-pass-${block.id}`}
+                checked={block.stopAfterOnePass || false}
+                onChange={e => onUpdateField('stopAfterOnePass', e.target.checked)}
+                className="accent-studio-magenta"
+              />
+              <label htmlFor={`stop-one-pass-${block.id}`} className="text-[11px] text-slate-300 cursor-pointer select-none">
+                Stop after one full pass through all slides
+              </label>
+            </div>
           </>
         )}
       </div>
@@ -544,17 +556,56 @@ export function GalleryBlockRenderer({ block }) {
   const [slideshowIndex, setSlideshowIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(Boolean(block.autoplay))
   const [isHovered, setIsHovered] = useState(false)
+  const [passCompleted, setPassCompleted] = useState(false)
+  const slideshowRef = useRef(null)
+  const isVisibleRef = useRef(false)
 
   const delayMs = (block.delaySeconds || 4) * 1000
+  const stopAfterOnePass = block.stopAfterOnePass || false
+  const photoOnlyItems = items.filter(it => it.type !== 'video')
 
-  // Slideshow autoplay
+  // IntersectionObserver: only autoplay when the slideshow is in view
+  useEffect(() => {
+    if (layout !== 'slideshow' || !block.autoplay) return
+    const el = slideshowRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting
+        setIsPlaying(entry.isIntersecting && !passCompleted)
+      },
+      { threshold: 0.3 }
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [layout, block.autoplay, passCompleted])
+
+  // Pause when tab hidden
+  useEffect(() => {
+    if (layout !== 'slideshow') return
+    const onVisChange = () => {
+      if (document.hidden) setIsPlaying(false)
+      else if (block.autoplay && isVisibleRef.current && !passCompleted) setIsPlaying(true)
+    }
+    document.addEventListener('visibilitychange', onVisChange)
+    return () => document.removeEventListener('visibilitychange', onVisChange)
+  }, [layout, block.autoplay, passCompleted])
+
+  // Slideshow autoplay — advance slides
   useEffect(() => {
     if (layout !== 'slideshow' || !isPlaying || isHovered || items.length <= 1) return
     const interval = setInterval(() => {
-      setSlideshowIndex(prev => (prev + 1) % items.length)
+      setSlideshowIndex(prev => {
+        const next = (prev + 1) % items.length
+        if (stopAfterOnePass && next === 0) {
+          setIsPlaying(false)
+          setPassCompleted(true)
+        }
+        return next
+      })
     }, delayMs)
     return () => clearInterval(interval)
-  }, [layout, isPlaying, isHovered, items.length, delayMs])
+  }, [layout, isPlaying, isHovered, items.length, delayMs, stopAfterOnePass])
 
   // Keyboard navigation for Lightbox
   useEffect(() => {
@@ -607,6 +658,7 @@ export function GalleryBlockRenderer({ block }) {
       {/* ── LAYOUT: SLIDESHOW ── */}
       {layout === 'slideshow' && (
         <div
+          ref={slideshowRef}
           className="relative max-w-4xl mx-auto rounded-3xl overflow-hidden glass-panel border border-white/10 shadow-2xl group"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -617,28 +669,40 @@ export function GalleryBlockRenderer({ block }) {
             () => setSlideshowIndex(prev => (prev - 1 + items.length) % items.length)
           )}
         >
-          {/* Main Slide */}
-          <div className="relative aspect-[16/10] bg-black/60 flex items-center justify-center">
-            {items[slideshowIndex]?.type === 'video' ? (
-              <div className="w-full h-full p-4 flex items-center justify-center">
-                <BlockVideoEmbed url={items[slideshowIndex].videoUrl} title={items[slideshowIndex].caption || 'Video'} />
-              </div>
-            ) : (
-              <img
-                src={items[slideshowIndex]?.url}
-                alt={items[slideshowIndex]?.caption || `Slide ${slideshowIndex + 1}`}
-                className="w-full h-full object-contain cursor-pointer"
-                loading="lazy"
-                onClick={() => setLightboxIndex(slideshowIndex)}
-              />
-            )}
+          {/* Main Slide — only render current and next to save memory */}
+          <div className="relative aspect-[16/10] bg-black/60 flex items-center justify-center overflow-hidden">
+            {items.map((item, i) => {
+              const isCurrent = i === slideshowIndex
+              const isNext = i === (slideshowIndex + 1) % items.length
+              if (!isCurrent && !isNext) return null
+              return (
+                <div
+                  key={item.id || i}
+                  className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${isCurrent ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+                >
+                  {item.type === 'video' ? (
+                    <div className="w-full h-full p-4 flex items-center justify-center">
+                      <BlockVideoEmbed url={item.videoUrl} title={item.caption || 'Video'} />
+                    </div>
+                  ) : (
+                    <img
+                      src={item.url}
+                      alt={item.caption || `Slide ${i + 1}`}
+                      className="w-full h-full object-contain cursor-pointer"
+                      onClick={() => setLightboxIndex(i)}
+                      draggable={false}
+                    />
+                  )}
+                </div>
+              )
+            })}
 
             {/* Expand icon overlay */}
             {items[slideshowIndex]?.type !== 'video' && (
               <button
                 type="button"
                 onClick={() => setLightboxIndex(slideshowIndex)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-white hover:bg-studio-magenta transition opacity-0 group-hover:opacity-100"
+                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-white hover:bg-studio-magenta transition opacity-0 group-hover:opacity-100 z-20"
                 title="View full screen"
               >
                 <Maximize2 className="w-4 h-4" />
@@ -651,7 +715,7 @@ export function GalleryBlockRenderer({ block }) {
                 <button
                   type="button"
                   onClick={() => setSlideshowIndex(prev => (prev - 1 + items.length) % items.length)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-studio-magenta text-white transition shadow-lg opacity-80 hover:opacity-100"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-studio-magenta text-white transition shadow-lg opacity-80 hover:opacity-100 z-20"
                   aria-label="Previous slide"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -659,7 +723,7 @@ export function GalleryBlockRenderer({ block }) {
                 <button
                   type="button"
                   onClick={() => setSlideshowIndex(prev => (prev + 1) % items.length)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-studio-magenta text-white transition shadow-lg opacity-80 hover:opacity-100"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/60 hover:bg-studio-magenta text-white transition shadow-lg opacity-80 hover:opacity-100 z-20"
                   aria-label="Next slide"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -678,7 +742,7 @@ export function GalleryBlockRenderer({ block }) {
               {block.autoplay && (
                 <button
                   type="button"
-                  onClick={() => setIsPlaying(!isPlaying)}
+                  onClick={() => { setIsPlaying(!isPlaying); setPassCompleted(false) }}
                   className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition px-2 py-0.5 rounded bg-white/5"
                   title={isPlaying ? 'Pause slideshow' : 'Play slideshow'}
                 >
@@ -687,18 +751,34 @@ export function GalleryBlockRenderer({ block }) {
                 </button>
               )}
 
-              {/* Dots */}
-              <div className="flex items-center gap-1.5">
-                {items.map((_, i) => (
+              {/* Thumbnail dots — use thumbUrl for performance */}
+              <div className="flex items-center gap-1">
+                {items.map((it, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setSlideshowIndex(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      slideshowIndex === i ? 'w-5 bg-studio-magenta' : 'bg-white/20 hover:bg-white/40'
+                    className={`rounded overflow-hidden transition-all border ${
+                      slideshowIndex === i
+                        ? 'w-9 h-7 border-studio-magenta shadow-glow-magenta opacity-100'
+                        : 'w-6 h-5 border-white/20 hover:border-white/50 opacity-50 hover:opacity-80'
                     }`}
                     aria-label={`Go to slide ${i + 1}`}
-                  />
+                    title={it.caption || `Slide ${i + 1}`}
+                  >
+                    {it.type === 'video' ? (
+                      <div className="w-full h-full bg-black/70 flex items-center justify-center">
+                        <Play className="w-2.5 h-2.5 text-red-400" />
+                      </div>
+                    ) : (
+                      <img
+                        src={it.thumbUrl || it.url}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                    )}
+                  </button>
                 ))}
               </div>
             </div>
@@ -874,6 +954,7 @@ export const defaultData = (blockId) => ({
   gap: 'm',
   autoplay: false,
   delaySeconds: 4,
+  stopAfterOnePass: false,
   items: [],
   style: {}
 })
