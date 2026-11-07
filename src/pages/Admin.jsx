@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon, Maximize2, Download, Play } from 'lucide-react'
+import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon, Maximize2, Download, Play, Smartphone, Tablet, Monitor } from 'lucide-react'
 import siteDataInitial from '../data/site.json'
 import paintingsDataInitial from '../data/paintings.json'
 import pagesDataInitial from '../data/pages.json'
@@ -12,7 +12,6 @@ import AdminMediaField from '../components/AdminMediaField'
 import { cleanVideoUrl } from '../components/PageBlocks'
 import SectionSpacingEditor from '../components/SectionSpacingEditor'
 import PageLayoutOutline from '../components/PageLayoutOutline'
-import PagePreviewModal from '../components/PagePreviewModal'
 import {
   HOME_BLOCK_SLOTS,
   ABOUT_BLOCK_SLOTS,
@@ -780,19 +779,96 @@ export default function Admin() {
     })
   }
 
-  const [previewPageKey, setPreviewPageKey] = useState(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewMode, setPreviewMode] = useState('draft') // 'draft' | 'saved'
+  const [previewDevice, setPreviewDevice] = useState('desktop') // 'phone' | 'tablet' | 'desktop'
+  const [previewKey, setPreviewKey] = useState(Date.now())
+  const draftDebounceRef = useRef(null)
 
-  const renderPreviewButton = (pageKey) => (
-    <button
-      type="button"
-      onClick={() => setPreviewPageKey(pageKey)}
-      className="px-3.5 py-1.5 rounded-xl border border-studio-gold/40 hover:border-studio-gold bg-studio-gold/10 hover:bg-studio-gold/20 text-xs font-semibold text-studio-gold flex items-center gap-1.5 transition self-start sm:self-auto shadow-sm"
-      title="Open live responsive preview popup (Phone, Tablet, Desktop)"
-    >
-      <Eye className="w-3.5 h-3.5" />
-      <span>Preview Page</span>
-    </button>
-  )
+  const PAGE_ROUTES = {
+    home: '/',
+    about: '/about',
+    commissions: '/commissions',
+    gallery: '/gallery',
+    videos: '/videos',
+    contact: '/contact',
+    memorial: '/memorial',
+    paintingDetail: '/gallery',
+    notFound: '/404',
+    footerHeader: '/'
+  }
+
+  // Esc key closes the preview
+  useEffect(() => {
+    if (!previewOpen) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current)
+        setPreviewOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [previewOpen])
+
+  // Toggle preview handler: button becomes "Close preview" in same spot
+  const handleTogglePreview = async () => {
+    if (previewOpen) {
+      if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current)
+      setPreviewOpen(false)
+    } else {
+      if (previewMode === 'draft') {
+        try {
+          await fetch('/__api/draft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pages })
+          })
+        } catch (_) {}
+      }
+      setPreviewKey(Date.now())
+      setPreviewOpen(true)
+    }
+  }
+
+  // Mode change handler
+  const handleSetPreviewMode = async (newMode) => {
+    setPreviewMode(newMode)
+    if (newMode === 'draft') {
+      try {
+        await fetch('/__api/draft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pages })
+        })
+      } catch (_) {}
+    }
+    setPreviewKey(Date.now())
+  }
+
+  // Auto-refresh draft when preview is open; stop when preview closes
+  useEffect(() => {
+    if (!previewOpen || previewMode !== 'draft') {
+      if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current)
+      return
+    }
+
+    if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current)
+    draftDebounceRef.current = setTimeout(async () => {
+      try {
+        await fetch('/__api/draft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pages })
+        })
+        setPreviewKey(Date.now())
+      } catch (_) {}
+    }, 800)
+
+    return () => {
+      if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current)
+    }
+  }, [pages, previewOpen, previewMode])
 
   const renderPageOutline = (pageKey) => (
     <PageLayoutOutline
@@ -940,33 +1016,6 @@ export default function Admin() {
               {label}
             </button>
           ))}
-        </div>
-
-        {/* Page Editor Dropdown */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="admin-page-select" className="text-xs text-slate-300 font-semibold hidden sm:inline">
-            Edit a page:
-          </label>
-          <select
-            id="admin-page-select"
-            value={activeTab === 'site' ? editPageSection : ''}
-            onChange={e => handleChoosePageFromDropdown(e.target.value)}
-            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition cursor-pointer ${
-              activeTab === 'site'
-                ? 'bg-studio-magenta text-white border-studio-magenta shadow-glow-magenta'
-                : 'bg-[#13111c] text-slate-300 border-white/15 hover:border-studio-magenta/60 hover:text-white'
-            }`}
-          >
-            <option value="" disabled>Edit a page...</option>
-            <option value="home">Home</option>
-            <option value="gallery">Gallery</option>
-            <option value="about">About</option>
-            <option value="commissions">Commissions & Prints</option>
-            <option value="videos">Videos</option>
-            <option value="contact">Contact</option>
-            <option value="memorial">🕯️ Memorial (Family)</option>
-            <option value="footerHeader">Header & Footer</option>
-          </select>
         </div>
       </div>
 
@@ -1735,45 +1784,168 @@ export default function Admin() {
 
       {/* TAB 5: Edit Site Content by Page */}
       {activeTab === 'site' && (
-        <form onSubmit={handleSaveSite} className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/10 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-            <div>
-              <h2 className="font-serif text-xl font-bold text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-studio-gold" />
-                <span>Page Text & Content Editor</span>
-              </h2>
-              <p className="text-xs text-slate-400">
-                Modify only the text, awards, photos, and links on any page. Changes are saved to <code className="text-slate-300">src/data/pages.json</code>.
-              </p>
+        <form onSubmit={handleSaveSite} className="glass-panel p-4 sm:p-6 rounded-2xl border border-white/10 space-y-6 relative">
+          
+          {/* 1. STICKY ADMIN TOOLBAR: ONE toolbar on every admin page editor, always visible while scrolling */}
+          <div className="sticky top-0 z-40 bg-[#0d0b14]/95 backdrop-blur-md border border-white/15 rounded-2xl p-3 shadow-2xl flex flex-wrap items-center justify-between gap-3">
+            {/* Left Controls: Edit a page dropdown + Preview Page / Close preview */}
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="flex items-center gap-2">
+                <label htmlFor="sticky-page-select" className="text-xs font-semibold text-slate-300 hidden sm:inline">
+                  Edit a page:
+                </label>
+                <select
+                  id="sticky-page-select"
+                  value={editPageSection}
+                  onChange={e => handleChoosePageFromDropdown(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#13111c] text-white border border-white/20 hover:border-studio-gold/60 transition cursor-pointer shadow-sm"
+                >
+                  <option value="home">Home</option>
+                  <option value="gallery">Gallery</option>
+                  <option value="about">About</option>
+                  <option value="commissions">Commissions & Prints</option>
+                  <option value="videos">Videos</option>
+                  <option value="contact">Contact</option>
+                  <option value="memorial">🕯️ Memorial (Family)</option>
+                  <option value="footerHeader">Header & Footer</option>
+                </select>
+              </div>
+
+              {/* Preview Page button that becomes Close preview in the SAME SPOT */}
+              <button
+                type="button"
+                onClick={handleTogglePreview}
+                className={`px-3.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition shadow-sm ${
+                  previewOpen
+                    ? 'bg-rose-500/20 border-rose-500/40 text-rose-300 hover:bg-rose-500/30 hover:text-white'
+                    : 'bg-studio-gold/15 border-studio-gold/40 text-studio-gold hover:bg-studio-gold/25 hover:text-white'
+                }`}
+                title={previewOpen ? 'Close preview (Esc)' : 'Preview this page'}
+              >
+                {previewOpen ? <X className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                <span>{previewOpen ? 'Close preview' : 'Preview Page'}</span>
+              </button>
+
+              {/* While previewing: Saved Version / Unsaved Draft toggle */}
+              {previewOpen && (
+                <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => handleSetPreviewMode('draft')}
+                    className={`px-2.5 py-1 rounded-lg font-medium transition text-xs ${
+                      previewMode === 'draft'
+                        ? 'bg-studio-gold text-slate-950 font-bold shadow'
+                        : 'text-slate-300 hover:text-white'
+                    }`}
+                    title="Preview unsaved draft"
+                  >
+                    Unsaved Draft
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetPreviewMode('saved')}
+                    className={`px-2.5 py-1 rounded-lg font-medium transition text-xs ${
+                      previewMode === 'saved'
+                        ? 'bg-studio-gold text-slate-950 font-bold shadow'
+                        : 'text-slate-300 hover:text-white'
+                    }`}
+                    title="Preview saved version"
+                  >
+                    Saved Version
+                  </button>
+                </div>
+              )}
+
+              {/* While previewing: Phone / Tablet / Desktop buttons */}
+              {previewOpen && (
+                <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('phone')}
+                    className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition ${
+                      previewDevice === 'phone' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Phone (390px)"
+                  >
+                    <Smartphone className="w-3.5 h-3.5 text-studio-gold" />
+                    <span className="hidden md:inline text-xs">Phone</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('tablet')}
+                    className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition ${
+                      previewDevice === 'tablet' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Tablet (768px)"
+                  >
+                    <Tablet className="w-3.5 h-3.5 text-studio-gold" />
+                    <span className="hidden md:inline text-xs">Tablet</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('desktop')}
+                    className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition ${
+                      previewDevice === 'desktop' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Desktop"
+                  >
+                    <Monitor className="w-3.5 h-3.5 text-studio-gold" />
+                    <span className="hidden md:inline text-xs">Desktop</span>
+                  </button>
+                </div>
+              )}
             </div>
-            
-            {/* Active Page Indicator */}
-            <div className="flex items-center gap-2.5">
-              <span className="text-xs text-studio-gold font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-studio-gold/10 border border-studio-gold/30">
-                {({
-                  home: '🏠 Home Page',
-                  about: '🎨 About & Studio',
-                  commissions: '✍ Commissions & Prints',
-                  gallery: '🖼 Gallery Page',
-                  videos: '🎬 Videos & Tutorials',
-                  contact: '✉ Contact Page',
-                  memorial: '🕯️ Memorial Page',
-                  paintingDetail: '🔍 Painting Detail',
-                  notFound: '🚫 404 Not Found',
-                  footerHeader: '⚓ Header & Footer'
-                })[editPageSection] || editPageSection}
-              </span>
+
+            {/* Right: Saved / Unsaved indicator + Save Page Content Changes button */}
+            <div className="flex items-center gap-2.5 flex-wrap">
               {hasUnsavedChangesForSection(editPageSection) ? (
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium whitespace-nowrap">
                   ● Unsaved changes
                 </span>
               ) : (
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium whitespace-nowrap">
                   ✓ Saved
                 </span>
               )}
+
+              <button
+                type="submit"
+                className="px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-studio-gold text-slate-950 hover:bg-studio-gold-light transition flex items-center gap-1.5 shadow-md whitespace-nowrap"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Page Content Changes</span>
+              </button>
             </div>
           </div>
+
+          {/* PREVIEW OVERLAY VIEWPORT */}
+          {previewOpen && (
+            <div className="fixed inset-x-0 bottom-0 top-[60px] z-30 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-2 sm:p-4 animate-fade-in">
+              <div
+                className={`h-full transition-all duration-300 flex flex-col bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/15 relative ${
+                  previewDevice === 'phone'
+                    ? 'w-[390px] max-w-full'
+                    : previewDevice === 'tablet'
+                    ? 'w-[768px] max-w-full'
+                    : 'w-full'
+                }`}
+              >
+                {previewDevice !== 'desktop' && (
+                  <div className="h-6 bg-slate-950/80 border-b border-white/10 flex items-center justify-between px-4 text-[10px] text-slate-400 select-none shrink-0">
+                    <span>9:41</span>
+                    <div className="w-16 h-2.5 bg-black rounded-full" />
+                    <span>100%</span>
+                  </div>
+                )}
+                <iframe
+                  key={`${previewKey}-${previewMode}-${editPageSection}`}
+                  src={`${PAGE_ROUTES[editPageSection] || '/'}?preview=${previewMode === 'draft' ? 'draft' : 'saved'}&_t=${previewKey}`}
+                  title={`${editPageSection} Preview`}
+                  className="w-full flex-grow border-0 bg-slate-950"
+                />
+              </div>
+            </div>
+          )}
 
           {siteSaveSuccess && (
             <div className="p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
@@ -1795,21 +1967,18 @@ export default function Admin() {
                     Control every visible string, button, highlight, showcase item, art show date, and extra block on the Home page.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                  {renderPreviewButton('home')}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm('Restore all default text and settings for Home Page? Any unsaved edits will be replaced with defaults.')) {
-                        setPages(prev => ({ ...prev, home: JSON.parse(JSON.stringify(pagesDefaultInitial.home)) }))
-                      }
-                    }}
-                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                    <span>Restore Default Text</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Restore all default text and settings for Home Page? Any unsaved edits will be replaced with defaults.')) {
+                      setPages(prev => ({ ...prev, home: JSON.parse(JSON.stringify(pagesDefaultInitial.home)) }))
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
               </div>
 
               {/* Page Layout Outline */}
@@ -2918,21 +3087,18 @@ export default function Admin() {
                     Control every visible string, photo, award, studio stat, and extra block on the About page.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                  {renderPreviewButton('about')}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm('Restore all default text and settings for About Page? Any unsaved edits will be replaced with defaults.')) {
-                        setPages(prev => ({ ...prev, about: JSON.parse(JSON.stringify(pagesDefaultInitial.about)) }))
-                      }
-                    }}
-                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                    <span>Restore Default Text</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Restore all default text and settings for About Page? Any unsaved edits will be replaced with defaults.')) {
+                      setPages(prev => ({ ...prev, about: JSON.parse(JSON.stringify(pagesDefaultInitial.about)) }))
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
               </div>
 
               {/* Page Layout Outline */}
@@ -3580,21 +3746,18 @@ export default function Admin() {
                     Control every visible string, service card, process step, notice, form field, and extra block on the Commissions page.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                  {renderPreviewButton('commissions')}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm('Restore all default text and settings for Commissions & Prints? Any unsaved edits will be replaced with defaults.')) {
-                        setPages(prev => ({ ...prev, commissions: JSON.parse(JSON.stringify(pagesDefaultInitial.commissions)) }))
-                      }
-                    }}
-                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                    <span>Restore Default Text</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Restore all default text and settings for Commissions & Prints? Any unsaved edits will be replaced with defaults.')) {
+                      setPages(prev => ({ ...prev, commissions: JSON.parse(JSON.stringify(pagesDefaultInitial.commissions)) }))
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
               </div>
 
               {/* Page Layout Outline */}
@@ -4296,21 +4459,18 @@ export default function Admin() {
                     Control visible headers, filter labels, search placeholder, card button texts, and extra blocks on the Gallery page.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                  {renderPreviewButton('gallery')}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm('Restore all default text and settings for Gallery Page? Any unsaved edits will be replaced with defaults.')) {
-                        setPages(prev => ({ ...prev, gallery: JSON.parse(JSON.stringify(pagesDefaultInitial.gallery)) }))
-                      }
-                    }}
-                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                    <span>Restore Default Text</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm('Restore all default text and settings for Gallery Page? Any unsaved edits will be replaced with defaults.')) {
+                      setPages(prev => ({ ...prev, gallery: JSON.parse(JSON.stringify(pagesDefaultInitial.gallery)) }))
+                    }
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
               </div>
 
               {/* Page Layout Outline */}
@@ -4608,17 +4768,14 @@ export default function Admin() {
                   </h3>
                   <p className="text-xs text-slate-400">Control headers, banner, and playlist display strings.</p>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                  {renderPreviewButton('videos')}
-                  <button
-                    type="button"
-                    onClick={() => restoreDefaultSection('videos', 'Videos Page')}
-                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                    <span>Restore Default Text</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => restoreDefaultSection('videos', 'Videos Page')}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
               </div>
 
               {/* Page Layout Outline */}
@@ -4721,17 +4878,14 @@ export default function Admin() {
                   </h3>
                   <p className="text-xs text-slate-400">Control headers, contact information, and sidebar cards.</p>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                  {renderPreviewButton('contact')}
-                  <button
-                    type="button"
-                    onClick={() => restoreDefaultSection('contact', 'Contact Page')}
-                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                    <span>Restore Default Text</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => restoreDefaultSection('contact', 'Contact Page')}
+                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                  <span>Restore Default Text</span>
+                </button>
               </div>
 
               {/* Page Layout Outline */}
@@ -4908,9 +5062,6 @@ export default function Admin() {
                   <p className="text-xs text-slate-400">
                     Private password-protected family memorial page. Set the password, hero video, dedication, and add blocks below.
                   </p>
-                </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                  {renderPreviewButton('memorial')}
                 </div>
               </div>
 
@@ -5426,31 +5577,6 @@ export default function Admin() {
               </div>
             </div>
           )}
-
-          {/* Sticky Save Button */}
-          <div className="sticky bottom-4 z-30 p-4 rounded-2xl bg-studio-surface/95 backdrop-blur-md border border-studio-gold/40 shadow-2xl flex items-center justify-between gap-4 mt-6">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-300">
-                Editing: <span className="text-studio-gold font-bold uppercase">{editPageSection}</span>
-              </span>
-              {hasUnsavedChangesForSection(editPageSection) ? (
-                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium">
-                  ● Unsaved changes
-                </span>
-              ) : (
-                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">
-                  ✓ Saved
-                </span>
-              )}
-            </div>
-            <button
-              type="submit"
-              className="px-7 py-2.5 rounded-xl text-sm font-semibold bg-studio-gold text-black hover:bg-studio-gold-light transition flex items-center gap-1.5 shadow-md"
-            >
-              <Save className="w-4 h-4" />
-              <span>Save Page Content Changes</span>
-            </button>
-          </div>
         </form>
       )}
 
@@ -5621,15 +5747,6 @@ export default function Admin() {
       {activeGuideModal && (
         <PriceListModal item={activeGuideModal} onClose={() => setActiveGuideModal(null)} />
       )}
-
-      {/* Responsive Page Preview Modal */}
-      <PagePreviewModal
-        isOpen={Boolean(previewPageKey)}
-        onClose={() => setPreviewPageKey(null)}
-        pageKey={previewPageKey || 'home'}
-        pagesData={pages}
-        hasUnsaved={Boolean(hasUnsavedChangesForSection && previewPageKey && hasUnsavedChangesForSection(previewPageKey))}
-      />
 
     </div>
   )

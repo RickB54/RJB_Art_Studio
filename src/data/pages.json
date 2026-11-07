@@ -150,7 +150,8 @@
     "resetFiltersBtn": "Reset All Filters",
     "extraBlocks": [],
     "blockSlots": {
-      "bottom": []
+      "bottom": [],
+      "top": []
     }
   },
   "about": {
