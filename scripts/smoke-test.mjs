@@ -249,6 +249,13 @@ check('Google Forms keeps/adds embedded=true', testForm?.embedUrl?.includes('emb
 const testMp4 = normalizeMediaUrl('Henry_E._Berube.mp4')
 check('Direct mp4 recognized as native direct video', testMp4?.type === 'direct' && testMp4?.isIframe === false)
 
+// Google Slides embed detection (checked in EmbedBlock separately via getGoogleSlidesUrls)
+const slidesUrl = 'https://docs.google.com/presentation/d/1abc123def456/edit'
+const slidesMatch = slidesUrl.match(/\/presentation\/d\/([a-zA-Z0-9_-]+)/)
+check('Google Slides /edit URL extracts presentation ID', slidesMatch && slidesMatch[1] === '1abc123def456')
+const slidesEmbedUrl = slidesMatch ? `https://docs.google.com/presentation/d/${slidesMatch[1]}/embed?start=true&loop=true&delayms=3000` : ''
+check('Google Slides embed URL contains start=true&loop=true', slidesEmbedUrl.includes('start=true&loop=true'))
+
 
 // ── SUMMARY ───────────────────────────────────
 console.log('\n════════════════════════════════════════')
