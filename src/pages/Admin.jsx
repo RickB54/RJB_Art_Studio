@@ -12,6 +12,7 @@ import AdminMediaField from '../components/AdminMediaField'
 import { cleanVideoUrl } from '../components/PageBlocks'
 import SectionSpacingEditor from '../components/SectionSpacingEditor'
 import PageLayoutOutline from '../components/PageLayoutOutline'
+import AdminMediaLibrary from '../components/AdminMediaLibrary'
 import {
   HOME_BLOCK_SLOTS,
   ABOUT_BLOCK_SLOTS,
@@ -1001,10 +1002,12 @@ export default function Admin() {
       {/* Navigation Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
         <div className="flex flex-wrap items-center gap-2">
-          {[['single', editingId ? 'Edit Painting' : 'Add Single Painting'],
+          {[['site', 'Site Pages'],
+            ['single', editingId ? 'Edit Painting' : 'Add Single Painting'],
             ['bulk', 'Bulk Importer'],
             ['manage', `Paintings (${paintings.length})`],
             ['playlists', `Playlists (${playlists.length})`],
+            ['media', 'Media Library'],
             ['help', '? Help']
           ].map(([key, label]) => (
             <button key={key} type="button" onClick={() => handleSwitchTab(key)}
@@ -5578,6 +5581,13 @@ export default function Admin() {
             </div>
           )}
         </form>
+      )}
+
+      {/* TAB: MEDIA LIBRARY */}
+      {activeTab === 'media' && (
+        <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/10">
+          <AdminMediaLibrary />
+        </div>
       )}
 
       {/* TAB: HELP */}

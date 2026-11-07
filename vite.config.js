@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import fs from 'node:fs'
 import path from 'node:path'
+import crypto from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -250,7 +251,281 @@ function adminApiPlugin() {
           return
         }
 
-        // POST /__api/upload-photo  — resize with sharp: 1600px WebP + 500px thumb in public/images/paintings/
+        // Helper to collect references to media files across all site data
+        const getMediaReferences = () => {
+          const refs = {}
+          const record = (val, desc) => {
+            if (!val || typeof val !== 'string') return
+            const match = val.match(/([a-zA-Z0-9_\-\.]+\.(?:webp|jpg|jpeg|png|gif|svg))/i)
+            if (match) {
+              const fn = match[1].toLowerCase()
+              const baseFn = fn.replace(/-thumb\.webp$/, '.webp')
+              if (!refs[fn]) refs[fn] = new Set()
+              refs[fn].add(desc)
+              if (baseFn !== fn) {
+                if (!refs[baseFn]) refs[baseFn] = new Set()
+                refs[baseFn].add(desc)
+              }
+            }
+          }
+
+          const walk = (obj, desc) => {
+            if (!obj) return
+            if (typeof obj === 'string') {
+              record(obj, desc)
+            } else if (Array.isArray(obj)) {
+              obj.forEach(item => walk(item, desc))
+            } else if (typeof obj === 'object') {
+              for (const v of Object.values(obj)) {
+                walk(v, desc)
+              }
+            }
+          }
+
+          if (fs.existsSync(pagesPath)) {
+            try {
+              const p = JSON.parse(fs.readFileSync(pagesPath, 'utf-8'))
+              for (const [k, v] of Object.entries(p)) walk(v, `Page: ${k}`)
+            } catch {}
+          }
+          if (fs.existsSync(pagesDraftPath)) {
+            try {
+              const d = JSON.parse(fs.readFileSync(pagesDraftPath, 'utf-8'))
+              for (const [k, v] of Object.entries(d)) walk(v, `Draft: ${k}`)
+            } catch {}
+          }
+          if (fs.existsSync(sitePath)) {
+            try {
+              walk(JSON.parse(fs.readFileSync(sitePath, 'utf-8')), 'Site settings')
+            } catch {}
+          }
+          if (fs.existsSync(paintingsPath)) {
+            try {
+              const pt = JSON.parse(fs.readFileSync(paintingsPath, 'utf-8'))
+              pt.forEach(p => walk(p, `Painting: ${p.title || p.id || 'Untitled'}`))
+            } catch {}
+          }
+          if (fs.existsSync(playlistsPath)) {
+            try {
+              walk(JSON.parse(fs.readFileSync(playlistsPath, 'utf-8')), 'Playlists')
+            } catch {}
+          }
+          const plDir = path.resolve(__dirname, 'src/data/playlists')
+          if (fs.existsSync(plDir)) {
+            try {
+              fs.readdirSync(plDir).forEach(f => {
+                if (f.endsWith('.json')) {
+                  try {
+                    const pl = JSON.parse(fs.readFileSync(path.join(plDir, f), 'utf-8'))
+                    walk(pl, `Playlist: ${pl.title || f}`)
+                  } catch {}
+                }
+              })
+            } catch {}
+          }
+          return refs
+        }
+
+        // GET /__api/media-library
+        if (req.method === 'GET' && req.url === '/__api/media-library') {
+          try {
+            const refs = getMediaReferences()
+            const imagesRoot = path.resolve(__dirname, 'public/images')
+            const uploadFolders = ['gallery', 'showcase', 'paintings', 'price-lists']
+            if (fs.existsSync(imagesRoot)) {
+              fs.readdirSync(imagesRoot).forEach(d => {
+                if (!uploadFolders.includes(d) && !d.startsWith('.')) {
+                  try {
+                    if (fs.statSync(path.join(imagesRoot, d)).isDirectory()) uploadFolders.push(d)
+                  } catch {}
+                }
+              })
+            }
+
+            const items = []
+            uploadFolders.forEach(folder => {
+              const folderDir = path.join(imagesRoot, folder)
+              if (!fs.existsSync(folderDir)) {
+                if (['gallery', 'showcase', 'paintings'].includes(folder)) {
+                  fs.mkdirSync(folderDir, { recursive: true })
+                }
+                return
+              }
+              const files = fs.readdirSync(folderDir).filter(f => !f.startsWith('.'))
+              const groupMap = new Map()
+
+              files.forEach(f => {
+                const isThumb = f.endsWith('-thumb.webp')
+                const baseName = isThumb ? f.replace(/-thumb\.webp$/, '.webp') : f
+                if (!groupMap.has(baseName)) {
+                  groupMap.set(baseName, { baseName, folder, file: null, thumb: null, fullSize: 0, thumbSize: 0, mtime: 0 })
+                }
+                const entry = groupMap.get(baseName)
+                const fullFp = path.join(folderDir, f)
+                try {
+                  const stat = fs.statSync(fullFp)
+                  if (stat.mtimeMs > entry.mtime) entry.mtime = stat.mtimeMs
+                  if (isThumb) {
+                    entry.thumb = f
+                    entry.thumbSize = stat.size
+                  } else {
+                    entry.file = f
+                    entry.fullSize = stat.size
+                  }
+                } catch {}
+              })
+
+              groupMap.forEach(entry => {
+                const f1 = entry.file ? entry.file.toLowerCase() : null
+                const f2 = entry.thumb ? entry.thumb.toLowerCase() : null
+                const usedSet = new Set()
+                if (f1 && refs[f1]) refs[f1].forEach(r => usedSet.add(r))
+                if (f2 && refs[f2]) refs[f2].forEach(r => usedSet.add(r))
+                const usedIn = Array.from(usedSet)
+                const totalSize = entry.fullSize + entry.thumbSize
+                items.push({
+                  id: `${folder}/${entry.baseName}`,
+                  folder,
+                  baseName: entry.baseName,
+                  file: entry.file,
+                  thumb: entry.thumb,
+                  fullSize: entry.fullSize,
+                  thumbSize: entry.thumbSize,
+                  totalSize,
+                  url: entry.file ? `/images/${folder}/${entry.file}` : `/images/${folder}/${entry.thumb}`,
+                  thumbnailUrl: entry.thumb ? `/images/${folder}/${entry.thumb}` : (entry.file ? `/images/${folder}/${entry.file}` : ''),
+                  mtime: entry.mtime,
+                  usedIn,
+                  isUnused: usedIn.length === 0
+                })
+              })
+            })
+
+            // Scan trash
+            const trashRoot = path.resolve(__dirname, 'removed-media')
+            const trashItems = []
+            if (fs.existsSync(trashRoot)) {
+              const trashFolders = fs.readdirSync(trashRoot).filter(d => !d.startsWith('.'))
+              trashFolders.forEach(folder => {
+                const folderDir = path.join(trashRoot, folder)
+                try {
+                  if (!fs.statSync(folderDir).isDirectory()) return
+                  const files = fs.readdirSync(folderDir).filter(f => !f.startsWith('.'))
+                  const groupMap = new Map()
+                  files.forEach(f => {
+                    const isThumb = f.endsWith('-thumb.webp')
+                    const baseName = isThumb ? f.replace(/-thumb\.webp$/, '.webp') : f
+                    if (!groupMap.has(baseName)) {
+                      groupMap.set(baseName, { baseName, folder, file: null, thumb: null, fullSize: 0, thumbSize: 0, mtime: 0 })
+                    }
+                    const entry = groupMap.get(baseName)
+                    try {
+                      const stat = fs.statSync(path.join(folderDir, f))
+                      if (stat.mtimeMs > entry.mtime) entry.mtime = stat.mtimeMs
+                      if (isThumb) { entry.thumb = f; entry.thumbSize = stat.size }
+                      else { entry.file = f; entry.fullSize = stat.size }
+                    } catch {}
+                  })
+                  groupMap.forEach(entry => {
+                    trashItems.push({
+                      id: `trash/${folder}/${entry.baseName}`,
+                      folder,
+                      baseName: entry.baseName,
+                      file: entry.file,
+                      thumb: entry.thumb,
+                      fullSize: entry.fullSize,
+                      thumbSize: entry.thumbSize,
+                      totalSize: entry.fullSize + entry.thumbSize,
+                      mtime: entry.mtime
+                    })
+                  })
+                } catch {}
+              })
+            }
+
+            res.end(JSON.stringify({
+              items,
+              trashItems,
+              stats: {
+                totalActiveCount: items.length,
+                totalActiveBytes: items.reduce((s, i) => s + i.totalSize, 0),
+                unusedCount: items.filter(i => i.isUnused).length,
+                unusedBytes: items.filter(i => i.isUnused).reduce((s, i) => s + i.totalSize, 0),
+                trashCount: trashItems.length,
+                trashBytes: trashItems.reduce((s, i) => s + i.totalSize, 0)
+              }
+            }))
+          } catch (err) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: err.message }))
+          }
+          return
+        }
+
+        // POST /__api/media-trash
+        if (req.method === 'POST' && req.url === '/__api/media-trash') {
+          try {
+            const { items } = await readBody()
+            const refs = getMediaReferences()
+            const moved = []
+            const skipped = []
+            const trashRoot = path.resolve(__dirname, 'removed-media')
+            const imagesRoot = path.resolve(__dirname, 'public/images')
+
+            for (const item of (items || [])) {
+              const f1 = item.file ? item.file.toLowerCase() : null
+              const f2 = item.thumb ? item.thumb.toLowerCase() : null
+              const isReferenced = (f1 && refs[f1] && refs[f1].size > 0) || (f2 && refs[f2] && refs[f2].size > 0)
+              if (isReferenced) {
+                skipped.push({ ...item, reason: 'Referenced in site content' })
+                continue
+              }
+              const destDir = path.join(trashRoot, item.folder)
+              fs.mkdirSync(destDir, { recursive: true })
+              const srcDir = path.join(imagesRoot, item.folder)
+              if (item.file && fs.existsSync(path.join(srcDir, item.file))) {
+                fs.renameSync(path.join(srcDir, item.file), path.join(destDir, item.file))
+              }
+              if (item.thumb && fs.existsSync(path.join(srcDir, item.thumb))) {
+                fs.renameSync(path.join(srcDir, item.thumb), path.join(destDir, item.thumb))
+              }
+              moved.push(item)
+            }
+            res.end(JSON.stringify({ success: true, moved, skipped }))
+          } catch (err) {
+            res.statusCode = 500; res.end(JSON.stringify({ error: err.message }))
+          }
+          return
+        }
+
+        // POST /__api/media-restore
+        if (req.method === 'POST' && req.url === '/__api/media-restore') {
+          try {
+            const { items } = await readBody()
+            const restored = []
+            const trashRoot = path.resolve(__dirname, 'removed-media')
+            const imagesRoot = path.resolve(__dirname, 'public/images')
+
+            for (const item of (items || [])) {
+              const srcDir = path.join(trashRoot, item.folder)
+              const destDir = path.join(imagesRoot, item.folder)
+              fs.mkdirSync(destDir, { recursive: true })
+              if (item.file && fs.existsSync(path.join(srcDir, item.file))) {
+                fs.renameSync(path.join(srcDir, item.file), path.join(destDir, item.file))
+              }
+              if (item.thumb && fs.existsSync(path.join(srcDir, item.thumb))) {
+                fs.renameSync(path.join(srcDir, item.thumb), path.join(destDir, item.thumb))
+              }
+              restored.push(item)
+            }
+            res.end(JSON.stringify({ success: true, restored }))
+          } catch (err) {
+            res.statusCode = 500; res.end(JSON.stringify({ error: err.message }))
+          }
+          return
+        }
+
+        // POST /__api/upload-photo  — content-hash deduplication, 20MB limit, 1400px <=250KB + 480px thumb <=50KB
         if (req.method === 'POST' && (req.url === '/__api/upload-photo' || req.url === '/__api/upload-original')) {
           let body = ''
           req.on('data', chunk => { body += chunk })
@@ -262,6 +537,37 @@ function adminApiPlugin() {
                 res.end(JSON.stringify({ error: 'filename and dataBase64 required' }))
                 return
               }
+
+              const buffer = Buffer.from(dataBase64, 'base64')
+              const MAX_UPLOAD_BYTES = 20 * 1024 * 1024 // 20 MB
+              if (buffer.length > MAX_UPLOAD_BYTES) {
+                res.statusCode = 413
+                res.end(JSON.stringify({ error: `File exceeds 20 MB limit (${(buffer.length / 1024 / 1024).toFixed(1)} MB). Upload rejected.` }))
+                return
+              }
+
+              // De-duplicate uploads by content hash so the same photo is stored once
+              const contentHash = crypto.createHash('sha256').update(buffer).digest('hex')
+              const hashesPath = path.resolve(__dirname, 'public/images/.upload-hashes.json')
+              let hashes = {}
+              if (fs.existsSync(hashesPath)) {
+                try { hashes = JSON.parse(fs.readFileSync(hashesPath, 'utf-8')) } catch {}
+              }
+              if (hashes[contentHash]) {
+                const existing = hashes[contentHash]
+                const checkFile = path.resolve(__dirname, 'public', existing.url.replace(/^\//, ''))
+                if (fs.existsSync(checkFile)) {
+                  res.end(JSON.stringify({
+                    success: true,
+                    url: existing.url,
+                    thumbnailUrl: existing.thumbnailUrl,
+                    size: existing.size,
+                    deduplicated: true
+                  }))
+                  return
+                }
+              }
+
               let sharp
               try {
                 sharp = (await import('sharp')).default
@@ -270,14 +576,10 @@ function adminApiPlugin() {
                 res.end(JSON.stringify({ error: 'sharp not installed' }))
                 return
               }
-              const buffer = Buffer.from(dataBase64, 'base64')
-              const MAX_UPLOAD_BYTES = 20 * 1024 * 1024 // 20 MB
-              if (buffer.length > MAX_UPLOAD_BYTES) {
-                res.statusCode = 413
-                res.end(JSON.stringify({ error: `File exceeds 20 MB limit (${(buffer.length / 1024 / 1024).toFixed(1)} MB). Upload rejected.` }))
-                return
-              }
-              const subFolder = folder === 'gallery' ? 'images/gallery' : 'images/paintings'
+
+              const subFolder = folder === 'gallery'
+                ? 'images/gallery'
+                : (folder === 'showcase' ? 'images/showcase' : 'images/paintings')
               const outDir = path.resolve(__dirname, 'public', subFolder)
               fs.mkdirSync(outDir, { recursive: true })
               const rawBase = path.basename(filename, path.extname(filename)).replace(/[^a-z0-9-_]/gi, '-').toLowerCase()
@@ -285,23 +587,50 @@ function adminApiPlugin() {
               const fullPath = path.join(outDir, `${base}.webp`)
               const thumbPath = path.join(outDir, `${base}-thumb.webp`)
 
-              await sharp(buffer)
-                .resize({ width: 1600, withoutEnlargement: true })
-                .webp({ quality: 85 })
-                .toFile(fullPath)
+              // 1400px long side targeting <= 250 KB (lower quality step by step, minimum 60)
+              let q = 85
+              let fullBuf
+              while (q >= 60) {
+                fullBuf = await sharp(buffer)
+                  .resize({ width: 1400, height: 1400, fit: 'inside', withoutEnlargement: true })
+                  .webp({ quality: q })
+                  .toBuffer()
+                if (fullBuf.length <= 250 * 1024 || q === 60) break
+                q -= 5
+              }
+              await fs.promises.writeFile(fullPath, fullBuf)
 
-              await sharp(buffer)
-                .resize({ width: 500, withoutEnlargement: true })
-                .webp({ quality: 80 })
-                .toFile(thumbPath)
+              // 480px thumb targeting <= 50 KB (lower quality step by step, minimum 60)
+              let tq = 80
+              let thumbBuf
+              while (tq >= 60) {
+                thumbBuf = await sharp(buffer)
+                  .resize({ width: 480, height: 480, fit: 'inside', withoutEnlargement: true })
+                  .webp({ quality: tq })
+                  .toBuffer()
+                if (thumbBuf.length <= 50 * 1024 || tq === 60) break
+                tq -= 5
+              }
+              await fs.promises.writeFile(thumbPath, thumbBuf)
 
-              const fullSize = fs.statSync(fullPath).size
-              const warning = fullSize > 500 * 1024 ? `File is over 500 KB (${Math.round(fullSize / 1024)} KB)` : null
+              const fullSize = fullBuf.length
+              const warning = fullSize > 250 * 1024 ? `File is over 250 KB (${Math.round(fullSize / 1024)} KB)` : null
+              const uploadedUrl = `/${subFolder}/${base}.webp`
+              const thumbUrl = `/${subFolder}/${base}-thumb.webp`
+
+              hashes[contentHash] = {
+                url: uploadedUrl,
+                thumbnailUrl: thumbUrl,
+                size: fullSize
+              }
+              try {
+                fs.writeFileSync(hashesPath, JSON.stringify(hashes, null, 2), 'utf-8')
+              } catch {}
 
               res.end(JSON.stringify({
                 success: true,
-                url: `/${subFolder}/${base}.webp`,
-                thumbnailUrl: `/${subFolder}/${base}-thumb.webp`,
+                url: uploadedUrl,
+                thumbnailUrl: thumbUrl,
                 size: fullSize,
                 warning
               }))
