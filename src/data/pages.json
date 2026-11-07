@@ -529,6 +529,23 @@
       "after_dedication": [],
       "bottom": [
         {
+          "id": "block-1794025767677-9n43",
+          "type": "google-photos",
+          "visible": true,
+          "albumUrl": "https://photos.app.goo.gl/edFxmMd8yzKiwMwA8",
+          "mode": "player",
+          "height": 480,
+          "delay": 3,
+          "repeat": true,
+          "background": "#000000",
+          "heading": "",
+          "title": "",
+          "tips": "Click any photo to view it full size. Use the arrows to browse.",
+          "hideTips": false,
+          "fallbackLinkText": "Open the album in Google Photos",
+          "hideFallbackLink": false
+        },
+        {
           "id": "block-1793826143064-gr0n",
           "type": "embed",
           "visible": true,

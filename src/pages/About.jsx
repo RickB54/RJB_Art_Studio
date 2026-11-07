@@ -16,7 +16,7 @@ export default function About() {
   const [aboutText, setAboutText] = useState(pagesData.about || {})
 
   useEffect(() => {
-    fetch('/__api/data')
+    fetch('/__api/data' + (window.location.search || ''))
       .then(res => res.json())
       .then(data => {
         if (data.pages?.about) setAboutText(data.pages.about)

@@ -12,7 +12,7 @@ export default function Contact() {
   const [site, setSite] = useState(siteData)
 
   useEffect(() => {
-    fetch('/__api/data')
+    fetch('/__api/data' + (window.location.search || ''))
       .then(res => res.json())
       .then(data => {
         if (data.pages) setPages(data.pages)

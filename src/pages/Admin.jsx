@@ -12,6 +12,7 @@ import AdminMediaField from '../components/AdminMediaField'
 import { cleanVideoUrl } from '../components/PageBlocks'
 import SectionSpacingEditor from '../components/SectionSpacingEditor'
 import PageLayoutOutline from '../components/PageLayoutOutline'
+import PagePreviewModal from '../components/PagePreviewModal'
 import {
   HOME_BLOCK_SLOTS,
   ABOUT_BLOCK_SLOTS,
@@ -674,6 +675,7 @@ export default function Admin() {
       ])
       if (resSite.ok && resPages.ok) {
         setSavedPagesSnapshot(JSON.stringify(pages))
+        fetch('/__api/draft', { method: 'DELETE' }).catch(() => {})
         setSiteSaveSuccess('✓ Site content and page text successfully saved to src/data/pages.json!')
         setTimeout(() => setSiteSaveSuccess(''), 6000)
       } else {
@@ -777,6 +779,20 @@ export default function Admin() {
       }
     })
   }
+
+  const [previewPageKey, setPreviewPageKey] = useState(null)
+
+  const renderPreviewButton = (pageKey) => (
+    <button
+      type="button"
+      onClick={() => setPreviewPageKey(pageKey)}
+      className="px-3.5 py-1.5 rounded-xl border border-studio-gold/40 hover:border-studio-gold bg-studio-gold/10 hover:bg-studio-gold/20 text-xs font-semibold text-studio-gold flex items-center gap-1.5 transition self-start sm:self-auto shadow-sm"
+      title="Open live responsive preview popup (Phone, Tablet, Desktop)"
+    >
+      <Eye className="w-3.5 h-3.5" />
+      <span>Preview Page</span>
+    </button>
+  )
 
   const renderPageOutline = (pageKey) => (
     <PageLayoutOutline
@@ -1779,18 +1795,21 @@ export default function Admin() {
                     Control every visible string, button, highlight, showcase item, art show date, and extra block on the Home page.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm('Restore all default text and settings for Home Page? Any unsaved edits will be replaced with defaults.')) {
-                      setPages(prev => ({ ...prev, home: JSON.parse(JSON.stringify(pagesDefaultInitial.home)) }))
-                    }
-                  }}
-                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                  <span>Restore Default Text</span>
-                </button>
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                  {renderPreviewButton('home')}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Restore all default text and settings for Home Page? Any unsaved edits will be replaced with defaults.')) {
+                        setPages(prev => ({ ...prev, home: JSON.parse(JSON.stringify(pagesDefaultInitial.home)) }))
+                      }
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                    <span>Restore Default Text</span>
+                  </button>
+                </div>
               </div>
 
               {/* Page Layout Outline */}
@@ -2899,18 +2918,21 @@ export default function Admin() {
                     Control every visible string, photo, award, studio stat, and extra block on the About page.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm('Restore all default text and settings for About Page? Any unsaved edits will be replaced with defaults.')) {
-                      setPages(prev => ({ ...prev, about: JSON.parse(JSON.stringify(pagesDefaultInitial.about)) }))
-                    }
-                  }}
-                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                  <span>Restore Default Text</span>
-                </button>
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                  {renderPreviewButton('about')}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Restore all default text and settings for About Page? Any unsaved edits will be replaced with defaults.')) {
+                        setPages(prev => ({ ...prev, about: JSON.parse(JSON.stringify(pagesDefaultInitial.about)) }))
+                      }
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                    <span>Restore Default Text</span>
+                  </button>
+                </div>
               </div>
 
               {/* Page Layout Outline */}
@@ -3558,18 +3580,21 @@ export default function Admin() {
                     Control every visible string, service card, process step, notice, form field, and extra block on the Commissions page.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm('Restore all default text and settings for Commissions & Prints? Any unsaved edits will be replaced with defaults.')) {
-                      setPages(prev => ({ ...prev, commissions: JSON.parse(JSON.stringify(pagesDefaultInitial.commissions)) }))
-                    }
-                  }}
-                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                  <span>Restore Default Text</span>
-                </button>
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                  {renderPreviewButton('commissions')}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Restore all default text and settings for Commissions & Prints? Any unsaved edits will be replaced with defaults.')) {
+                        setPages(prev => ({ ...prev, commissions: JSON.parse(JSON.stringify(pagesDefaultInitial.commissions)) }))
+                      }
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                    <span>Restore Default Text</span>
+                  </button>
+                </div>
               </div>
 
               {/* Page Layout Outline */}
@@ -4271,18 +4296,21 @@ export default function Admin() {
                     Control visible headers, filter labels, search placeholder, card button texts, and extra blocks on the Gallery page.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm('Restore all default text and settings for Gallery Page? Any unsaved edits will be replaced with defaults.')) {
-                      setPages(prev => ({ ...prev, gallery: JSON.parse(JSON.stringify(pagesDefaultInitial.gallery)) }))
-                    }
-                  }}
-                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                  <span>Restore Default Text</span>
-                </button>
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                  {renderPreviewButton('gallery')}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Restore all default text and settings for Gallery Page? Any unsaved edits will be replaced with defaults.')) {
+                        setPages(prev => ({ ...prev, gallery: JSON.parse(JSON.stringify(pagesDefaultInitial.gallery)) }))
+                      }
+                    }}
+                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                    <span>Restore Default Text</span>
+                  </button>
+                </div>
               </div>
 
               {/* Page Layout Outline */}
@@ -4580,14 +4608,17 @@ export default function Admin() {
                   </h3>
                   <p className="text-xs text-slate-400">Control headers, banner, and playlist display strings.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => restoreDefaultSection('videos', 'Videos Page')}
-                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                  <span>Restore Default Text</span>
-                </button>
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                  {renderPreviewButton('videos')}
+                  <button
+                    type="button"
+                    onClick={() => restoreDefaultSection('videos', 'Videos Page')}
+                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                    <span>Restore Default Text</span>
+                  </button>
+                </div>
               </div>
 
               {/* Page Layout Outline */}
@@ -4690,14 +4721,17 @@ export default function Admin() {
                   </h3>
                   <p className="text-xs text-slate-400">Control headers, contact information, and sidebar cards.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => restoreDefaultSection('contact', 'Contact Page')}
-                  className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition self-start sm:self-auto"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
-                  <span>Restore Default Text</span>
-                </button>
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                  {renderPreviewButton('contact')}
+                  <button
+                    type="button"
+                    onClick={() => restoreDefaultSection('contact', 'Contact Page')}
+                    className="px-3.5 py-1.5 rounded-xl border border-white/15 hover:border-studio-gold/60 bg-white/5 hover:bg-white/10 text-xs text-slate-300 hover:text-white flex items-center gap-1.5 transition"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-studio-gold" />
+                    <span>Restore Default Text</span>
+                  </button>
+                </div>
               </div>
 
               {/* Page Layout Outline */}
@@ -4874,6 +4908,9 @@ export default function Admin() {
                   <p className="text-xs text-slate-400">
                     Private password-protected family memorial page. Set the password, hero video, dedication, and add blocks below.
                   </p>
+                </div>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  {renderPreviewButton('memorial')}
                 </div>
               </div>
 
@@ -5584,6 +5621,15 @@ export default function Admin() {
       {activeGuideModal && (
         <PriceListModal item={activeGuideModal} onClose={() => setActiveGuideModal(null)} />
       )}
+
+      {/* Responsive Page Preview Modal */}
+      <PagePreviewModal
+        isOpen={Boolean(previewPageKey)}
+        onClose={() => setPreviewPageKey(null)}
+        pageKey={previewPageKey || 'home'}
+        pagesData={pages}
+        hasUnsaved={Boolean(hasUnsavedChangesForSection && previewPageKey && hasUnsavedChangesForSection(previewPageKey))}
+      />
 
     </div>
   )

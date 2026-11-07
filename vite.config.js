@@ -31,6 +31,7 @@ function adminApiPlugin() {
         const sitePath = path.resolve(__dirname, 'src/data/site.json')
         const playlistsPath = path.resolve(__dirname, 'src/data/playlists.json')
         const pagesPath = path.resolve(__dirname, 'src/data/pages.json')
+        const pagesDraftPath = path.resolve(__dirname, 'src/data/pages.draft.json')
 
         res.setHeader('Content-Type', 'application/json')
 
@@ -44,12 +45,62 @@ function adminApiPlugin() {
         })
 
         // GET /__api/data
-        if (req.method === 'GET' && req.url === '/__api/data') {
+        if (req.method === 'GET' && req.url.startsWith('/__api/data')) {
           const paintings = JSON.parse(fs.readFileSync(paintingsPath, 'utf-8'))
           const site = JSON.parse(fs.readFileSync(sitePath, 'utf-8'))
           const playlists = fs.existsSync(playlistsPath) ? JSON.parse(fs.readFileSync(playlistsPath, 'utf-8')) : []
-          const pages = fs.existsSync(pagesPath) ? JSON.parse(fs.readFileSync(pagesPath, 'utf-8')) : {}
+          
+          let pages = {}
+          const isDraft = req.url.includes('preview=draft')
+          if (isDraft && fs.existsSync(pagesDraftPath)) {
+            try {
+              pages = JSON.parse(fs.readFileSync(pagesDraftPath, 'utf-8'))
+            } catch {
+              pages = fs.existsSync(pagesPath) ? JSON.parse(fs.readFileSync(pagesPath, 'utf-8')) : {}
+            }
+          } else {
+            pages = fs.existsSync(pagesPath) ? JSON.parse(fs.readFileSync(pagesPath, 'utf-8')) : {}
+          }
+
           res.end(JSON.stringify({ paintings, site, playlists, pages }))
+          return
+        }
+
+        // GET /__api/draft
+        if (req.method === 'GET' && req.url === '/__api/draft') {
+          if (fs.existsSync(pagesDraftPath)) {
+            try {
+              const draft = JSON.parse(fs.readFileSync(pagesDraftPath, 'utf-8'))
+              res.end(JSON.stringify({ exists: true, draft }))
+              return
+            } catch {
+              res.end(JSON.stringify({ exists: false, draft: null }))
+              return
+            }
+          }
+          res.end(JSON.stringify({ exists: false, draft: null }))
+          return
+        }
+
+        // POST /__api/draft
+        if (req.method === 'POST' && req.url === '/__api/draft') {
+          const { pages } = await readBody()
+          if (pages && typeof pages === 'object') {
+            fs.writeFileSync(pagesDraftPath, JSON.stringify(pages, null, 2), 'utf-8')
+            res.end(JSON.stringify({ success: true }))
+          } else {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: 'Expected pages object' }))
+          }
+          return
+        }
+
+        // DELETE /__api/draft
+        if (req.method === 'DELETE' && req.url === '/__api/draft') {
+          if (fs.existsSync(pagesDraftPath)) {
+            try { fs.unlinkSync(pagesDraftPath) } catch {}
+          }
+          res.end(JSON.stringify({ success: true }))
           return
         }
 
@@ -113,6 +164,9 @@ function adminApiPlugin() {
           const { pages } = await readBody()
           if (pages && typeof pages === 'object') {
             fs.writeFileSync(pagesPath, JSON.stringify(pages, null, 2), 'utf-8')
+            if (fs.existsSync(pagesDraftPath)) {
+              try { fs.unlinkSync(pagesDraftPath) } catch {}
+            }
             res.end(JSON.stringify({ success: true }))
           } else { res.statusCode = 400; res.end(JSON.stringify({ error: 'Expected pages object' })) }
           return

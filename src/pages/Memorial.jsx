@@ -19,7 +19,7 @@ export default function Memorial() {
   const inputRef = useRef(null)
 
   useEffect(() => {
-    fetch('/__api/data')
+    fetch('/__api/data' + (window.location.search || ''))
       .then(r => r.json())
       .then(data => {
         if (data.pages?.memorial) setMemData(data.pages.memorial)

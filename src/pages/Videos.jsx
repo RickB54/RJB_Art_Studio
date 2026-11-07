@@ -13,7 +13,7 @@ export default function Videos() {
 
   // Sync with dev API if running
   useEffect(() => {
-    fetch('/__api/data')
+    fetch('/__api/data' + (window.location.search || ''))
       .then(res => res.json())
       .then(data => {
         if (data.playlists && Array.isArray(data.playlists)) {

@@ -16,7 +16,7 @@ export default function Commissions() {
   const [thumbErrors, setThumbErrors] = useState({})
 
   useEffect(() => {
-    fetch('/__api/data')
+    fetch('/__api/data' + (window.location.search || ''))
       .then(res => res.json())
       .then(data => {
         if (data.pages?.commissions) setPageText(data.pages.commissions)

@@ -54,7 +54,7 @@ export default function Gallery() {
       setPlaylists(fullPlaylists)
     })
 
-    fetch('/__api/data')
+    fetch('/__api/data' + (window.location.search || ''))
       .then(res => res.json())
       .then(data => {
         if (data.paintings && Array.isArray(data.paintings)) setPaintings(data.paintings)

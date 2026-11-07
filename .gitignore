@@ -24,6 +24,7 @@ paintings-originals/
 .env.local
 .env.*.local
 .netlify/
+src/data/pages.draft.json
 
 # Logs
 npm-debug.log*
