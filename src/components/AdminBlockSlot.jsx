@@ -1,7 +1,7 @@
 // src/components/AdminBlockSlot.jsx
 import React, { useState } from 'react'
 import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, X } from 'lucide-react'
-import { cleanVideoUrl } from '../blocks/helpers'
+import { cleanVideoUrl, getBlockLocalPhotos } from '../blocks/helpers'
 import { BLOCK_REGISTRY, getBlockDefinition, createDefaultBlock } from '../blocks/registry'
 import BlockStyleEditor from '../blocks/BlockStyleEditor'
 
@@ -39,8 +39,49 @@ export default function AdminBlockSlot({
   }
 
   const handleRemove = (index) => {
-    if (window.confirm('Delete this custom block?')) {
-      onUpdate(blocks.filter((_, i) => i !== index))
+    const block = blocks[index]
+    const localPhotos = getBlockLocalPhotos(block)
+    const hasPhotos = localPhotos.length > 0
+    const mediaTypes = ['gallery', 'photo', 'image-text']
+    const isMediaBlock = block && mediaTypes.includes(block.type)
+
+    let deleteConfirmed = false
+    let trashPhotos = false
+
+    if (isMediaBlock && hasPhotos) {
+      deleteConfirmed = window.confirm(
+        `Delete this ${block.type} block?\n\nIt contains ${localPhotos.length} local photo(s).\nClick OK to continue, then you'll be asked about the photos.`
+      )
+      if (deleteConfirmed) {
+        trashPhotos = window.confirm(
+          `Also move its ${localPhotos.length} photo(s) to Trash (removed-media/)?\n\nPhotos used elsewhere in the site will be kept automatically.\n\nClick OK to move photos to Trash, or Cancel to keep them.`
+        )
+      }
+    } else {
+      deleteConfirmed = window.confirm('Delete this custom block?')
+    }
+
+    if (!deleteConfirmed) return
+    onUpdate(blocks.filter((_, i) => i !== index))
+
+    if (trashPhotos && localPhotos.length > 0) {
+      const trashItems = []
+      localPhotos.forEach(url => {
+        const parts = url.replace(/^\/images\//, '').split('/')
+        if (parts.length >= 2) {
+          const folder = parts[0]
+          const file = parts[1]
+          const thumb = file.replace(/\.webp$/, '-thumb.webp')
+          trashItems.push({ folder, file, thumb })
+        }
+      })
+      if (trashItems.length > 0) {
+        fetch('/__api/media-trash', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: trashItems })
+        }).catch(() => {})
+      }
     }
   }
 

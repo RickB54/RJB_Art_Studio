@@ -73,3 +73,39 @@ export function BlockVideoEmbed({
     />
   )
 }
+
+/**
+ * Extract all locally-stored photo URLs (/images/...) from a block.
+ * Returns an array of URL strings (full-size only, no thumbs).
+ * Works with gallery (items[].url), photo (images[].url or image),
+ * and image-text (images[].url or image) block types.
+ */
+export function getBlockLocalPhotos(block) {
+  if (!block) return []
+  const LOCAL_RE = /^\/images\//
+  const urls = new Set()
+
+  const addUrl = (u) => {
+    if (u && typeof u === 'string' && LOCAL_RE.test(u) && !u.includes('-thumb.')) {
+      urls.add(u)
+    }
+  }
+
+  // gallery block: block.items[].url
+  if (Array.isArray(block.items)) {
+    block.items.forEach(item => {
+      if (item && item.type !== 'video') addUrl(item.url)
+    })
+  }
+  // photo block: block.images[].url or block.image
+  if (Array.isArray(block.images)) {
+    block.images.forEach(img => addUrl(img?.url))
+  }
+  if (block.image) addUrl(block.image)
+
+  // image-text block: block.images[].url or block.image
+  // (same fields handled above)
+
+  return Array.from(urls)
+}
+

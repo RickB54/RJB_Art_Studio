@@ -18,7 +18,7 @@ import {
 import { BLOCK_REGISTRY, getBlockDefinition, createDefaultBlock } from '../blocks/registry'
 import { getPageOutlineSchema } from '../blocks/pageSlots'
 import BlockStyleEditor from '../blocks/BlockStyleEditor'
-import { cleanVideoUrl } from '../blocks/helpers'
+import { cleanVideoUrl, getBlockLocalPhotos } from '../blocks/helpers'
 
 function getBlockSummary(block) {
   if (!block) return 'Empty block'
@@ -127,11 +127,56 @@ export default function PageLayoutOutline({
   }
 
   const handleDeleteBlock = (slotId, blockIndex) => {
-    if (window.confirm('Delete this block from the page?')) {
-      const curBlocks = getSlotBlocks(slotId).filter((_, i) => i !== blockIndex)
-      setSlotBlocks(slotId, curBlocks)
-      if (expandedBlockKey === `${slotId}-${blockIndex}`) {
-        setExpandedBlockKey(null)
+    const block = getSlotBlocks(slotId)[blockIndex]
+    const localPhotos = getBlockLocalPhotos(block)
+    const hasPhotos = localPhotos.length > 0
+    const mediaTypes = ['gallery', 'photo', 'image-text']
+    const isMediaBlock = block && mediaTypes.includes(block.type)
+
+    let deleteConfirmed = false
+    let trashPhotos = false
+
+    if (isMediaBlock && hasPhotos) {
+      // Show custom dialog via a two-step confirm
+      deleteConfirmed = window.confirm(
+        `Delete this ${block.type} block from the page?\n\nIt contains ${localPhotos.length} local photo(s).\nClick OK to continue, then you'll be asked about the photos.`
+      )
+      if (deleteConfirmed) {
+        trashPhotos = window.confirm(
+          `Also move its ${localPhotos.length} photo(s) to Trash (removed-media/)?\n\nPhotos used elsewhere in the site will be kept automatically.\n\nClick OK to move photos to Trash, or Cancel to keep them.`
+        )
+      }
+    } else {
+      deleteConfirmed = window.confirm('Delete this block from the page?')
+    }
+
+    if (!deleteConfirmed) return
+
+    const curBlocks = getSlotBlocks(slotId).filter((_, i) => i !== blockIndex)
+    setSlotBlocks(slotId, curBlocks)
+    if (expandedBlockKey === `${slotId}-${blockIndex}`) {
+      setExpandedBlockKey(null)
+    }
+
+    if (trashPhotos && localPhotos.length > 0) {
+      // Build trash items from local photo URLs like /images/gallery/file.webp
+      const trashItems = []
+      localPhotos.forEach(url => {
+        // url: /images/<folder>/<file>.webp
+        const parts = url.replace(/^\/images\//, '').split('/')
+        if (parts.length >= 2) {
+          const folder = parts[0]
+          const file = parts[1]
+          const thumb = file.replace(/\.webp$/, '-thumb.webp')
+          trashItems.push({ folder, file, thumb })
+        }
+      })
+      if (trashItems.length > 0) {
+        fetch('/__api/media-trash', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: trashItems })
+        }).catch(() => {})
       }
     }
   }
