@@ -29,7 +29,7 @@ export default function Admin() {
   const [site, setSite] = useState(siteDataInitial)
   const [pages, setPages] = useState(pagesDataInitial)
   const [playlists, setPlaylists] = useState([])
-  const [activeTab, setActiveTab] = useState('single') // 'single' | 'bulk' | 'manage' | 'playlists' | 'site'
+  const [activeTab, setActiveTab] = useState('site') // default to 'site' on entering admin mode
   const [paintingMode, setPaintingMode] = useState('photo') // 'youtube' | 'photo'
   const [editPageSection, setEditPageSection] = useState('home') // 'home' | 'about' | 'commissions' | 'contact'
   const [siteSaveSuccess, setSiteSaveSuccess] = useState('')
@@ -900,7 +900,7 @@ export default function Admin() {
           Custom Content Blocks Between Sections
         </span>
         <p className="text-[11px] text-slate-400 mt-0.5">
-          Add custom content blocks (photos, text, cards, notices, buttons, videos, embeds) between sections on the {sectionTitle}. Changes save when you click Save Page Content Changes.
+          Add custom content blocks (photos, text, cards, notices, buttons, videos, embeds) between sections on the {sectionTitle}. Changes save when you click Save Content.
         </p>
       </div>
       <div className="space-y-4">
@@ -1019,6 +1019,182 @@ export default function Admin() {
               {label}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* ALWAYS-VISIBLE STICKY ADMIN TOOLBAR */}
+      <div className="sticky top-20 z-40 bg-[#0d0b14]/95 backdrop-blur-md border border-white/15 rounded-2xl p-2.5 sm:p-3 shadow-2xl flex flex-wrap items-center justify-between gap-2.5">
+        {/* Left: Site Pages dropdown + Preview Page / Close preview */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <label htmlFor="sticky-admin-page-select" className="text-xs font-semibold text-studio-gold flex items-center gap-1 whitespace-nowrap">
+              <Eye className="w-3.5 h-3.5" />
+              <span>Site Pages:</span>
+            </label>
+            <select
+              id="sticky-admin-page-select"
+              value={editPageSection}
+              onChange={e => handleChoosePageFromDropdown(e.target.value)}
+              className="px-2.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#13111c] text-white border border-white/20 hover:border-studio-gold/60 transition cursor-pointer shadow-sm"
+            >
+              <option value="home">Home</option>
+              <option value="gallery">Gallery</option>
+              <option value="about">About</option>
+              <option value="commissions">Commissions & Prints</option>
+              <option value="videos">Videos</option>
+              <option value="contact">Contact</option>
+              <option value="memorial">🕯️ Memorial (Family)</option>
+              <option value="footerHeader">Header & Footer</option>
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleTogglePreview}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition shadow-sm whitespace-nowrap ${
+              previewOpen
+                ? 'bg-rose-500/20 border-rose-500/40 text-rose-300 hover:bg-rose-500/30 hover:text-white'
+                : 'bg-studio-gold/15 border-studio-gold/40 text-studio-gold hover:bg-studio-gold/25 hover:text-white'
+            }`}
+            title={previewOpen ? 'Close preview (Esc)' : 'Preview this page'}
+          >
+            {previewOpen ? <X className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            <span>{previewOpen ? 'Close preview' : 'Preview Page'}</span>
+          </button>
+        </div>
+
+        {/* Center: Draft/Saved Mode + Device Toggles */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center">
+          {/* Mode Toggle */}
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => handleSetPreviewMode('draft')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium transition text-xs whitespace-nowrap ${
+                previewMode === 'draft'
+                  ? 'bg-studio-gold text-slate-950 font-bold shadow'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+              title="Preview unsaved draft"
+            >
+              <FileEdit className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Unsaved Draft</span>
+              <span className="sm:hidden">Draft</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSetPreviewMode('saved')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium transition text-xs whitespace-nowrap ${
+                previewMode === 'saved'
+                  ? 'bg-studio-gold text-slate-950 font-bold shadow'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+              title="Preview saved version"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Saved Version</span>
+              <span className="sm:hidden">Saved</span>
+            </button>
+          </div>
+
+          {/* Device Width Buttons */}
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setPreviewDevice('phone')
+                if (!previewOpen) handleTogglePreview()
+              }}
+              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition whitespace-nowrap ${
+                previewDevice === 'phone' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Phone (390px)"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-studio-gold" />
+              <span className="hidden md:inline text-xs">Phone</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPreviewDevice('tablet')
+                if (!previewOpen) handleTogglePreview()
+              }}
+              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition whitespace-nowrap ${
+                previewDevice === 'tablet' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Tablet (768px)"
+            >
+              <Tablet className="w-3.5 h-3.5 text-studio-gold" />
+              <span className="hidden md:inline text-xs">Tablet</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPreviewDevice('desktop')
+                if (!previewOpen) handleTogglePreview()
+              }}
+              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition whitespace-nowrap ${
+                previewDevice === 'desktop' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
+              }`}
+              title="Desktop"
+            >
+              <Monitor className="w-3.5 h-3.5 text-studio-gold" />
+              <span className="hidden md:inline text-xs">Desktop</span>
+            </button>
+          </div>
+
+          {/* Refresh & Open in Tab */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (previewMode === 'draft') {
+                  fetch('/__api/draft', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pages })
+                  }).catch(() => {})
+                }
+                setPreviewKey(Date.now())
+              }}
+              className="p-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition"
+              title="Refresh preview"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
+            <a
+              href={`${PAGE_ROUTES[editPageSection] || '/'}?preview=${previewMode === 'draft' ? 'draft' : 'saved'}&_t=${previewKey}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition inline-flex"
+              title="Open in new window/tab"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+
+        {/* Right: Saved/Unsaved indicator + Save Content button */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {hasUnsavedChangesForSection(editPageSection) ? (
+            <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium whitespace-nowrap">
+              ● Unsaved
+            </span>
+          ) : (
+            <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium whitespace-nowrap">
+              ✓ Saved
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={handleSaveSite}
+            className="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-studio-gold text-slate-950 hover:bg-studio-gold-light transition flex items-center gap-1.5 shadow-md whitespace-nowrap"
+            title="Save content changes"
+          >
+            <Save className="w-4 h-4" />
+            <span>Save Content</span>
+          </button>
         </div>
       </div>
 
@@ -1789,64 +1965,6 @@ export default function Admin() {
       {activeTab === 'site' && (
         <form onSubmit={handleSaveSite} className="glass-panel p-4 sm:p-6 rounded-2xl border border-white/10 space-y-6 relative">
           
-          {/* 1. STICKY ADMIN TOOLBAR: ONE toolbar on every admin page editor, always visible while scrolling */}
-          <div className="sticky top-20 z-40 bg-[#0d0b14]/95 backdrop-blur-md border border-white/15 rounded-2xl p-3 shadow-2xl flex flex-wrap items-center justify-between gap-3">
-            {/* Left Controls: Site Pages dropdown + Preview Page */}
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <div className="flex items-center gap-2">
-                <label htmlFor="sticky-page-select" className="text-xs font-semibold text-slate-300 hidden sm:inline">
-                  Site Pages:
-                </label>
-                <select
-                  id="sticky-page-select"
-                  value={editPageSection}
-                  onChange={e => handleChoosePageFromDropdown(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#13111c] text-white border border-white/20 hover:border-studio-gold/60 transition cursor-pointer shadow-sm"
-                >
-                  <option value="home">Home</option>
-                  <option value="gallery">Gallery</option>
-                  <option value="about">About</option>
-                  <option value="commissions">Commissions & Prints</option>
-                  <option value="videos">Videos</option>
-                  <option value="contact">Contact</option>
-                  <option value="memorial">🕯️ Memorial (Family)</option>
-                  <option value="footerHeader">Header & Footer</option>
-                </select>
-              </div>
-
-              {/* Preview Page button */}
-              <button
-                type="button"
-                onClick={handleTogglePreview}
-                className="px-3.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition shadow-sm bg-studio-gold/15 border-studio-gold/40 text-studio-gold hover:bg-studio-gold/25 hover:text-white"
-                title="Preview Page"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>Preview Page</span>
-              </button>
-            </div>
-
-            {/* Right: Saved / Unsaved indicator + Save Page Content Changes button */}
-            <div className="flex items-center gap-2.5 flex-wrap">
-              {hasUnsavedChangesForSection(editPageSection) ? (
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium whitespace-nowrap">
-                  ● Unsaved changes
-                </span>
-              ) : (
-                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium whitespace-nowrap">
-                  ✓ Saved
-                </span>
-              )}
-
-              <button
-                type="submit"
-                className="px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-studio-gold text-slate-950 hover:bg-studio-gold-light transition flex items-center gap-1.5 shadow-md whitespace-nowrap"
-              >
-                <Save className="w-4 h-4" />
-                <span>Save Page Content Changes</span>
-              </button>
-            </div>
-          </div>
 
           {/* Page-level media budget warning: show if estimated gallery/photo media > 2MB */}
           {(() => {
@@ -1878,189 +1996,7 @@ export default function Admin() {
             return null
           })()}
 
-          {/* PREVIEW OVERLAY VIEWPORT */}
-          {previewOpen && (
-            <div className="fixed inset-0 z-[100] flex flex-col bg-slate-950/98 backdrop-blur-md animate-fade-in">
-              {/* Top Preview Bar - ALWAYS SHOWING AT TOP */}
-              <header className="flex-shrink-0 h-16 border-b border-white/10 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 bg-[#0d0b14]/95 shadow-2xl z-10">
-                {/* Left: Site Pages dropdown */}
-                <div className="flex items-center gap-2 min-w-0">
-                  <label htmlFor="preview-top-page-select" className="text-xs font-serif font-bold text-studio-gold flex items-center gap-1.5 whitespace-nowrap shrink-0">
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Site Pages:</span>
-                  </label>
-                  <select
-                    id="preview-top-page-select"
-                    value={editPageSection}
-                    onChange={e => handleChoosePageFromDropdown(e.target.value)}
-                    className="px-2.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#13111c] text-white border border-white/20 hover:border-studio-gold/60 transition cursor-pointer shadow-sm max-w-[150px] sm:max-w-none"
-                  >
-                    <option value="home">Home</option>
-                    <option value="gallery">Gallery</option>
-                    <option value="about">About</option>
-                    <option value="commissions">Commissions & Prints</option>
-                    <option value="videos">Videos</option>
-                    <option value="contact">Contact</option>
-                    <option value="memorial">🕯️ Memorial (Family)</option>
-                    <option value="footerHeader">Header & Footer</option>
-                  </select>
-                </div>
 
-                {/* Center: Draft vs Saved Mode + Device Toggles */}
-                <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-center">
-                  {/* Mode Toggle */}
-                  <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => handleSetPreviewMode('draft')}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium transition text-xs ${
-                        previewMode === 'draft'
-                          ? 'bg-studio-gold text-slate-950 font-bold shadow'
-                          : 'text-slate-300 hover:text-white'
-                      }`}
-                      title="Preview unsaved draft"
-                    >
-                      <FileEdit className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Unsaved Draft</span>
-                      <span className="sm:hidden">Draft</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSetPreviewMode('saved')}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium transition text-xs ${
-                        previewMode === 'saved'
-                          ? 'bg-studio-gold text-slate-950 font-bold shadow'
-                          : 'text-slate-300 hover:text-white'
-                      }`}
-                      title="Preview saved version"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Saved Version</span>
-                      <span className="sm:hidden">Saved</span>
-                    </button>
-                  </div>
-
-                  {/* Device Width */}
-                  <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewDevice('phone')}
-                      className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition ${
-                        previewDevice === 'phone' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
-                      }`}
-                      title="Phone (390px)"
-                    >
-                      <Smartphone className="w-3.5 h-3.5 text-studio-gold" />
-                      <span className="hidden md:inline text-xs">Phone</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewDevice('tablet')}
-                      className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition ${
-                        previewDevice === 'tablet' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
-                      }`}
-                      title="Tablet (768px)"
-                    >
-                      <Tablet className="w-3.5 h-3.5 text-studio-gold" />
-                      <span className="hidden md:inline text-xs">Tablet</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewDevice('desktop')}
-                      className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition ${
-                        previewDevice === 'desktop' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
-                      }`}
-                      title="Desktop"
-                    >
-                      <Monitor className="w-3.5 h-3.5 text-studio-gold" />
-                      <span className="hidden md:inline text-xs">Desktop</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Right: Refresh, Open in Tab, Save, Close */}
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (previewMode === 'draft') {
-                        fetch('/__api/draft', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ pages })
-                        }).catch(() => {})
-                      }
-                      setPreviewKey(Date.now())
-                    }}
-                    className="p-1.5 sm:p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition"
-                    title="Refresh preview"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                  </button>
-                  <a
-                    href={`${PAGE_ROUTES[editPageSection] || '/'}?preview=${previewMode === 'draft' ? 'draft' : 'saved'}&_t=${previewKey}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 sm:p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition hidden sm:inline-flex"
-                    title="Open in new window/tab"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                  {hasUnsavedChangesForSection(editPageSection) ? (
-                    <button
-                      type="button"
-                      onClick={handleSaveSite}
-                      className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 transition flex items-center gap-1.5 shadow-sm whitespace-nowrap"
-                      title="Save unsaved changes now"
-                    >
-                      <Save className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Save</span>
-                    </button>
-                  ) : (
-                    <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium whitespace-nowrap hidden lg:inline-flex">
-                      ✓ Saved
-                    </span>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleTogglePreview}
-                    className="px-3 py-1.5 rounded-xl bg-rose-600/20 border border-rose-500/30 text-rose-300 hover:bg-rose-600/30 hover:text-white flex items-center gap-1.5 text-xs font-semibold transition"
-                    title="Close preview (Esc)"
-                  >
-                    <X className="w-4 h-4" />
-                    <span>Close</span>
-                  </button>
-                </div>
-              </header>
-
-              {/* Viewport Frame */}
-              <div className="flex-grow overflow-auto p-2 sm:p-4 flex items-center justify-center bg-black/75">
-                <div
-                  className={`h-full transition-all duration-300 flex flex-col bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/15 relative ${
-                    previewDevice === 'phone'
-                      ? 'w-[390px] max-w-full'
-                      : previewDevice === 'tablet'
-                      ? 'w-[768px] max-w-full'
-                      : 'w-full'
-                  }`}
-                >
-                  {previewDevice !== 'desktop' && (
-                    <div className="h-6 bg-slate-950/80 border-b border-white/10 flex items-center justify-between px-4 text-[10px] text-slate-400 select-none shrink-0">
-                      <span>9:41</span>
-                      <div className="w-16 h-2.5 bg-black rounded-full" />
-                      <span>100%</span>
-                    </div>
-                  )}
-                  <iframe
-                    key={`${previewKey}-${previewMode}-${editPageSection}`}
-                    src={`${PAGE_ROUTES[editPageSection] || '/'}?preview=${previewMode === 'draft' ? 'draft' : 'saved'}&_t=${previewKey}`}
-                    title={`${editPageSection} Preview`}
-                    className="w-full flex-grow border-0 bg-slate-950"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
           {siteSaveSuccess && (
             <div className="p-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
@@ -5868,6 +5804,193 @@ export default function Admin() {
       {/* Website Update Guide Modal */}
       {activeGuideModal && (
         <PriceListModal item={activeGuideModal} onClose={() => setActiveGuideModal(null)} />
+      )}
+
+      {/* PREVIEW OVERLAY VIEWPORT */}
+      {previewOpen && (
+        <div className="fixed inset-0 z-[100] flex flex-col bg-slate-950/98 backdrop-blur-md animate-fade-in">
+          {/* Top Preview Bar - ALWAYS SHOWING AT TOP */}
+          <header className="flex-shrink-0 h-16 border-b border-white/10 px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-4 bg-[#0d0b14]/95 shadow-2xl z-10">
+            {/* Left: Site Pages dropdown */}
+            <div className="flex items-center gap-2 min-w-0">
+              <label htmlFor="preview-top-page-select" className="text-xs font-serif font-bold text-studio-gold flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                <Eye className="w-3.5 h-3.5" />
+                <span>Site Pages:</span>
+              </label>
+              <select
+                id="preview-top-page-select"
+                value={editPageSection}
+                onChange={e => handleChoosePageFromDropdown(e.target.value)}
+                className="px-2.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#13111c] text-white border border-white/20 hover:border-studio-gold/60 transition cursor-pointer shadow-sm max-w-[150px] sm:max-w-none"
+              >
+                <option value="home">Home</option>
+                <option value="gallery">Gallery</option>
+                <option value="about">About</option>
+                <option value="commissions">Commissions & Prints</option>
+                <option value="videos">Videos</option>
+                <option value="contact">Contact</option>
+                <option value="memorial">🕯️ Memorial (Family)</option>
+                <option value="footerHeader">Header & Footer</option>
+              </select>
+            </div>
+
+            {/* Center: Draft vs Saved Mode + Device Toggles */}
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap justify-center">
+              {/* Mode Toggle */}
+              <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => handleSetPreviewMode('draft')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium transition text-xs whitespace-nowrap ${
+                    previewMode === 'draft'
+                      ? 'bg-studio-gold text-slate-950 font-bold shadow'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                  title="Preview unsaved draft"
+                >
+                  <FileEdit className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Unsaved Draft</span>
+                  <span className="sm:hidden">Draft</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSetPreviewMode('saved')}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-medium transition text-xs whitespace-nowrap ${
+                    previewMode === 'saved'
+                      ? 'bg-studio-gold text-slate-950 font-bold shadow'
+                      : 'text-slate-300 hover:text-white'
+                  }`}
+                  title="Preview saved version"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Saved Version</span>
+                  <span className="sm:hidden">Saved</span>
+                </button>
+              </div>
+
+              {/* Device Width */}
+              <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setPreviewDevice('phone')}
+                  className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition whitespace-nowrap ${
+                    previewDevice === 'phone' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Phone (390px)"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-studio-gold" />
+                  <span className="hidden md:inline text-xs">Phone</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDevice('tablet')}
+                  className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition whitespace-nowrap ${
+                    previewDevice === 'tablet' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Tablet (768px)"
+                >
+                  <Tablet className="w-3.5 h-3.5 text-studio-gold" />
+                  <span className="hidden md:inline text-xs">Tablet</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDevice('desktop')}
+                  className={`p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1 transition whitespace-nowrap ${
+                    previewDevice === 'desktop' ? 'bg-white/20 text-white font-bold' : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Desktop"
+                >
+                  <Monitor className="w-3.5 h-3.5 text-studio-gold" />
+                  <span className="hidden md:inline text-xs">Desktop</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Refresh, Open in Tab, Save Content, Close */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (previewMode === 'draft') {
+                    fetch('/__api/draft', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ pages })
+                    }).catch(() => {})
+                  }
+                  setPreviewKey(Date.now())
+                }}
+                className="p-1.5 sm:p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition"
+                title="Refresh preview"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+              <a
+                href={`${PAGE_ROUTES[editPageSection] || '/'}?preview=${previewMode === 'draft' ? 'draft' : 'saved'}&_t=${previewKey}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 sm:p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition hidden sm:inline-flex"
+                title="Open in new window/tab"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              {hasUnsavedChangesForSection(editPageSection) ? (
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium whitespace-nowrap hidden sm:inline-flex">
+                  ● Unsaved
+                </span>
+              ) : (
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium whitespace-nowrap hidden sm:inline-flex">
+                  ✓ Saved
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleSaveSite}
+                className="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-studio-gold text-slate-950 hover:bg-studio-gold-light transition flex items-center gap-1.5 shadow-md whitespace-nowrap"
+                title="Save content changes"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Content</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleTogglePreview}
+                className="px-3 py-1.5 rounded-xl bg-rose-600/20 border border-rose-500/30 text-rose-300 hover:bg-rose-600/30 hover:text-white flex items-center gap-1.5 text-xs font-semibold transition"
+                title="Close preview (Esc)"
+              >
+                <X className="w-4 h-4" />
+                <span>Close</span>
+              </button>
+            </div>
+          </header>
+
+          {/* Viewport Frame */}
+          <div className="flex-grow overflow-auto p-2 sm:p-4 flex items-center justify-center bg-black/75">
+            <div
+              className={`h-full transition-all duration-300 flex flex-col bg-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-white/15 relative ${
+                previewDevice === 'phone'
+                  ? 'w-[390px] max-w-full'
+                  : previewDevice === 'tablet'
+                  ? 'w-[768px] max-w-full'
+                  : 'w-full'
+              }`}
+            >
+              {previewDevice !== 'desktop' && (
+                <div className="h-6 bg-slate-950/80 border-b border-white/10 flex items-center justify-between px-4 text-[10px] text-slate-400 select-none shrink-0">
+                  <span>9:41</span>
+                  <div className="w-16 h-2.5 bg-black rounded-full" />
+                  <span>100%</span>
+                </div>
+              )}
+              <iframe
+                key={`${previewKey}-${previewMode}-${editPageSection}`}
+                src={`${PAGE_ROUTES[editPageSection] || '/'}?preview=${previewMode === 'draft' ? 'draft' : 'saved'}&_t=${previewKey}`}
+                title={`${editPageSection} Preview`}
+                className="w-full flex-grow border-0 bg-slate-950"
+              />
+            </div>
+          </div>
+        </div>
       )}
 
     </div>
