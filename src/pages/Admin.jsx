@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon, Maximize2, Download, Play, Smartphone, Tablet, Monitor, ExternalLink, FileEdit } from 'lucide-react'
+import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon, Maximize2, Download, Play, Smartphone, Tablet, Monitor, ExternalLink, FileEdit, History } from 'lucide-react'
 import siteDataInitial from '../data/site.json'
 import paintingsDataInitial from '../data/paintings.json'
 import pagesDataInitial from '../data/pages.json'
@@ -33,6 +33,11 @@ export default function Admin() {
   const [paintingMode, setPaintingMode] = useState('photo') // 'youtube' | 'photo'
   const [editPageSection, setEditPageSection] = useState('home') // 'home' | 'about' | 'commissions' | 'contact'
   const [siteSaveSuccess, setSiteSaveSuccess] = useState('')
+  const [toolbarNotice, setToolbarNotice] = useState('')
+  const [showBackupsMenu, setShowBackupsMenu] = useState(false)
+  const [backupsList, setBackupsList] = useState([])
+  const [loadingBackups, setLoadingBackups] = useState(false)
+  const [unsavedNavTarget, setUnsavedNavTarget] = useState(null)
   const [savedPagesSnapshot, setSavedPagesSnapshot] = useState(() => JSON.stringify(pagesDataInitial))
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkStatusValue, setBulkStatusValue] = useState('For Sale')
@@ -677,12 +682,89 @@ export default function Admin() {
         setSavedPagesSnapshot(JSON.stringify(pages))
         fetch('/__api/draft', { method: 'DELETE' }).catch(() => {})
         setSiteSaveSuccess('✓ Site content and page text successfully saved to src/data/pages.json!')
-        setTimeout(() => setSiteSaveSuccess(''), 6000)
+        setToolbarNotice('✓ Saved')
+        setTimeout(() => {
+          setSiteSaveSuccess('')
+          setToolbarNotice('')
+        }, 5000)
       } else {
         throw new Error('Save failed')
       }
     } catch (e) {
       alert('Failed to save data: ' + e.message)
+    }
+  }
+
+  const handleDiscardChanges = async () => {
+    if (!hasUnsavedChangesForSection(editPageSection)) return
+    const confirmed = window.confirm(
+      `Discard unsaved changes on "${editPageSection.toUpperCase()}" page? All unsaved edits will be discarded and restored from saved data.`
+    )
+    if (!confirmed) return
+    try {
+      const snap = JSON.parse(savedPagesSnapshot || '{}')
+      if (editPageSection === 'footerHeader') {
+        setPages(prev => ({
+          ...prev,
+          footer: snap.footer || {},
+          header: snap.header || {}
+        }))
+      } else {
+        setPages(prev => ({
+          ...prev,
+          [editPageSection]: snap[editPageSection] || {}
+        }))
+      }
+      await fetch('/__api/draft', { method: 'DELETE' }).catch(() => {})
+      setPreviewKey(k => k + 1)
+      setToolbarNotice('Changes discarded')
+      setTimeout(() => setToolbarNotice(''), 4000)
+    } catch (e) {
+      console.error('Error discarding changes:', e)
+    }
+  }
+
+  const handleToggleBackupsMenu = async () => {
+    const nextState = !showBackupsMenu
+    setShowBackupsMenu(nextState)
+    if (nextState) {
+      setLoadingBackups(true)
+      try {
+        const res = await fetch('/__api/backups')
+        const data = await res.json()
+        setBackupsList(data.backups || [])
+      } catch (err) {
+        console.error('Failed to load backups:', err)
+      } finally {
+        setLoadingBackups(false)
+      }
+    }
+  }
+
+  const handleRestoreBackup = async (b) => {
+    const confirmed = window.confirm(
+      `Restore backup from ${b.dateFormatted}?\n\nYour current version will be backed up before restoring.`
+    )
+    if (!confirmed) return
+    try {
+      const res = await fetch('/__api/restore-backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: b.filename })
+      })
+      const data = await res.json()
+      if (data.success && data.pages) {
+        setPages(data.pages)
+        setSavedPagesSnapshot(JSON.stringify(data.pages))
+        setShowBackupsMenu(false)
+        setPreviewKey(k => k + 1)
+        setToolbarNotice(`Restored version from ${b.dateFormatted}`)
+        setTimeout(() => setToolbarNotice(''), 5000)
+      } else {
+        alert('Failed to restore backup: ' + (data.error || 'Unknown error'))
+      }
+    } catch (err) {
+      alert('Failed to restore backup: ' + err.message)
     }
   }
 
@@ -707,10 +789,8 @@ export default function Admin() {
   const handleSwitchPageSection = (nextSection) => {
     if (nextSection === editPageSection) return
     if (hasUnsavedChangesForSection(editPageSection)) {
-      const proceed = window.confirm(
-        `You have unsaved changes on "${editPageSection.toUpperCase()}" page. Do you want to switch pages without saving?`
-      )
-      if (!proceed) return
+      setUnsavedNavTarget({ type: 'section', target: nextSection })
+      return
     }
     setEditPageSection(nextSection)
   }
@@ -718,10 +798,8 @@ export default function Admin() {
   const handleSwitchTab = (nextTab) => {
     if (activeTab === 'site' && nextTab !== 'site') {
       if (hasUnsavedChangesForSection(editPageSection)) {
-        const proceed = window.confirm(
-          `You have unsaved changes on "${editPageSection.toUpperCase()}" page. Do you want to leave without saving?`
-        )
-        if (!proceed) return
+        setUnsavedNavTarget({ type: 'tab', target: nextTab })
+        return
       }
     }
     setActiveTab(nextTab)
@@ -731,14 +809,74 @@ export default function Admin() {
     if (!nextSection) return
     if (activeTab === 'site' && nextSection === editPageSection) return
     if (hasUnsavedChangesForSection(editPageSection)) {
-      const proceed = window.confirm(
-        `You have unsaved changes on "${editPageSection.toUpperCase()}" page. Do you want to switch pages without saving?`
-      )
-      if (!proceed) return
+      setUnsavedNavTarget({ type: 'section', target: nextSection })
+      return
     }
     setEditPageSection(nextSection)
     setActiveTab('site')
   }
+
+  const handleUnsavedModalSave = async () => {
+    if (!unsavedNavTarget) return
+    const target = unsavedNavTarget
+    setUnsavedNavTarget(null)
+    await handleSaveSite()
+    if (target.type === 'section') {
+      setEditPageSection(target.target)
+      setActiveTab('site')
+    } else if (target.type === 'tab') {
+      setActiveTab(target.target)
+    }
+  }
+
+  const handleUnsavedModalDiscard = async () => {
+    if (!unsavedNavTarget) return
+    const target = unsavedNavTarget
+    setUnsavedNavTarget(null)
+    try {
+      const snap = JSON.parse(savedPagesSnapshot || '{}')
+      if (editPageSection === 'footerHeader') {
+        setPages(prev => ({
+          ...prev,
+          footer: snap.footer || {},
+          header: snap.header || {}
+        }))
+      } else {
+        setPages(prev => ({
+          ...prev,
+          [editPageSection]: snap[editPageSection] || {}
+        }))
+      }
+      await fetch('/__api/draft', { method: 'DELETE' }).catch(() => {})
+      setPreviewKey(k => k + 1)
+      setToolbarNotice('Changes discarded')
+      setTimeout(() => setToolbarNotice(''), 4000)
+    } catch (e) {
+      console.error('Error discarding changes:', e)
+    }
+    if (target.type === 'section') {
+      setEditPageSection(target.target)
+      setActiveTab('site')
+    } else if (target.type === 'tab') {
+      setActiveTab(target.target)
+    }
+  }
+
+  const handleUnsavedModalCancel = () => {
+    setUnsavedNavTarget(null)
+  }
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChangesForSection(editPageSection)) {
+        e.preventDefault()
+        e.returnValue = ''
+        return ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [editPageSection, pages, savedPagesSnapshot])
 
   const updatePageBlockSlot = (sectionKey, slotId, newBlocks) => {
     const curSection = pages[sectionKey] || {}
@@ -1174,8 +1312,14 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Right: Saved/Unsaved indicator + Save Content button */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Right: Saved/Unsaved indicator + Discard changes + Restore backups + Save Content button */}
+        <div className="flex items-center gap-2 flex-wrap relative">
+          {toolbarNotice && (
+            <span className="text-[11px] px-2.5 py-1 rounded-full bg-studio-gold/20 text-studio-gold border border-studio-gold/30 font-medium whitespace-nowrap animate-pulse">
+              {toolbarNotice}
+            </span>
+          )}
+
           {hasUnsavedChangesForSection(editPageSection) ? (
             <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-medium whitespace-nowrap">
               ● Unsaved
@@ -1185,6 +1329,76 @@ export default function Admin() {
               ✓ Saved
             </span>
           )}
+
+          {/* DISCARD CHANGES BUTTON (only shown when unsaved changes exist) */}
+          {hasUnsavedChangesForSection(editPageSection) && (
+            <button
+              type="button"
+              onClick={handleDiscardChanges}
+              className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 transition flex items-center gap-1.5 whitespace-nowrap"
+              title="Discard unsaved changes on this page"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Discard changes</span>
+            </button>
+          )}
+
+          {/* RESTORE A PREVIOUS VERSION DROPDOWN */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={handleToggleBackupsMenu}
+              className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 transition flex items-center gap-1.5 whitespace-nowrap"
+              title="Restore a previous version"
+            >
+              <History className="w-3.5 h-3.5 text-studio-gold" />
+              <span className="hidden sm:inline">Restore version</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+            {showBackupsMenu && (
+              <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl bg-slate-900 border border-white/15 shadow-2xl p-2 z-50 backdrop-blur-xl">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+                  <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5 text-studio-gold" />
+                    Restore a previous version
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowBackupsMenu(false)}
+                    className="p-1 rounded text-slate-400 hover:text-white"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="max-h-60 overflow-y-auto py-1 divide-y divide-white/5">
+                  {loadingBackups ? (
+                    <div className="p-4 text-center text-xs text-slate-400">Loading versions...</div>
+                  ) : backupsList.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-400">
+                      No backups yet. Backups are created automatically each time you click Save Content.
+                    </div>
+                  ) : (
+                    backupsList.map(b => (
+                      <button
+                        key={b.filename}
+                        type="button"
+                        onClick={() => handleRestoreBackup(b)}
+                        className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/10 transition group flex flex-col gap-0.5"
+                      >
+                        <span className="text-xs font-semibold text-slate-200 group-hover:text-studio-gold">
+                          {b.dateFormatted}
+                        </span>
+                        <span className="text-[11px] text-slate-400">
+                          {b.summary}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           <button
             type="button"
@@ -5943,6 +6157,17 @@ export default function Admin() {
                   ✓ Saved
                 </span>
               )}
+              {hasUnsavedChangesForSection(editPageSection) && (
+                <button
+                  type="button"
+                  onClick={handleDiscardChanges}
+                  className="px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-rose-500/15 border border-rose-500/30 text-rose-300 hover:bg-rose-500/25 transition flex items-center gap-1.5 whitespace-nowrap"
+                  title="Discard unsaved changes on this page"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Discard changes</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={handleSaveSite}
@@ -5988,6 +6213,51 @@ export default function Admin() {
                 title={`${editPageSection} Preview`}
                 className="w-full flex-grow border-0 bg-slate-950"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3-Way Unsaved Navigation Modal: Save, Discard, or Cancel */}
+      {unsavedNavTarget && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="max-w-md w-full bg-slate-900 border border-white/20 rounded-2xl p-6 shadow-2xl space-y-5">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-white font-serif">Unsaved Changes</h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  You have unsaved changes on the <strong className="text-amber-300 uppercase">{editPageSection}</strong> page. Would you like to save your changes, discard them, or stay on this page?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={handleUnsavedModalCancel}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 text-slate-300 hover:bg-white/15 hover:text-white transition order-3 sm:order-1"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleUnsavedModalDiscard}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600/80 hover:bg-rose-600 text-white transition flex items-center justify-center gap-1.5 order-2 sm:order-2"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Discard
+              </button>
+              <button
+                type="button"
+                onClick={handleUnsavedModalSave}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-studio-gold text-slate-950 hover:bg-studio-gold-light transition flex items-center justify-center gap-1.5 font-bold shadow-md order-1 sm:order-3"
+              >
+                <Save className="w-3.5 h-3.5" />
+                Save
+              </button>
             </div>
           </div>
         </div>

@@ -33,6 +33,37 @@ function adminApiPlugin() {
         const playlistsPath = path.resolve(__dirname, 'src/data/playlists.json')
         const pagesPath = path.resolve(__dirname, 'src/data/pages.json')
         const pagesDraftPath = path.resolve(__dirname, 'src/data/pages.draft.json')
+        const backupsDir = path.resolve(__dirname, 'backups')
+        if (!fs.existsSync(backupsDir)) {
+          fs.mkdirSync(backupsDir, { recursive: true })
+        }
+
+        const createBackup = (name, targetFilePath) => {
+          if (!fs.existsSync(targetFilePath)) return
+          if (!fs.existsSync(backupsDir)) {
+            fs.mkdirSync(backupsDir, { recursive: true })
+          }
+          const now = new Date()
+          const pad = (n) => String(n).padStart(2, '0')
+          const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
+          const backupFileName = `${name}-${timestamp}.json`
+          const backupFilePath = path.join(backupsDir, backupFileName)
+          try {
+            fs.copyFileSync(targetFilePath, backupFilePath)
+            const prefix = `${name}-`
+            const files = fs.readdirSync(backupsDir)
+              .filter(f => f.startsWith(prefix) && f.endsWith('.json'))
+              .sort()
+              .reverse()
+            if (files.length > 30) {
+              for (const oldFile of files.slice(30)) {
+                try { fs.unlinkSync(path.join(backupsDir, oldFile)) } catch {}
+              }
+            }
+          } catch (err) {
+            console.error('Backup error:', err)
+          }
+        }
 
         res.setHeader('Content-Type', 'application/json')
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -156,6 +187,7 @@ function adminApiPlugin() {
         if (req.method === 'POST' && req.url === '/__api/site') {
           const { site } = await readBody()
           if (site && typeof site === 'object') {
+            createBackup('site', sitePath)
             fs.writeFileSync(sitePath, JSON.stringify(site, null, 2), 'utf-8')
             res.end(JSON.stringify({ success: true }))
           } else { res.statusCode = 400; res.end(JSON.stringify({ error: 'Expected site object' })) }
@@ -166,12 +198,106 @@ function adminApiPlugin() {
         if (req.method === 'POST' && req.url === '/__api/pages') {
           const { pages } = await readBody()
           if (pages && typeof pages === 'object') {
+            createBackup('pages', pagesPath)
             fs.writeFileSync(pagesPath, JSON.stringify(pages, null, 2), 'utf-8')
             if (fs.existsSync(pagesDraftPath)) {
               try { fs.unlinkSync(pagesDraftPath) } catch {}
             }
             res.end(JSON.stringify({ success: true }))
           } else { res.statusCode = 400; res.end(JSON.stringify({ error: 'Expected pages object' })) }
+          return
+        }
+
+        // GET /__api/backups
+        if (req.method === 'GET' && req.url === '/__api/backups') {
+          if (!fs.existsSync(backupsDir)) {
+            res.end(JSON.stringify({ backups: [] }))
+            return
+          }
+          try {
+            const files = fs.readdirSync(backupsDir)
+              .filter(f => f.startsWith('pages-') && f.endsWith('.json'))
+              .sort()
+              .reverse()
+
+            const backups = files.map(filename => {
+              const filePath = path.join(backupsDir, filename)
+              const stat = fs.statSync(filePath)
+              let dateFormatted = stat.mtime.toLocaleString()
+              const match = filename.match(/^pages-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})\.json$/)
+              if (match) {
+                const [, Y, M, D, h, m, s] = match
+                const d = new Date(Number(Y), Number(M) - 1, Number(D), Number(h), Number(m), Number(s))
+                if (!isNaN(d.getTime())) {
+                  dateFormatted = d.toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  })
+                }
+              }
+
+              let summary = ''
+              try {
+                const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+                const pageKeys = Object.keys(data).filter(k => k !== 'footer' && k !== 'header')
+                let totalBlocks = 0
+                for (const k of Object.keys(data)) {
+                  const slots = data[k]?.blockSlots || {}
+                  for (const s of Object.keys(slots)) {
+                    if (Array.isArray(slots[s])) totalBlocks += slots[s].length
+                  }
+                }
+                summary = `${pageKeys.length} page${pageKeys.length === 1 ? '' : 's'}, ${totalBlocks} block${totalBlocks === 1 ? '' : 's'}`
+              } catch {
+                summary = `${(stat.size / 1024).toFixed(1)} KB`
+              }
+
+              return {
+                filename,
+                dateFormatted,
+                summary,
+                mtime: stat.mtimeMs
+              }
+            })
+
+            res.end(JSON.stringify({ backups }))
+          } catch (err) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: err.message }))
+          }
+          return
+        }
+
+        // POST /__api/restore-backup
+        if (req.method === 'POST' && req.url === '/__api/restore-backup') {
+          const { filename } = await readBody()
+          if (!filename || typeof filename !== 'string' || !filename.match(/^pages-\d{8}-\d{6}\.json$/)) {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: 'Invalid backup filename' }))
+            return
+          }
+          const targetBackup = path.join(backupsDir, filename)
+          if (!fs.existsSync(targetBackup)) {
+            res.statusCode = 404
+            res.end(JSON.stringify({ error: 'Backup not found' }))
+            return
+          }
+          try {
+            createBackup('pages', pagesPath)
+            const backupContent = fs.readFileSync(targetBackup, 'utf-8')
+            fs.writeFileSync(pagesPath, backupContent, 'utf-8')
+            if (fs.existsSync(pagesDraftPath)) {
+              try { fs.unlinkSync(pagesDraftPath) } catch {}
+            }
+            const restoredPages = JSON.parse(backupContent)
+            res.end(JSON.stringify({ success: true, pages: restoredPages }))
+          } catch (err) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: err.message }))
+          }
           return
         }
 

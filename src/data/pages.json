@@ -62,7 +62,7 @@
         "title": "Bringing Home The Christmas Tree Acrylic Painting",
         "thumb": "https://img.youtube.com/vi/T6Ycxx0jqr8/maxresdefault.jpg",
         "highlightPhoto": "",
-        "badge": "For Sale",
+        "badge": "",
         "price": 154,
         "videoId": "T6Ycxx0jqr8",
         "youtubeUrl": "https://www.youtube.com/watch?v=T6Ycxx0jqr8",
@@ -103,17 +103,17 @@
         "size": "Custom"
       },
       {
-        "id": "video-fIYMAPzSWm4",
-        "title": "Haunted House acrylic painting",
-        "thumb": "https://img.youtube.com/vi/fIYMAPzSWm4/hqdefault.jpg",
+        "id": "video-P12dJsNeoHM",
+        "title": "Christmas Candle Acrylic Painting Tutorial",
+        "thumb": "https://img.youtube.com/vi/P12dJsNeoHM/hqdefault.jpg",
         "highlightPhoto": "",
         "badge": "",
         "price": "",
-        "videoId": "fIYMAPzSWm4",
-        "youtubeUrl": "https://www.youtube.com/watch?v=fIYMAPzSWm4",
+        "videoId": "P12dJsNeoHM",
+        "youtubeUrl": "https://www.youtube.com/watch?v=P12dJsNeoHM",
         "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
         "isVideo": true,
-        "category": "Halloween Paintings",
+        "category": "Christmas Paintings",
         "medium": "Oil or Acrylic on Canvas",
         "size": "Custom"
       }
@@ -126,7 +126,12 @@
       "after_hero": [],
       "top": []
     },
-    "teaserImage2": ""
+    "teaserImage2": "",
+    "sectionSpacing": {
+      "hero": {
+        "spaceBelow": "xs"
+      }
+    }
   },
   "gallery": {
     "headerVisible": true,

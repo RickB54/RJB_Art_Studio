@@ -27,6 +27,7 @@ paintings-originals/
 src/data/pages.draft.json
 removed-media/
 public/images/.upload-hashes.json
+backups/
 
 # Logs
 npm-debug.log*
