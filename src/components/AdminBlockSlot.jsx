@@ -38,30 +38,32 @@ export default function AdminBlockSlot({
     onUpdate(updated)
   }
 
+  const [deleteModalState, setDeleteModalState] = useState(null)
+
   const handleRemove = (index) => {
     const block = blocks[index]
     const localPhotos = getBlockLocalPhotos(block)
-    const hasPhotos = localPhotos.length > 0
     const mediaTypes = ['gallery', 'photo', 'image-text']
     const isMediaBlock = block && mediaTypes.includes(block.type)
 
-    let deleteConfirmed = false
-    let trashPhotos = false
-
-    if (isMediaBlock && hasPhotos) {
-      deleteConfirmed = window.confirm(
-        `Delete this ${block.type} block?\n\nIt contains ${localPhotos.length} local photo(s).\nClick OK to continue, then you'll be asked about the photos.`
-      )
-      if (deleteConfirmed) {
-        trashPhotos = window.confirm(
-          `Also move its ${localPhotos.length} photo(s) to Trash (removed-media/)?\n\nPhotos used elsewhere in the site will be kept automatically.\n\nClick OK to move photos to Trash, or Cancel to keep them.`
-        )
-      }
-    } else {
-      deleteConfirmed = window.confirm('Delete this custom block?')
+    if (isMediaBlock && localPhotos.length > 0) {
+      setDeleteModalState({
+        index,
+        block,
+        localPhotos,
+        trashPhotos: false // unchecked by default
+      })
+      return
     }
 
-    if (!deleteConfirmed) return
+    if (window.confirm('Delete this custom block?')) {
+      onUpdate(blocks.filter((_, i) => i !== index))
+    }
+  }
+
+  const handleConfirmDeleteWithPhotos = () => {
+    if (!deleteModalState) return
+    const { index, localPhotos, trashPhotos } = deleteModalState
     onUpdate(blocks.filter((_, i) => i !== index))
 
     if (trashPhotos && localPhotos.length > 0) {
@@ -83,6 +85,8 @@ export default function AdminBlockSlot({
         }).catch(() => {})
       }
     }
+
+    setDeleteModalState(null)
   }
 
   const handleToggleVisible = (index) => {
@@ -235,6 +239,49 @@ export default function AdminBlockSlot({
                 <span>{bt.label}</span>
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Media Block Confirmation Dialog */}
+      {deleteModalState && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#13111c] border border-white/20 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-rose-400" />
+              <span>Delete {deleteModalState.block?.type || 'Block'}</span>
+            </h3>
+            <p className="text-sm text-slate-300">
+              Are you sure you want to delete this {deleteModalState.block?.type || ''} block?
+            </p>
+            <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition">
+              <input
+                type="checkbox"
+                checked={deleteModalState.trashPhotos}
+                onChange={e => setDeleteModalState({ ...deleteModalState, trashPhotos: e.target.checked })}
+                className="mt-0.5 rounded border-white/20 text-rose-500 focus:ring-rose-500 w-4 h-4 cursor-pointer"
+              />
+              <span className="text-xs text-slate-200">
+                Also move its {deleteModalState.localPhotos.length} photo{deleteModalState.localPhotos.length === 1 ? '' : 's'} to Trash? (photos used elsewhere are kept)
+              </span>
+            </label>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setDeleteModalState(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-white transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteWithPhotos}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white transition flex items-center gap-1.5 shadow"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Block</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
