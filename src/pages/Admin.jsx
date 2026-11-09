@@ -44,6 +44,7 @@ export default function Admin() {
   const [newMarketplace, setNewMarketplace] = useState({ name: '', domains: '', originalLabel: '', printsLabel: '', otherLabel: '', color: '#e05a47' })
   const [paintingsFilter, setPaintingsFilter] = useState('all') // 'all' | 'for-sale' | 'needs-sale-info' | 'sold'
   const [showBulkSaleEdit, setShowBulkSaleEdit] = useState(false)
+  const [galleryBrowserSearch, setGalleryBrowserSearch] = useState('')
   const [showcaseFilter, setShowcaseFilter] = useState('all')
   const [savedPagesSnapshot, setSavedPagesSnapshot] = useState(() => JSON.stringify(pagesDataInitial))
   const [selectedIds, setSelectedIds] = useState(new Set())
@@ -5139,6 +5140,141 @@ export default function Admin() {
                   <span>Restore Default Text</span>
                 </button>
               </div>
+
+              {/* ── GALLERY ITEM BROWSER ── */}
+              {(() => {
+                // Build unified gallery list same way Gallery.jsx does (computed inline, no hooks)
+                const paintingByVideoId = new Map()
+                const usedIds = new Set()
+                for (const pt of paintings) {
+                  const vid = pt.videoId || (pt.youtubeUrl ? pt.youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)?.[1] : null)
+                  if (vid) paintingByVideoId.set(vid, pt)
+                }
+
+                const galleryItems = []
+                const seenVids = new Set()
+                const visPlaylists = (playlists || []).filter(p => p.show !== false).sort((a, b) => (a.order || 0) - (b.order || 0))
+
+                for (const pl of visPlaylists) {
+                  for (const v of (pl.videos || []).filter(v => !v.hide)) {
+                    if (seenVids.has(v.id)) continue
+                    seenVids.add(v.id)
+                    const matched = paintingByVideoId.get(v.id)
+                    if (matched) usedIds.add(matched.id)
+                    const thumb = matched?.thumbnailUrl || matched?.thumbnail || matched?.photo || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`
+                    const status = matched?.status || (matched?.sold ? 'Sold' : (matched?.price ? 'For Sale' : ''))
+                    galleryItems.push({ id: matched?.id || `video-${v.id}`, videoId: v.id, title: matched?.title || v.title, category: pl.title, thumb, status, medium: matched?.medium || '', year: matched?.year || '', hasData: !!matched, _painting: matched || null })
+                  }
+                }
+
+                for (const pt of paintings) {
+                  if (usedIds.has(pt.id)) continue
+                  const vid = pt.videoId || (pt.youtubeUrl ? pt.youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)?.[1] : null)
+                  if (vid && seenVids.has(vid)) continue
+                  usedIds.add(pt.id)
+                  if (vid) seenVids.add(vid)
+                  const thumb = pt.photo || pt.customImage || pt.thumbnail || (vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : '')
+                  const status = pt.status || (pt.sold ? 'Sold' : (pt.price ? 'For Sale' : ''))
+                  galleryItems.push({ id: pt.id, videoId: vid || null, title: pt.title, category: pt.category || (Array.isArray(pt.categories) ? pt.categories[0] : 'Paintings'), thumb, status, medium: pt.medium || '', year: pt.year || '', hasData: true, _painting: pt })
+                }
+
+                const filteredGalleryItems = galleryBrowserSearch.trim()
+                  ? galleryItems.filter(it => it.title.toLowerCase().includes(galleryBrowserSearch.toLowerCase()) || it.category.toLowerCase().includes(galleryBrowserSearch.toLowerCase()))
+                  : galleryItems
+
+                return (
+                  <div className="p-4 rounded-2xl bg-white/5 border border-studio-magenta/30 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <span className="text-xs font-bold text-studio-magenta uppercase tracking-wider block">
+                          🎨 Gallery Item Browser — Click to Edit
+                        </span>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {galleryItems.length} items in the gallery. Click <strong className="text-white">✎ Edit</strong> to open the full edit form pre-filled with that item's data.
+                        </p>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search by title or category…"
+                        value={galleryBrowserSearch}
+                        onChange={e => setGalleryBrowserSearch(e.target.value)}
+                        className="w-full sm:w-56 bg-[#13111c] border border-white/15 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-studio-magenta"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 max-h-[460px] overflow-y-auto pr-1">
+                      {filteredGalleryItems.length === 0 && (
+                        <p className="text-xs text-slate-500 italic text-center py-6">No gallery items found.</p>
+                      )}
+                      {filteredGalleryItems.map(item => (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-3 p-2.5 rounded-xl bg-black/30 border border-white/[0.06] hover:border-white/20 transition"
+                        >
+                          {/* Thumbnail */}
+                          <div className="w-14 h-12 rounded-lg overflow-hidden shrink-0 bg-black/60 border border-white/10">
+                            {item.thumb ? (
+                              <img src={item.thumb} alt="" className="w-full h-full object-cover" loading="lazy" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-600">
+                                <ImageIcon className="w-5 h-5" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-white truncate">{item.title}</p>
+                            <p className="text-[10px] text-slate-400 truncate">
+                              {item.category}{item.medium ? ` • ${item.medium}` : ''}{item.year ? ` • ${item.year}` : ''}
+                            </p>
+                            {item.status ? (
+                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded mt-0.5 inline-block ${
+                                item.status === 'For Sale' ? 'bg-emerald-500/20 text-emerald-300' :
+                                item.status === 'Sold' ? 'bg-rose-500/20 text-rose-300' :
+                                'bg-white/10 text-slate-300'
+                              }`}>{item.status}</span>
+                            ) : !item.hasData ? (
+                              <span className="text-[9px] text-amber-400/70 mt-0.5 block">Video only — click Edit to add painting data</span>
+                            ) : null}
+                          </div>
+
+                          {/* Edit Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (item._painting) {
+                                handleEditClick(item._painting)
+                              } else {
+                                // Video-only: pre-fill form from playlist data
+                                const yt = item.videoId ? `https://www.youtube.com/watch?v=${item.videoId}` : ''
+                                resetForm()
+                                setForm(prev => ({
+                                  ...prev,
+                                  title: item.title || '',
+                                  category: item.category || 'Landscapes & Seascapes',
+                                  categories: [item.category || 'Landscapes & Seascapes'],
+                                  youtubeUrl: yt,
+                                  videoId: item.videoId || ''
+                                }))
+                                setInputUrl(yt)
+                                setPaintingMode('youtube')
+                                setActiveTab('single')
+                                window.scrollTo({ top: 0, behavior: 'smooth' })
+                              }
+                            }}
+                            className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold bg-studio-magenta/15 border border-studio-magenta/30 text-studio-magenta hover:bg-studio-magenta hover:text-white transition flex items-center gap-1.5"
+                            title="Edit this gallery item"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Page Layout Outline */}
               {renderPageOutline('gallery')}

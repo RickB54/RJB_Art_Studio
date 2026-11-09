@@ -58,6 +58,21 @@
     "extraBlocks": [],
     "featuredItems": [
       {
+        "id": "photo-1794188402946",
+        "title": "Sailboats in the city",
+        "thumb": "/images/paintings/screenshot-2026-11-08-204137-514481.webp",
+        "highlightPhoto": "",
+        "badge": "For Sale",
+        "price": 108,
+        "videoId": "kOPFIc1XedA",
+        "youtubeUrl": "https://youtu.be/kOPFIc1XedA",
+        "fineArtAmericaUrl": "",
+        "isVideo": true,
+        "category": "Seascapes",
+        "medium": "Acrylics on Canvas Board",
+        "size": "9x12"
+      },
+      {
         "id": "video-T6Ycxx0jqr8",
         "title": "Bringing Home The Christmas Tree Acrylic Painting",
         "thumb": "https://img.youtube.com/vi/T6Ycxx0jqr8/maxresdefault.jpg",
@@ -144,21 +159,6 @@
           "contactOnly": false,
           "links": []
         }
-      },
-      {
-        "id": "photo-1794188402946",
-        "title": "Sailboats in the city",
-        "thumb": "/images/paintings/screenshot-2026-11-08-204137-514481.webp",
-        "highlightPhoto": "",
-        "badge": "For Sale",
-        "price": 108,
-        "videoId": "kOPFIc1XedA",
-        "youtubeUrl": "https://youtu.be/kOPFIc1XedA",
-        "fineArtAmericaUrl": "",
-        "isVideo": true,
-        "category": "Seascapes",
-        "medium": "Acrylics on Canvas Board",
-        "size": "9x12"
       }
     ],
     "teaserImage": "",
