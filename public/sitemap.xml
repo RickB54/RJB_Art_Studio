@@ -86,6 +86,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://rjbart.netlify.app/painting/photo-1794188402946</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rjbart.netlify.app/painting/video-T6Ycxx0jqr8</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

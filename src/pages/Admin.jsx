@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon, Maximize2, Download, Play, Smartphone, Tablet, Monitor, ExternalLink, FileEdit, History, ShoppingBag, Store, Tag, Palette } from 'lucide-react'
 import { DEFAULT_MARKETPLACES, getMarketplaces } from '../utils/marketplaces'
 import siteDataInitial from '../data/site.json'
@@ -697,6 +697,55 @@ export default function Admin() {
     setActiveTab('single')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  // Handle URL query param: ?editPainting=... or ?videoId=... coming from public Gallery or PaintingDetail
+  const [searchParams] = useSearchParams()
+  const handledEditRef = useRef(null)
+
+  useEffect(() => {
+    const editTargetId = searchParams.get('editPainting') || searchParams.get('editPaintingId') || searchParams.get('edit')
+    const editTargetVideoId = searchParams.get('videoId') || searchParams.get('editVideoId')
+    const editTargetTitle = searchParams.get('title')
+    const editTargetCategory = searchParams.get('category')
+
+    const targetKey = editTargetId || editTargetVideoId
+    if (!targetKey) return
+    if (handledEditRef.current === targetKey) return
+
+    // 1. Try to find matching painting in paintings array
+    const matched = (paintings || []).find(p => {
+      if (editTargetId && (String(p.id) === String(editTargetId))) return true
+      if (editTargetVideoId && (
+        p.videoId === editTargetVideoId ||
+        (p.youtubeUrl && p.youtubeUrl.includes(editTargetVideoId))
+      )) return true
+      return false
+    })
+
+    if (matched) {
+      handleEditClick(matched)
+      handledEditRef.current = targetKey
+    } else if (paintings && paintings.length > 0) {
+      // 2. Video-only item from gallery: prefill form so user can fill out and add to paintings
+      const yt = editTargetVideoId ? `https://www.youtube.com/watch?v=${editTargetVideoId}` : ''
+      resetForm()
+      setForm(prev => ({
+        ...prev,
+        title: editTargetTitle || '',
+        category: editTargetCategory || 'Landscapes & Seascapes',
+        categories: [editTargetCategory || 'Landscapes & Seascapes'],
+        youtubeUrl: yt,
+        videoId: editTargetVideoId || '',
+        thumbnail: editTargetVideoId ? `https://i.ytimg.com/vi/${editTargetVideoId}/hqdefault.jpg` : '',
+        thumbnailUrl: editTargetVideoId ? `https://i.ytimg.com/vi/${editTargetVideoId}/hqdefault.jpg` : ''
+      }))
+      setInputUrl(yt)
+      setPaintingMode(editTargetVideoId ? 'youtube' : 'photo')
+      setActiveTab('single')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      handledEditRef.current = targetKey
+    }
+  }, [searchParams, paintings])
 
   // Bulk Process "URL | Name": if Name matches a playlist (case-insensitive) add video to it, otherwise warn
   const handleBulkProcess = async () => {

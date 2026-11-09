@@ -1,10 +1,29 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Play, ArrowLeft, ArrowRight, ShoppingBag, MessageSquare, Sparkles } from 'lucide-react'
+import { Play, ArrowLeft, ArrowRight, ShoppingBag, MessageSquare, Sparkles, Edit3 } from 'lucide-react'
 import initialPaintings from '../data/paintings.json'
 import initialPlaylists from '../data/playlists.json'
 import initialPages from '../data/pages.json'
 import BuyButtons from '../components/BuyButtons'
+
+const isLocalhost = Boolean(
+  import.meta.env.DEV ||
+  (typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '[::1]'
+  ))
+)
+
+function getAdminEditUrl(item) {
+  if (!item) return '/admin'
+  const params = new URLSearchParams()
+  if (item.id) params.set('editPainting', item.id)
+  if (item.videoId) params.set('videoId', item.videoId)
+  if (item.title) params.set('title', item.title)
+  if (item.category) params.set('category', item.category)
+  return `/admin?${params.toString()}`
+}
 
 // Helper function to turn URLs in text into clickable links while preserving whitespace
 function renderDescriptionWithLinks(text) {
@@ -208,6 +227,16 @@ export default function PaintingDetail() {
           <span>{pd.backButtonText || 'Back to All Artworks'}</span>
         </Link>
         <div className="flex items-center gap-4">
+          {isLocalhost && (
+            <Link
+              to={getAdminEditUrl(painting)}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-black/60 hover:bg-studio-magenta text-amber-300 hover:text-white border border-amber-400/40 transition flex items-center gap-1.5 shadow"
+              title="Edit Pic as Admin"
+            >
+              <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+              <span>Edit Pic as Admin</span>
+            </Link>
+          )}
           <Link
             to={`/painting/${prevPainting.id}`}
             className="hover:text-studio-magenta flex items-center gap-1 transition"
@@ -255,6 +284,19 @@ export default function PaintingDetail() {
                   <span className="mt-4 px-4 py-1.5 rounded-full text-xs font-semibold bg-black/70 text-white backdrop-blur-md border border-white/10">
                     {pd.watchVideoPrompt || 'Click to Watch Creation Video'}
                   </span>
+                </div>
+              )}
+              {isLocalhost && (
+                <div className="absolute bottom-3 left-3 z-20">
+                  <Link
+                    to={getAdminEditUrl(painting)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-black/85 hover:bg-studio-magenta text-amber-300 hover:text-white border border-amber-400/50 shadow-lg flex items-center gap-1.5 backdrop-blur-md transition-all group/btn"
+                    title="Edit Pic as Admin"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-amber-400 group-hover/btn:text-white transition-colors" />
+                    <span>Edit Pic as Admin</span>
+                  </Link>
                 </div>
               )}
             </div>

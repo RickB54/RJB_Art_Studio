@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, X, ChevronLeft, ChevronRight, Play, ShoppingBag, Eye, ChevronDown } from 'lucide-react'
+import { Search, X, ChevronLeft, ChevronRight, Play, ShoppingBag, Eye, ChevronDown, Edit3 } from 'lucide-react'
 import initialPaintings from '../data/paintings.json'
 import initialPlaylists from '../data/playlists.json'
 import initialSite from '../data/site.json'
@@ -9,6 +9,25 @@ import PageBlocks from '../components/PageBlocks'
 import SectionWrap from '../components/SectionWrap'
 import BuyButtons from '../components/BuyButtons'
 import { matchesSearch } from '../utils/search'
+
+const isLocalhost = Boolean(
+  import.meta.env.DEV ||
+  (typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '[::1]'
+  ))
+)
+
+function getAdminEditUrl(item) {
+  if (!item) return '/admin'
+  const params = new URLSearchParams()
+  if (item.id) params.set('editPainting', item.id)
+  if (item.videoId) params.set('videoId', item.videoId)
+  if (item.title) params.set('title', item.title)
+  if (item.category) params.set('category', item.category)
+  return `/admin?${params.toString()}`
+}
 
 const PAGE_SIZE = 24
 const playlistLoaders = import.meta.glob('../data/playlists/*.json')
@@ -588,6 +607,21 @@ export default function Gallery() {
                       )}
                     </div>
 
+                    {/* Localhost Edit Pic as Admin Button directly on the picture */}
+                    {isLocalhost && (
+                      <div className="absolute bottom-2.5 left-2.5 z-20">
+                        <Link
+                          to={getAdminEditUrl(item)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-black/85 hover:bg-studio-magenta text-amber-300 hover:text-white border border-amber-400/50 hover:border-studio-magenta shadow-lg flex items-center gap-1.5 backdrop-blur-md transition-all group/btn"
+                          title="Edit this picture in Admin backend"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-amber-400 group-hover/btn:text-white transition-colors" />
+                          <span>Edit Pic as Admin</span>
+                        </Link>
+                      </div>
+                    )}
+
                     {/* Hover Quick Action Buttons */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-[2px]">
                       <button
@@ -616,6 +650,17 @@ export default function Gallery() {
                           aria-label="View artwork details"
                         >
                           <Eye className="w-5 h-5" />
+                        </Link>
+                      )}
+                      {isLocalhost && (
+                        <Link
+                          to={getAdminEditUrl(item)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-3 rounded-full bg-black/70 hover:bg-studio-magenta text-amber-300 hover:text-white transition transform hover:scale-110 shadow-lg border border-amber-400/40 hover:border-transparent"
+                          title="Edit Pic as Admin"
+                          aria-label="Edit Pic as Admin"
+                        >
+                          <Edit3 className="w-5 h-5" />
                         </Link>
                       )}
                     </div>
@@ -754,6 +799,16 @@ export default function Gallery() {
                 )}
               </div>
               <div className="flex items-center gap-3">
+                {isLocalhost && (
+                  <Link
+                    to={getAdminEditUrl(activePainting)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-black/60 hover:bg-studio-magenta text-amber-300 hover:text-white border border-amber-400/40 hover:border-transparent transition flex items-center gap-1.5 shadow-lg"
+                    title="Edit Pic as Admin"
+                  >
+                    <Edit3 className="w-4 h-4 text-amber-400" />
+                    <span>Edit Pic as Admin</span>
+                  </Link>
+                )}
                 <Link
                   to={`/painting/${activePainting.id}`}
                   onClick={() => setLightboxIndex(null)}
