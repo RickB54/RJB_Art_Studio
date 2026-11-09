@@ -1,16 +1,52 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Sparkles, ExternalLink, Brush, Calendar, ShoppingBag } from 'lucide-react'
+import { ArrowRight, Sparkles, ExternalLink, Brush, Calendar, ShoppingBag, Ticket, Edit3 } from 'lucide-react'
 import siteData from '../data/site.json'
 import paintingsData from '../data/paintings.json'
 import pagesData from '../data/pages.json'
 import PageBlocks, { BlockVideoEmbed, MediaEmbed } from '../components/PageBlocks'
 import SectionWrap from '../components/SectionWrap'
 import BuyButtons from '../components/BuyButtons'
+import AttendShowModal from '../components/AttendShowModal'
+import ArtShowsManagerModal from '../components/ArtShowsManagerModal'
+
+const isLocalhost = Boolean(
+  import.meta.env.DEV ||
+  (typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname === '[::1]'
+  ))
+)
 
 export default function Home() {
   const [paintings, setPaintings] = useState(paintingsData)
   const [homeText, setHomeText] = useState(pagesData.home || {})
+  const [selectedAttendShow, setSelectedAttendShow] = useState(null)
+  const [showAdminShowsModal, setShowAdminShowsModal] = useState(false)
+
+  const handleSaveShows = async ({ activeShows, allDiscoveredShows }) => {
+    const updatedHome = {
+      ...homeText,
+      artShows: activeShows,
+      allDiscoveredShows: allDiscoveredShows
+    }
+    const updatedPages = {
+      ...pagesData,
+      home: updatedHome
+    }
+    setHomeText(updatedHome)
+
+    try {
+      await fetch('/__api/pages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pages: updatedPages })
+      })
+    } catch (e) {
+      console.error('Failed to save art shows to server:', e)
+    }
+  }
 
   useEffect(() => {
     fetch('/__api/data' + (window.location.search || ''))
@@ -375,9 +411,51 @@ export default function Home() {
         spaceBelow={homeText.sectionSpacing?.artShows?.spaceBelow}
         customSpaceAbove={homeText.sectionSpacing?.artShows?.customSpaceAbove}
         customSpaceBelow={homeText.sectionSpacing?.artShows?.customSpaceBelow}
-        visible={homeText.artShowsVisible !== false && artShows.length > 0}
+        visible={homeText.artShowsVisible !== false && (artShows.length > 0 || isLocalhost)}
       >
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+          {/* Admin Action: Button on home page for Admin use only */}
+          {isLocalhost && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-studio-gold/15 via-studio-card to-studio-magenta/15 border border-studio-gold/40 shadow-lg">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-studio-gold text-slate-950 uppercase tracking-wider">
+                    Admin Only
+                  </span>
+                  <span className="text-xs font-semibold text-white">
+                    Local Art Shows Finder (30-Mile Radius)
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  Search & check off shows within 30 miles of 54 Boston St, Methuen MA to publish to this section.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAdminShowsModal(true)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-studio-gold hover:bg-studio-gold-light text-slate-950 transition flex items-center justify-center gap-1.5 shadow-md shrink-0"
+                title="Open Admin Art Shows Manager"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Find & Manage Shows (Admin)</span>
+              </button>
+            </div>
+          )}
+
+          {artShows.length === 0 && isLocalhost && (
+            <div className="glass-panel rounded-2xl p-6 text-center text-xs text-slate-400 border border-dashed border-white/15 space-y-3">
+              <p>No art shows are currently checked off to show on the live site.</p>
+              <button
+                type="button"
+                onClick={() => setShowAdminShowsModal(true)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-studio-gold text-slate-950 hover:bg-studio-gold-light transition inline-flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Open Shows Spreadsheet & Check Off Shows</span>
+              </button>
+            </div>
+          )}
+
           {artShows.map((show, idx) => {
             const showImg1 = cleanPhotoUrl(show.image)
             const showImg2 = cleanPhotoUrl(show.image2)
@@ -387,27 +465,58 @@ export default function Home() {
             const showPos = show.imagePosition || homeText.artShowsImagePosition || 'right'
 
             const renderShowText = () => (
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-studio-gold">
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider text-studio-gold">
                   <Calendar className="w-4 h-4" />
                   <span>{homeText.artShowsBadge || "Art Shows & In-Person Appearances"}</span>
+                  {show.distanceMiles !== undefined && show.distanceMiles !== null && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-slate-300 border border-white/10">
+                      {show.distanceMiles} mi away
+                    </span>
+                  )}
                 </div>
                 <h4 className="font-serif text-xl sm:text-2xl font-bold text-white">
                   {show.title}
                 </h4>
-                <p className="text-xs sm:text-sm text-slate-400">
+                <p className="text-xs sm:text-sm text-slate-300">
                   {show.date} • {show.location}
                 </p>
+                {show.cost && (
+                  <p className="text-xs text-emerald-300 font-medium">
+                    Admission: {show.cost}
+                  </p>
+                )}
               </div>
             )
 
             const renderShowBtn = () => (
-              <Link
-                to={homeText.artShowsLink || "/contact"}
-                className="px-5 py-2.5 rounded-lg text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition whitespace-nowrap self-start md:self-auto shrink-0"
-              >
-                {homeText.artShowsBtn || "Inquire About Future Booths"}
-              </Link>
+              <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSelectedAttendShow(show)}
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple hover:opacity-95 text-white transition whitespace-nowrap shadow-glow-magenta flex items-center gap-1.5"
+                  title="View attendee details, cost, snow dates, directions"
+                >
+                  <Ticket className="w-3.5 h-3.5" />
+                  <span>Attend / Show Details</span>
+                </button>
+                <Link
+                  to={homeText.artShowsLink || "/contact"}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-white/10 text-white hover:bg-white/20 transition whitespace-nowrap"
+                >
+                  {homeText.artShowsBtn || "Inquire About Future Booths"}
+                </Link>
+                {isLocalhost && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminShowsModal(true)}
+                    className="p-2.5 rounded-xl text-xs font-semibold bg-studio-gold/15 text-studio-gold hover:bg-studio-gold hover:text-black transition border border-studio-gold/30"
+                    title="Edit in Admin Shows Spreadsheet"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             )
 
             const renderShowMedia = () => {
@@ -486,6 +595,24 @@ export default function Home() {
 
       {/* Slot: After Shows / Bottom */}
       <PageBlocks blocks={homeText.blockSlots?.bottom || homeText.extraBlocks} />
+
+      {/* Attend Show Modal */}
+      {selectedAttendShow && (
+        <AttendShowModal
+          show={selectedAttendShow}
+          onClose={() => setSelectedAttendShow(null)}
+        />
+      )}
+
+      {/* Admin Art Shows Manager Modal */}
+      {showAdminShowsModal && (
+        <ArtShowsManagerModal
+          currentShows={artShows}
+          savedCatalog={homeText.allDiscoveredShows || []}
+          onSave={handleSaveShows}
+          onClose={() => setShowAdminShowsModal(false)}
+        />
+      )}
 
     </div>
   )

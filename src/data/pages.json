@@ -47,10 +47,17 @@
     "artShowsBadge": "Art Shows & In-Person Appearances",
     "artShows": [
       {
-        "title": "Nevins Memorial Library Art Exhibit",
-        "date": "Annual Featured Exhibition",
+        "id": "show-nevins-methuen",
+        "title": "Nevins Memorial Library Art Exhibit & Sale",
+        "date": "Annual Featured Spring & Autumn Series",
         "location": "Methuen, Massachusetts",
-        "image2": ""
+        "address": "305 Broadway, Methuen, MA 01844",
+        "distanceMiles": 1.2,
+        "cost": "Free Admission (Open to the public)",
+        "snowPolicy": "Indoor library gallery; follows Methuen municipal weather delays.",
+        "notes": "Annual local showcase featuring Merrimack Valley fine artists. Free library parking lot in rear.",
+        "image2": "",
+        "active": true
       }
     ],
     "artShowsBtn": "Inquire About Future Booths",
