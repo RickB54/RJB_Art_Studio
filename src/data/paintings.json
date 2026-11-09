@@ -21,7 +21,14 @@
     "customImage": "",
     "originalImage": "",
     "fineArtAmericaUrl": "",
-    "featured": true
+    "featured": true,
+    "sale": {
+      "price": 154,
+      "showPrice": false,
+      "needsSaleInfo": false,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-l8pWROfd1c4",
@@ -40,7 +47,14 @@
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
     "featured": false,
-    "highlighted": false
+    "highlighted": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-uP1hbprwVpQ",
@@ -58,7 +72,14 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video--6B900uB2fg",
@@ -76,7 +97,14 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-P12dJsNeoHM",
@@ -94,7 +122,14 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-Ty0yexr4_r4",
@@ -113,7 +148,14 @@
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
     "featured": true,
-    "highlighted": true
+    "highlighted": true,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-8McB1P8XOF4",
@@ -132,7 +174,14 @@
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
     "featured": false,
-    "highlighted": false
+    "highlighted": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-15rmv_ScZlQ",
@@ -152,7 +201,14 @@
     "draft": true,
     "featured": true,
     "hide": false,
-    "highlighted": true
+    "highlighted": true,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-1O1BsYuNtgY",
@@ -170,7 +226,14 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-Ux1_kqgXnVw",
@@ -188,7 +251,14 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-fIYMAPzSWm4",
@@ -206,7 +276,14 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-lfJcqgem8sA",
@@ -224,7 +301,14 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-eMq6DztOTnY",
@@ -242,7 +326,14 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   },
   {
     "id": "video-OKQzqqPnj9s",
@@ -260,6 +351,13 @@
     "customImage": "",
     "fineArtAmericaUrl": "https://fineartamerica.com/profiles/rick-berube",
     "draft": true,
-    "featured": false
+    "featured": false,
+    "sale": {
+      "price": null,
+      "showPrice": false,
+      "needsSaleInfo": true,
+      "contactOnly": false,
+      "links": []
+    }
   }
 ]

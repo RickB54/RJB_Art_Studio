@@ -70,7 +70,14 @@
         "isVideo": true,
         "category": "Landscapes & Seascapes",
         "medium": "Acrylic on Canvas Board",
-        "size": "11x14"
+        "size": "11x14",
+        "sale": {
+          "price": 154,
+          "showPrice": false,
+          "needsSaleInfo": false,
+          "contactOnly": false,
+          "links": []
+        }
       },
       {
         "id": "video-Ty0yexr4_r4",
@@ -85,7 +92,14 @@
         "isVideo": true,
         "category": "Christmas Paintings",
         "medium": "Oil or Acrylic on Canvas",
-        "size": "Custom"
+        "size": "Custom",
+        "sale": {
+          "price": "",
+          "showPrice": false,
+          "needsSaleInfo": true,
+          "contactOnly": false,
+          "links": []
+        }
       },
       {
         "id": "video-15rmv_ScZlQ",
@@ -100,7 +114,14 @@
         "isVideo": true,
         "category": "Christmas Paintings",
         "medium": "Oil or Acrylic on Canvas",
-        "size": "Custom"
+        "size": "Custom",
+        "sale": {
+          "price": "",
+          "showPrice": false,
+          "needsSaleInfo": true,
+          "contactOnly": false,
+          "links": []
+        }
       },
       {
         "id": "video-P12dJsNeoHM",
@@ -115,7 +136,14 @@
         "isVideo": true,
         "category": "Christmas Paintings",
         "medium": "Oil or Acrylic on Canvas",
-        "size": "Custom"
+        "size": "Custom",
+        "sale": {
+          "price": "",
+          "showPrice": false,
+          "needsSaleInfo": true,
+          "contactOnly": false,
+          "links": []
+        }
       }
     ],
     "teaserImage": "",
