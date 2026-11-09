@@ -110,7 +110,10 @@
     {
       "id": "fineartamerica",
       "name": "Fine Art America",
-      "domains": ["fineartamerica.com", "pixels.com"],
+      "domains": [
+        "fineartamerica.com",
+        "pixels.com"
+      ],
       "originalLabel": "Buy original on Fine Art America",
       "printsLabel": "Prints on Fine Art America",
       "otherLabel": "Buy on Fine Art America",
@@ -119,7 +122,9 @@
     {
       "id": "etsy",
       "name": "Etsy",
-      "domains": ["etsy.com"],
+      "domains": [
+        "etsy.com"
+      ],
       "originalLabel": "Buy original on Etsy",
       "printsLabel": "Prints on Etsy",
       "otherLabel": "Buy on Etsy",
@@ -128,7 +133,9 @@
     {
       "id": "saatchiart",
       "name": "Saatchi Art",
-      "domains": ["saatchiart.com"],
+      "domains": [
+        "saatchiart.com"
+      ],
       "originalLabel": "Buy original on Saatchi Art",
       "printsLabel": "Prints on Saatchi Art",
       "otherLabel": "Buy on Saatchi Art",
@@ -137,7 +144,9 @@
     {
       "id": "artpal",
       "name": "ArtPal",
-      "domains": ["artpal.com"],
+      "domains": [
+        "artpal.com"
+      ],
       "originalLabel": "Buy original on ArtPal",
       "printsLabel": "Prints on ArtPal",
       "otherLabel": "Buy on ArtPal",
@@ -146,7 +155,9 @@
     {
       "id": "ebay",
       "name": "eBay",
-      "domains": ["ebay.com"],
+      "domains": [
+        "ebay.com"
+      ],
       "originalLabel": "Buy original on eBay",
       "printsLabel": "Prints on eBay",
       "otherLabel": "Buy on eBay",
@@ -155,7 +166,9 @@
     {
       "id": "facebook",
       "name": "Facebook",
-      "domains": ["facebook.com"],
+      "domains": [
+        "facebook.com"
+      ],
       "originalLabel": "View on Facebook",
       "printsLabel": "Prints on Facebook",
       "otherLabel": "View on Facebook",
@@ -164,7 +177,10 @@
     {
       "id": "paypal",
       "name": "PayPal",
-      "domains": ["paypal.com", "paypal.me"],
+      "domains": [
+        "paypal.com",
+        "paypal.me"
+      ],
       "originalLabel": "Buy with PayPal",
       "printsLabel": "Pay with PayPal",
       "otherLabel": "Pay with PayPal",
@@ -173,7 +189,10 @@
     {
       "id": "stripe",
       "name": "Stripe",
-      "domains": ["buy.stripe.com", "stripe.com"],
+      "domains": [
+        "buy.stripe.com",
+        "stripe.com"
+      ],
       "originalLabel": "Buy with Card (Stripe)",
       "printsLabel": "Pay with Stripe",
       "otherLabel": "Pay with Stripe",

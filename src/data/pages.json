@@ -74,7 +74,7 @@
         "sale": {
           "price": 154,
           "showPrice": false,
-          "needsSaleInfo": false,
+          "needsSaleInfo": true,
           "contactOnly": false,
           "links": []
         }
@@ -144,6 +144,21 @@
           "contactOnly": false,
           "links": []
         }
+      },
+      {
+        "id": "photo-1794188402946",
+        "title": "Sailboats in the city",
+        "thumb": "/images/paintings/screenshot-2026-11-08-204137-514481.webp",
+        "highlightPhoto": "",
+        "badge": "For Sale",
+        "price": 108,
+        "videoId": "kOPFIc1XedA",
+        "youtubeUrl": "https://youtu.be/kOPFIc1XedA",
+        "fineArtAmericaUrl": "",
+        "isVideo": true,
+        "category": "Seascapes",
+        "medium": "Acrylics on Canvas Board",
+        "size": "9x12"
       }
     ],
     "teaserImage": "",

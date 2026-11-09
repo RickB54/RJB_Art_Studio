@@ -1,5 +1,43 @@
 [
   {
+    "id": "photo-1794188402946",
+    "title": "Sailboats in the city",
+    "category": "Seascapes",
+    "categories": [
+      "Seascapes"
+    ],
+    "year": "2018",
+    "medium": "Acrylics on Canvas Board",
+    "size": "9x12",
+    "description": "Acrylic painting of sail boats in the city harbor on a 9x12 inch canvas panel.",
+    "status": "For Sale",
+    "sold": false,
+    "price": 108,
+    "sale": {
+      "price": "108",
+      "showPrice": true,
+      "needsSaleInfo": false,
+      "contactOnly": false,
+      "links": [
+        {
+          "marketplaceId": "fineartamerica",
+          "kind": "both",
+          "url": "https://fineartamerica.com/featured/sailboats-in-the-city-rick-berube.html?newartwork=true",
+          "label": ""
+        }
+      ]
+    },
+    "youtubeUrl": "https://youtu.be/kOPFIc1XedA",
+    "videoId": "kOPFIc1XedA",
+    "thumbnail": "/images/paintings/screenshot-2026-11-08-204137-514481-thumb.webp",
+    "thumbnailUrl": "/images/paintings/screenshot-2026-11-08-204137-514481-thumb.webp",
+    "photo": "/images/paintings/screenshot-2026-11-08-204137-514481.webp",
+    "customImage": "/images/paintings/screenshot-2026-11-08-204137-514481.webp",
+    "originalImage": "/images/paintings/screenshot-2026-11-08-204137-514481.webp",
+    "fineArtAmericaUrl": "",
+    "featured": true
+  },
+  {
     "id": "video-T6Ycxx0jqr8",
     "title": "Bringing Home The Christmas Tree Acrylic Painting",
     "category": "Landscapes & Seascapes",

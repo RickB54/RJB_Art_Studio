@@ -113,8 +113,38 @@ export default function Admin() {
         if (data.site) setSite(data.site)
         if (data.playlists) setPlaylists(data.playlists)
         if (data.pages) {
-          setPages(data.pages)
-          setSavedPagesSnapshot(JSON.stringify(data.pages))
+          // Auto-migrate: any painting with featured:true that isn't in featuredItems → add it
+          const loadedPaintings = data.paintings || []
+          const loadedPages = data.pages
+          const existingFeatured = loadedPages.home?.featuredItems || []
+          const existingIds = new Set(existingFeatured.map(fi => fi.id))
+          const toAdd = loadedPaintings.filter(p => p.featured && !existingIds.has(p.id))
+          if (toAdd.length > 0) {
+            const merged = [
+              ...existingFeatured,
+              ...toAdd.map(p => ({
+                id: p.id,
+                title: p.title,
+                category: p.category || (Array.isArray(p.categories) ? p.categories[0] : ''),
+                highlightPhoto: p.photo || p.customImage || '',
+                badge: p.status || '',
+                price: p.price,
+                sale: p.sale || null
+              }))
+            ]
+            const migratedPages = { ...loadedPages, home: { ...(loadedPages.home || {}), featuredItems: merged } }
+            setPages(migratedPages)
+            setSavedPagesSnapshot(JSON.stringify(migratedPages))
+            // Persist the migration silently
+            fetch('/__api/pages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pages: migratedPages })
+            }).catch(() => {})
+          } else {
+            setPages(loadedPages)
+            setSavedPagesSnapshot(JSON.stringify(loadedPages))
+          }
         }
       })
       .catch(() => {})
@@ -374,6 +404,35 @@ export default function Admin() {
       updatedList = [newEntry, ...paintings.filter(p => p.id !== paintingId)]
     }
 
+    // Sync featured flag into pages.home.featuredItems
+    const currentFeaturedItems = pages.home?.featuredItems || []
+    const alreadyFeatured = currentFeaturedItems.some(fi => fi.id === paintingId)
+    let newFeaturedItems = currentFeaturedItems
+    if (form.featured && !alreadyFeatured) {
+      // Add to featured list (up to 4 slots)
+      newFeaturedItems = [
+        ...currentFeaturedItems,
+        {
+          id: paintingId,
+          title: newEntry.title,
+          category: primaryCategory,
+          highlightPhoto: newEntry.photo || newEntry.customImage || '',
+          badge: status || '',
+          price: newEntry.price,
+          sale: sale
+        }
+      ]
+    } else if (!form.featured && alreadyFeatured) {
+      // Remove from featured list
+      newFeaturedItems = currentFeaturedItems.filter(fi => fi.id !== paintingId)
+    } else if (form.featured && alreadyFeatured) {
+      // Update the featured item data
+      newFeaturedItems = currentFeaturedItems.map(fi => fi.id === paintingId
+        ? { ...fi, title: newEntry.title, category: primaryCategory, highlightPhoto: newEntry.photo || newEntry.customImage || fi.highlightPhoto || '', badge: status || '', price: newEntry.price, sale: sale }
+        : fi
+      )
+    }
+
     try {
       const res = await fetch('/__api/paintings', {
         method: 'POST',
@@ -383,6 +442,22 @@ export default function Admin() {
 
       if (res.ok) {
         setPaintings(updatedList)
+
+        // Also save pages if featuredItems changed
+        if (newFeaturedItems !== currentFeaturedItems) {
+          const newPages = { ...pages, home: { ...(pages.home || {}), featuredItems: newFeaturedItems } }
+          setPages(newPages)
+          try {
+            await fetch('/__api/pages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pages: newPages })
+            })
+          } catch (err) {
+            console.warn('Could not sync featuredItems to pages:', err)
+          }
+        }
+
         setSaveSuccess(`Painting "${form.title}" saved successfully!`)
         resetForm()
       }
@@ -614,7 +689,7 @@ export default function Admin() {
       customImage: p.customImage || p.photo || '',
       originalImage: p.originalImage || p.photo || '',
       fineArtAmericaUrl: p.fineArtAmericaUrl || '',
-      featured: !!p.featured
+      featured: !!(p.featured || (pages.home?.featuredItems || []).some(fi => fi.id === p.id))
     })
     setInputUrl(p.youtubeUrl || (p.videoId ? `https://www.youtube.com/watch?v=${p.videoId}` : ''))
     setPaintingMode(p.videoId ? 'youtube' : 'photo')
@@ -2328,7 +2403,14 @@ export default function Admin() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paintings.map(painting => {
+            {paintings
+              .filter(p => {
+                if (paintingsFilter === 'for-sale') return p.status === 'For Sale'
+                if (paintingsFilter === 'needs-sale-info') return Boolean(p.sale?.needsSaleInfo)
+                if (paintingsFilter === 'sold') return p.status === 'Sold' || p.sold
+                return true // 'all'
+              })
+              .map(painting => {
               const displayImg = painting.photo || painting.customImage || painting.originalImage || painting.thumbnail
               const isSelected = selectedIds.has(painting.id)
               return (
