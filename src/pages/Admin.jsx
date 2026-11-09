@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon, Maximize2, Download, Play, Smartphone, Tablet, Monitor, ExternalLink, FileEdit, History } from 'lucide-react'
+import { Plus, Youtube, Save, Trash2, Edit3, CheckCircle2, AlertCircle, RefreshCw, Upload, Globe, Film, Layers, Eye, EyeOff, ArrowUp, ArrowDown, Link as LinkIcon, RotateCcw, Search, X, ChevronDown, Mail, FileText, Award, Sparkles, Image as ImageIcon, Maximize2, Download, Play, Smartphone, Tablet, Monitor, ExternalLink, FileEdit, History, ShoppingBag, Store, Tag, Palette } from 'lucide-react'
+import { DEFAULT_MARKETPLACES, getMarketplaces } from '../utils/marketplaces'
 import siteDataInitial from '../data/site.json'
 import paintingsDataInitial from '../data/paintings.json'
 import pagesDataInitial from '../data/pages.json'
@@ -38,6 +39,7 @@ export default function Admin() {
   const [backupsList, setBackupsList] = useState([])
   const [loadingBackups, setLoadingBackups] = useState(false)
   const [unsavedNavTarget, setUnsavedNavTarget] = useState(null)
+  const [newMarketplace, setNewMarketplace] = useState({ name: '', domains: '', originalLabel: '', printsLabel: '', otherLabel: '', color: '#e05a47' })
   const [savedPagesSnapshot, setSavedPagesSnapshot] = useState(() => JSON.stringify(pagesDataInitial))
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkStatusValue, setBulkStatusValue] = useState('For Sale')
@@ -805,6 +807,60 @@ export default function Admin() {
     setActiveTab(nextTab)
   }
 
+  const handleAddMarketplace = (e) => {
+    if (e && e.preventDefault) e.preventDefault()
+    if (!newMarketplace.name.trim()) return
+    const id = newMarketplace.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') || `market-${Date.now()}`
+    const domains = newMarketplace.domains.split(',').map(d => d.trim().toLowerCase()).filter(Boolean)
+    const cur = getMarketplaces(site)
+    if (cur.some(m => m.id === id)) {
+      alert('A marketplace with this name or ID already exists.')
+      return
+    }
+    const created = {
+      id,
+      name: newMarketplace.name.trim(),
+      domains,
+      originalLabel: newMarketplace.originalLabel.trim() || `Buy original on ${newMarketplace.name.trim()}`,
+      printsLabel: newMarketplace.printsLabel.trim() || `Prints on ${newMarketplace.name.trim()}`,
+      otherLabel: newMarketplace.otherLabel.trim() || `Buy on ${newMarketplace.name.trim()}`,
+      color: newMarketplace.color || '#d4af37'
+    }
+    setSite(prev => ({
+      ...prev,
+      marketplaces: [...cur, created]
+    }))
+    setNewMarketplace({ name: '', domains: '', originalLabel: '', printsLabel: '', otherLabel: '', color: '#e05a47' })
+    setToolbarNotice('Marketplace added (click Save Content to persist)')
+    setTimeout(() => setToolbarNotice(''), 4000)
+  }
+
+  const handleUpdateMarketplace = (id, field, value) => {
+    const cur = getMarketplaces(site)
+    const updated = cur.map(m => {
+      if (m.id !== id) return m
+      if (field === 'domains') {
+        const doms = typeof value === 'string' ? value.split(',').map(d => d.trim().toLowerCase()).filter(Boolean) : value
+        return { ...m, domains: doms }
+      }
+      return { ...m, [field]: value }
+    })
+    setSite(prev => ({ ...prev, marketplaces: updated }))
+  }
+
+  const handleDeleteMarketplace = (id) => {
+    if (id === 'other') {
+      alert('The "Other" fallback marketplace cannot be deleted.')
+      return
+    }
+    if (window.confirm('Delete this marketplace? Paintings using it will fall back to "Other".')) {
+      const cur = getMarketplaces(site)
+      setSite(prev => ({ ...prev, marketplaces: cur.filter(m => m.id !== id) }))
+      setToolbarNotice('Marketplace removed (click Save Content to persist)')
+      setTimeout(() => setToolbarNotice(''), 4000)
+    }
+  }
+
   const handleChoosePageFromDropdown = (nextSection) => {
     if (!nextSection) return
     if (activeTab === 'site' && nextSection === editPageSection) return
@@ -1145,6 +1201,7 @@ export default function Admin() {
             ['bulk', 'Bulk Importer'],
             ['manage', `Paintings (${paintings.length})`],
             ['playlists', `Playlists (${playlists.length})`],
+            ['marketplaces', 'Where I Sell'],
             ['media', 'Media Library'],
             ['help', '? Help']
           ].map(([key, label]) => (
@@ -5843,6 +5900,245 @@ export default function Admin() {
             </div>
           )}
         </form>
+      )}
+
+      {/* TAB: WHERE I SELL (MARKETPLACES) */}
+      {activeTab === 'marketplaces' && (
+        <div className="space-y-6">
+          <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/10 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Store className="w-5 h-5 text-studio-gold" />
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-white">
+                    Where I Sell (Marketplaces)
+                  </h2>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-300">
+                  Configure the websites and platforms where visitors can buy your paintings and prints. Changing labels or colors here updates every buy button across your site.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleSaveSite}
+                className="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-studio-gold text-slate-950 hover:bg-studio-gold-light transition flex items-center gap-1.5 shadow-md whitespace-nowrap self-start sm:self-auto"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Marketplaces</span>
+              </button>
+            </div>
+
+            {/* Add New Marketplace Form */}
+            <form onSubmit={handleAddMarketplace} className="bg-white/5 border border-white/10 rounded-xl p-4 sm:p-5 space-y-4">
+              <h3 className="text-sm font-semibold text-studio-gold flex items-center gap-1.5">
+                <Plus className="w-4 h-4" />
+                <span>Add a New Marketplace</span>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Marketplace Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Daily Paintworks"
+                    value={newMarketplace.name}
+                    onChange={e => setNewMarketplace({ ...newMarketplace, name: e.target.value })}
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Web Domain(s) (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. dailypaintworks.com"
+                    value={newMarketplace.domains}
+                    onChange={e => setNewMarketplace({ ...newMarketplace, domains: e.target.value })}
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">Used to auto-detect this marketplace when you paste artwork links</p>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Button Accent Color
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={newMarketplace.color}
+                      onChange={e => setNewMarketplace({ ...newMarketplace, color: e.target.value })}
+                      className="w-8 h-8 rounded border border-white/20 bg-transparent cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={newMarketplace.color}
+                      onChange={e => setNewMarketplace({ ...newMarketplace, color: e.target.value })}
+                      className="w-24 bg-slate-900 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Original Artwork Button Label
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={`Buy original on ${newMarketplace.name || 'marketplace'}`}
+                    value={newMarketplace.originalLabel}
+                    onChange={e => setNewMarketplace({ ...newMarketplace, originalLabel: e.target.value })}
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Prints Button Label
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={`Prints on ${newMarketplace.name || 'marketplace'}`}
+                    value={newMarketplace.printsLabel}
+                    onChange={e => setNewMarketplace({ ...newMarketplace, printsLabel: e.target.value })}
+                    className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    type="submit"
+                    className="w-full px-4 py-2 rounded-xl text-xs font-bold bg-studio-magenta text-white hover:bg-studio-magenta/80 transition flex items-center justify-center gap-1.5 shadow"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Marketplace</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {/* List of Configured Marketplaces */}
+            <div className="space-y-4 pt-2">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                Configured Marketplaces ({getMarketplaces(site).length})
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {getMarketplaces(site).map(m => (
+                  <div
+                    key={m.id}
+                    className="bg-white/[0.03] border border-white/10 rounded-xl p-4 space-y-3 relative group hover:border-white/20 transition"
+                  >
+                    {/* Header: Dot + Name + ID + Delete */}
+                    <div className="flex items-center justify-between gap-2 border-b border-white/5 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-white/20 shrink-0"
+                          style={{ backgroundColor: m.color || '#d4af37' }}
+                        />
+                        <span className="font-semibold text-sm text-white">{m.name}</span>
+                        <code className="text-[10px] bg-white/5 text-slate-400 px-1.5 py-0.5 rounded">
+                          {m.id}
+                        </code>
+                      </div>
+                      {m.id !== 'other' && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteMarketplace(m.id)}
+                          className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition"
+                          title="Delete marketplace"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <label className="block text-[10px] text-slate-400 mb-0.5">Display Name</label>
+                        <input
+                          type="text"
+                          value={m.name}
+                          onChange={e => handleUpdateMarketplace(m.id, 'name', e.target.value)}
+                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 mb-0.5">Color</label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="color"
+                            value={m.color || '#d4af37'}
+                            onChange={e => handleUpdateMarketplace(m.id, 'color', e.target.value)}
+                            className="w-7 h-7 rounded border border-white/20 bg-transparent cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={m.color || ''}
+                            onChange={e => handleUpdateMarketplace(m.id, 'color', e.target.value)}
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-2 py-1 text-xs text-white font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-[10px] text-slate-400 mb-0.5">
+                          Domain(s) for auto-detection
+                        </label>
+                        <input
+                          type="text"
+                          value={Array.isArray(m.domains) ? m.domains.join(', ') : ''}
+                          onChange={e => handleUpdateMarketplace(m.id, 'domains', e.target.value)}
+                          placeholder="e.g. domain.com, sub.domain.com"
+                          className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                        />
+                      </div>
+                      <div className="sm:col-span-2 space-y-1">
+                        <label className="block text-[10px] text-slate-400">
+                          Button Labels
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={m.originalLabel || ''}
+                            onChange={e => handleUpdateMarketplace(m.id, 'originalLabel', e.target.value)}
+                            placeholder="Original artwork button label"
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                            title="Default label for original artwork purchase button"
+                          />
+                          <input
+                            type="text"
+                            value={m.printsLabel || ''}
+                            onChange={e => handleUpdateMarketplace(m.id, 'printsLabel', e.target.value)}
+                            placeholder="Prints button label"
+                            className="w-full bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white"
+                            title="Default label for prints purchase button"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Live Button Preview */}
+                    <div className="pt-2 border-t border-white/5 space-y-1.5">
+                      <span className="text-[10px] text-slate-400">Button Preview:</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className="px-3 py-1 rounded-lg text-xs font-semibold text-white shadow-sm inline-flex items-center gap-1.5"
+                          style={{ backgroundColor: m.color || '#d4af37' }}
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5" />
+                          <span>{m.originalLabel || `Buy original on ${m.name}`}</span>
+                        </span>
+                        <span className="px-3 py-1 rounded-lg text-xs font-semibold text-slate-200 bg-white/10 border border-white/15 hover:bg-white/20 transition inline-flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5" />
+                          <span>{m.printsLabel || `Prints on ${m.name}`}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* TAB: MEDIA LIBRARY */}
