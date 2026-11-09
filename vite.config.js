@@ -301,6 +301,47 @@ function adminApiPlugin() {
           return
         }
 
+        // POST /__api/delete-backup
+        if (req.method === 'POST' && req.url === '/__api/delete-backup') {
+          const { filename } = await readBody()
+          if (!filename || typeof filename !== 'string' || !filename.match(/^pages-\d{8}-\d{6}\.json$/)) {
+            res.statusCode = 400
+            res.end(JSON.stringify({ error: 'Invalid backup filename' }))
+            return
+          }
+          const targetBackup = path.join(backupsDir, filename)
+          if (fs.existsSync(targetBackup)) {
+            try {
+              fs.unlinkSync(targetBackup)
+              res.end(JSON.stringify({ success: true }))
+            } catch (err) {
+              res.statusCode = 500
+              res.end(JSON.stringify({ error: err.message }))
+            }
+          } else {
+            res.statusCode = 404
+            res.end(JSON.stringify({ error: 'Backup not found' }))
+          }
+          return
+        }
+
+        // POST /__api/delete-all-backups
+        if (req.method === 'POST' && req.url === '/__api/delete-all-backups') {
+          try {
+            if (fs.existsSync(backupsDir)) {
+              const files = fs.readdirSync(backupsDir).filter(f => f.startsWith('pages-') && f.endsWith('.json'))
+              for (const file of files) {
+                try { fs.unlinkSync(path.join(backupsDir, file)) } catch {}
+              }
+            }
+            res.end(JSON.stringify({ success: true }))
+          } catch (err) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: err.message }))
+          }
+          return
+        }
+
         // POST /__api/sync-playlist  — YouTube API call runs server-side; key never in browser
         if (req.method === 'POST' && req.url === '/__api/sync-playlist') {
           const { playlistId } = await readBody()

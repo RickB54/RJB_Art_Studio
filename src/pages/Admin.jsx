@@ -699,8 +699,20 @@ export default function Admin() {
   }
 
   // Handle URL query param: ?editPainting=... or ?videoId=... coming from public Gallery or PaintingDetail
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const handledEditRef = useRef(null)
+
+  const handleCancelEdit = () => {
+    resetForm()
+    setEditingId(null)
+    try {
+      if (searchParams.get('editPainting') || searchParams.get('videoId') || searchParams.get('edit') || searchParams.get('editPaintingId') || searchParams.get('title') || searchParams.get('category')) {
+        setSearchParams({}, { replace: true })
+      }
+    } catch {}
+    setActiveTab('paintings')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   useEffect(() => {
     const editTargetId = searchParams.get('editPainting') || searchParams.get('editPaintingId') || searchParams.get('edit')
@@ -935,6 +947,50 @@ export default function Admin() {
       }
     } catch (err) {
       alert('Failed to restore backup: ' + err.message)
+    }
+  }
+
+  const handleDeleteBackup = async (e, b) => {
+    e.stopPropagation()
+    const confirmed = window.confirm(`Delete backup from ${b.dateFormatted}?`)
+    if (!confirmed) return
+    try {
+      const res = await fetch('/__api/delete-backup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: b.filename })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setBackupsList(prev => prev.filter(item => item.filename !== b.filename))
+        setToolbarNotice(`Deleted backup from ${b.dateFormatted}`)
+        setTimeout(() => setToolbarNotice(''), 4000)
+      } else {
+        alert('Failed to delete backup: ' + (data.error || 'Unknown error'))
+      }
+    } catch (err) {
+      alert('Failed to delete backup: ' + err.message)
+    }
+  }
+
+  const handleDeleteAllBackups = async () => {
+    const confirmed = window.confirm('Are you sure you want to delete ALL saved version backups? This cannot be undone.')
+    if (!confirmed) return
+    try {
+      const res = await fetch('/__api/delete-all-backups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const data = await res.json()
+      if (data.success) {
+        setBackupsList([])
+        setToolbarNotice('All version backups deleted')
+        setTimeout(() => setToolbarNotice(''), 4000)
+      } else {
+        alert('Failed to delete backups: ' + (data.error || 'Unknown error'))
+      }
+    } catch (err) {
+      alert('Failed to delete backups: ' + err.message)
     }
   }
 
@@ -1650,13 +1706,26 @@ export default function Admin() {
                     <History className="w-3.5 h-3.5 text-studio-gold" />
                     Restore a previous version
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowBackupsMenu(false)}
-                    className="p-1 rounded text-slate-400 hover:text-white"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {backupsList.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleDeleteAllBackups}
+                        className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 hover:underline px-1.5 py-0.5 rounded transition"
+                        title="Delete all version backups"
+                      >
+                        Delete All
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowBackupsMenu(false)}
+                      className="p-1 rounded text-slate-400 hover:text-white"
+                      title="Close"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
                 <div className="max-h-60 overflow-y-auto py-1 divide-y divide-white/5">
                   {loadingBackups ? (
@@ -1667,19 +1736,30 @@ export default function Admin() {
                     </div>
                   ) : (
                     backupsList.map(b => (
-                      <button
+                      <div
                         key={b.filename}
-                        type="button"
                         onClick={() => handleRestoreBackup(b)}
-                        className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/10 transition group flex flex-col gap-0.5"
+                        className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 transition group flex items-center justify-between gap-2 cursor-pointer"
+                        title="Click to restore this version"
                       >
-                        <span className="text-xs font-semibold text-slate-200 group-hover:text-studio-gold">
-                          {b.dateFormatted}
-                        </span>
-                        <span className="text-[11px] text-slate-400">
-                          {b.summary}
-                        </span>
-                      </button>
+                        <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                          <span className="text-xs font-semibold text-slate-200 group-hover:text-studio-gold truncate">
+                            {b.dateFormatted}
+                          </span>
+                          <span className="text-[11px] text-slate-400 truncate">
+                            {b.summary}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteBackup(e, b)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition shrink-0"
+                          title="Delete this backup version"
+                          aria-label={`Delete backup from ${b.dateFormatted}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     ))
                   )}
                 </div>
@@ -1741,15 +1821,15 @@ export default function Admin() {
                 </div>
               )}
 
-              {editingId && (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="text-xs text-studio-gold hover:underline whitespace-nowrap"
-                >
-                  Cancel Edit Mode
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white transition flex items-center gap-1.5 border border-white/10 whitespace-nowrap shadow-sm"
+                title="Cancel and return to catalog"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Cancel</span>
+              </button>
             </div>
           </div>
 
@@ -1988,6 +2068,15 @@ export default function Admin() {
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                className="px-6 py-3 rounded-xl text-sm font-semibold bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition flex items-center gap-2 border border-white/10"
+                title="Cancel and return to catalog without saving"
+              >
+                <X className="w-4 h-4" />
+                <span>Cancel</span>
+              </button>
               <button
                 type="submit"
                 className="px-7 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 transition flex items-center gap-2"
