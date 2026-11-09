@@ -16,9 +16,12 @@ import {
   AlertTriangle,
   Upload,
   Link as LinkIcon,
-  Layers
+  Layers,
+  Tag
 } from 'lucide-react'
 import { parseVideoEmbed, BlockVideoEmbed } from '../helpers'
+import PaintingSaleEditor from '../../components/PaintingSaleEditor'
+import BuyButtons from '../../components/BuyButtons'
 
 const GAP_CLASSES = {
   none: 'gap-0',
@@ -117,6 +120,7 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
   const [showAddVideo, setShowAddVideo] = useState(false)
   const [videoUrlInput, setVideoUrlInput] = useState('')
   const [videoCaptionInput, setVideoCaptionInput] = useState('')
+  const [expandedSaleIndex, setExpandedSaleIndex] = useState(null)
   const fileInputRef = useRef(null)
 
   const handleFiles = async (files) => {
@@ -463,10 +467,10 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
             {items.map((it, idx) => (
-              <div
-                key={it.id || idx}
-                className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition"
-              >
+              <React.Fragment key={it.id || idx}>
+                <div
+                  className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition"
+                >
                 {/* Thumb Preview */}
                 <div className="w-14 h-12 rounded-lg bg-black/50 overflow-hidden shrink-0 border border-white/10 flex items-center justify-center">
                   {it.type === 'video' ? (
@@ -502,6 +506,19 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
+                    onClick={() => setExpandedSaleIndex(expandedSaleIndex === idx ? null : idx)}
+                    className={`px-2 py-1 rounded text-xs font-semibold flex items-center gap-1 transition ${
+                      it.status === 'For Sale' || it.sale?.links?.length > 0
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-white/5 text-slate-400 hover:text-white'
+                    }`}
+                    title="Configure sale status and marketplace links"
+                  >
+                    <Tag className="w-3 h-3 text-studio-gold" />
+                    <span className="hidden sm:inline">{it.status || (it.sale?.links?.length ? 'For Sale' : 'Sale')}</span>
+                  </button>
+                  <button
+                    type="button"
                     disabled={idx === 0}
                     onClick={() => handleMove(idx, -1)}
                     className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white disabled:opacity-30"
@@ -528,6 +545,28 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
                   </button>
                 </div>
               </div>
+
+              {/* Expandable Sale Editor */}
+              {expandedSaleIndex === idx && (
+                <div className="p-3 bg-black/40 rounded-xl border border-white/10 mb-2">
+                  <PaintingSaleEditor
+                    status={it.status || ''}
+                    onStatusChange={st => {
+                      const updated = [...items]
+                      updated[idx] = { ...updated[idx], status: st }
+                      onUpdateField('items', updated)
+                    }}
+                    sale={it.sale || { price: it.price || '', showPrice: false, needsSaleInfo: false, contactOnly: false, links: [] }}
+                    onSaleChange={sl => {
+                      const updated = [...items]
+                      updated[idx] = { ...updated[idx], sale: sl, price: sl.price || it.price }
+                      onUpdateField('items', updated)
+                    }}
+                    compact
+                  />
+                </div>
+              )}
+              </React.Fragment>
             ))}
           </div>
         )}
@@ -923,7 +962,7 @@ export function GalleryBlockRenderer({ block }) {
             </div>
 
             {/* Caption & Counter */}
-            <div className="text-center space-y-1 px-4">
+            <div className="text-center space-y-1.5 px-4">
               {activeLightboxItem.caption && (
                 <p className="text-sm sm:text-base text-white font-serif">
                   {activeLightboxItem.caption}
@@ -932,6 +971,12 @@ export function GalleryBlockRenderer({ block }) {
               <p className="text-xs text-slate-400">
                 Item {lightboxIndex + 1} of {items.length}
               </p>
+              {/* Buy Buttons in Lightbox */}
+              <BuyButtons
+                painting={activeLightboxItem}
+                compact
+                className="justify-center pt-1"
+              />
             </div>
           </div>
         </div>

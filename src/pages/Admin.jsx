@@ -9,6 +9,8 @@ import pagesDefaultInitial from '../data/pages.default.json'
 import PhotoDropZone from '../components/PhotoDropZone'
 import AdminBlockSlot from '../components/AdminBlockSlot'
 import PriceListModal from '../components/PriceListModal'
+import PaintingSaleEditor from '../components/PaintingSaleEditor'
+import BuyButtons from '../components/BuyButtons'
 import AdminMediaField from '../components/AdminMediaField'
 import { cleanVideoUrl } from '../components/PageBlocks'
 import SectionSpacingEditor from '../components/SectionSpacingEditor'
@@ -40,6 +42,9 @@ export default function Admin() {
   const [loadingBackups, setLoadingBackups] = useState(false)
   const [unsavedNavTarget, setUnsavedNavTarget] = useState(null)
   const [newMarketplace, setNewMarketplace] = useState({ name: '', domains: '', originalLabel: '', printsLabel: '', otherLabel: '', color: '#e05a47' })
+  const [paintingsFilter, setPaintingsFilter] = useState('all') // 'all' | 'for-sale' | 'needs-sale-info' | 'sold'
+  const [showBulkSaleEdit, setShowBulkSaleEdit] = useState(false)
+  const [showcaseFilter, setShowcaseFilter] = useState('all')
   const [savedPagesSnapshot, setSavedPagesSnapshot] = useState(() => JSON.stringify(pagesDataInitial))
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [bulkStatusValue, setBulkStatusValue] = useState('For Sale')
@@ -67,6 +72,13 @@ export default function Admin() {
     status: 'For Sale',
     sold: false,
     price: '',
+    sale: {
+      price: '',
+      showPrice: false,
+      needsSaleInfo: true,
+      contactOnly: false,
+      links: []
+    },
     youtubeUrl: '',
     videoId: '',
     thumbnail: '',
@@ -297,7 +309,16 @@ export default function Admin() {
       description: '',
       status: 'For Sale',
       sold: false,
+      status: 'For Sale',
+      sold: false,
       price: '',
+      sale: {
+        price: '',
+        showPrice: false,
+        needsSaleInfo: true,
+        contactOnly: false,
+        links: []
+      },
       youtubeUrl: '',
       videoId: '',
       thumbnail: '',
@@ -322,6 +343,13 @@ export default function Admin() {
     const finalCategories = Array.isArray(form.categories) && form.categories.length ? form.categories : [primaryCategory]
     const status = form.status || (form.sold ? 'Sold' : (form.price ? 'For Sale' : ''))
     const sold = status === 'Sold'
+    const sale = form.sale || {
+      price: form.price ? Number(form.price) : null,
+      showPrice: false,
+      needsSaleInfo: status === 'For Sale' && !form.sale?.links?.length && !form.sale?.contactOnly,
+      contactOnly: false,
+      links: []
+    }
 
     const newEntry = {
       id: paintingId,
@@ -331,6 +359,7 @@ export default function Admin() {
       status: status,
       sold: sold,
       price: form.price ? Number(form.price) : null,
+      sale: sale,
       photo: form.photo || form.customImage || '',
       customImage: form.photo || form.customImage || '',
       originalImage: form.photo || form.customImage || '',
@@ -383,6 +412,13 @@ export default function Admin() {
         status: form.status || 'For Sale',
         sold: form.status === 'Sold',
         price: form.price ? Number(form.price) : null,
+        sale: {
+          price: form.price ? Number(form.price) : null,
+          showPrice: false,
+          needsSaleInfo: true,
+          contactOnly: false,
+          links: form.sale?.links || []
+        },
         photo: r.url,
         customImage: r.url,
         originalImage: r.url,
@@ -563,6 +599,13 @@ export default function Admin() {
       status: p.status || (p.sold ? 'Sold' : (p.price ? 'For Sale' : '')),
       sold: !!(p.sold || p.status === 'Sold'),
       price: p.price ? p.price.toString() : '',
+      sale: p.sale || {
+        price: p.price ? p.price.toString() : '',
+        showPrice: false,
+        needsSaleInfo: Boolean(p.sale?.needsSaleInfo),
+        contactOnly: Boolean(p.sale?.contactOnly),
+        links: Array.isArray(p.sale?.links) ? p.sale.links : []
+      },
       youtubeUrl: p.youtubeUrl || (p.videoId ? `https://www.youtube.com/watch?v=${p.videoId}` : ''),
       videoId: p.videoId || '',
       thumbnail: p.thumbnail || '',
@@ -858,6 +901,68 @@ export default function Admin() {
       setSite(prev => ({ ...prev, marketplaces: cur.filter(m => m.id !== id) }))
       setToolbarNotice('Marketplace removed (click Save Content to persist)')
       setTimeout(() => setToolbarNotice(''), 4000)
+    }
+  }
+
+  const handleBulkSaleFieldChange = (paintingId, linkIndex, field, value) => {
+    setPaintings(prev => prev.map(p => {
+      if (p.id !== paintingId) return p
+      const curSale = p.sale || { price: p.price, showPrice: false, needsSaleInfo: false, contactOnly: false, links: [] }
+      const links = Array.isArray(curSale.links) ? [...curSale.links] : []
+      if (linkIndex === -1) {
+        if (field === 'price') return { ...p, price: value, sale: { ...curSale, price: value } }
+        if (field === 'showPrice') return { ...p, sale: { ...curSale, showPrice: value } }
+        if (field === 'contactOnly') return { ...p, sale: { ...curSale, contactOnly: value, needsSaleInfo: value ? false : curSale.needsSaleInfo } }
+        return { ...p, [field]: value }
+      }
+      if (!links[linkIndex]) {
+        links[linkIndex] = { marketplaceId: 'fineartamerica', kind: 'both', url: '' }
+      }
+      const updatedLink = { ...links[linkIndex], [field]: value }
+      if (field === 'url') {
+        const detected = detectMarketplace(value, getMarketplaces(site))
+        if (detected && detected !== 'other') updatedLink.marketplaceId = detected
+      }
+      links[linkIndex] = updatedLink
+      return {
+        ...p,
+        sale: {
+          ...curSale,
+          links,
+          needsSaleInfo: links.some(l => l.url) ? false : curSale.needsSaleInfo
+        }
+      }
+    }))
+  }
+
+  const handleAddBulkSaleLink = (paintingId) => {
+    setPaintings(prev => prev.map(p => {
+      if (p.id !== paintingId) return p
+      const curSale = p.sale || { price: p.price, showPrice: false, needsSaleInfo: false, contactOnly: false, links: [] }
+      const links = Array.isArray(curSale.links) ? [...curSale.links] : []
+      links.push({ marketplaceId: 'fineartamerica', kind: 'both', url: '' })
+      return {
+        ...p,
+        sale: { ...curSale, links, needsSaleInfo: false }
+      }
+    }))
+  }
+
+  const handleSaveAllBulkPaintings = async () => {
+    try {
+      const res = await fetch('/__api/paintings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paintings })
+      })
+      if (res.ok) {
+        setToolbarNotice('✓ All painting sale changes saved!')
+        setTimeout(() => setToolbarNotice(''), 4000)
+      } else {
+        alert('Failed to save paintings')
+      }
+    } catch (e) {
+      alert('Error saving paintings: ' + e.message)
     }
   }
 
@@ -1700,65 +1805,33 @@ export default function Admin() {
 
             </div>
 
-            {/* Sales, Status & Links */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2 border-t border-white/5">
-              
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Status Badge</label>
-                <select
-                  value={form.status || (form.sold ? 'Sold' : '')}
-                  onChange={e => {
-                    const val = e.target.value
-                    setForm({ ...form, status: val, sold: val === 'Sold' })
-                  }}
-                  className="w-full bg-[#13111c] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                >
-                  <option value="">None (No badge)</option>
-                  <option value="For Sale">For Sale</option>
-                  <option value="Sold">Sold</option>
-                  <option value="Not Available for Sale">Not Available for Sale</option>
-                  <option value="Reserved">Reserved</option>
-                </select>
-              </div>
+            {/* Sales, Status & Where to Buy */}
+            <div className="pt-2 border-t border-white/5 space-y-4">
+              <PaintingSaleEditor
+                status={form.status || (form.sold ? 'Sold' : '')}
+                onStatusChange={st => setForm({ ...form, status: st, sold: st === 'Sold' })}
+                sale={form.sale || { price: form.price, showPrice: false, needsSaleInfo: false, contactOnly: false, links: [] }}
+                onSaleChange={sl => setForm({ ...form, sale: sl, price: sl.price || form.price })}
+                marketplaces={getMarketplaces(site)}
+              />
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Price (USD) - Optional</label>
-                <input
-                  type="number"
-                  placeholder="e.g. 350"
-                  value={form.price}
-                  onChange={e => setForm({ ...form, price: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Optional Video URL</label>
-                <input
-                  type="url"
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  value={form.youtubeUrl}
-                  onChange={e => {
-                    const url = e.target.value
-                    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
-                    const vid = match ? match[1] : form.videoId
-                    setForm({ ...form, youtubeUrl: url, videoId: vid })
-                  }}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Fine Art America URL (Prints)</label>
-                <input
-                  type="url"
-                  placeholder="https://fineartamerica.com/..."
-                  value={form.fineArtAmericaUrl}
-                  onChange={e => setForm({ ...form, fineArtAmericaUrl: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
-                />
-              </div>
-
+              {paintingMode === 'photo' && (
+                <div className="max-w-md">
+                  <label className="block text-xs font-medium text-slate-300 mb-1">Optional Video Demonstration URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={form.youtubeUrl}
+                    onChange={e => {
+                      const url = e.target.value
+                      const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{11})/i)
+                      const vid = match ? match[1] : form.videoId
+                      setForm({ ...form, youtubeUrl: url, videoId: vid })
+                    }}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-studio-magenta"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Featured on Home Toggle */}
@@ -2048,48 +2121,211 @@ export default function Admin() {
             </button>
           </div>
 
-          {/* Bulk Action Bar */}
-          <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-200">
-                <input
-                  type="checkbox"
-                  checked={paintings.length > 0 && selectedIds.size === paintings.length}
-                  onChange={toggleSelectAll}
-                  className="w-4 h-4 rounded text-studio-magenta focus:ring-studio-magenta cursor-pointer"
-                />
-                <span>Select All ({paintings.length})</span>
-              </label>
-              {selectedIds.size > 0 && (
-                <span className="px-2 py-0.5 rounded-full bg-studio-magenta/20 text-studio-magenta font-semibold">
-                  {selectedIds.size} selected
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400">Set Status:</span>
-              <select
-                value={bulkStatusValue}
-                onChange={e => setBulkStatusValue(e.target.value)}
-                className="bg-[#13111c] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-studio-magenta"
-              >
-                <option value="">None (Clear badge)</option>
-                <option value="For Sale">For Sale</option>
-                <option value="Sold">Sold</option>
-                <option value="Not Available for Sale">Not Available for Sale</option>
-                <option value="Reserved">Reserved</option>
-              </select>
+          {/* Filters & Bulk Edit Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={handleApplyBulkStatus}
-                disabled={selectedIds.size === 0}
-                className="px-3.5 py-1.5 rounded-lg font-semibold bg-studio-gold text-black hover:bg-studio-gold-light disabled:opacity-40 disabled:cursor-not-allowed transition"
+                onClick={() => setPaintingsFilter('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  paintingsFilter === 'all'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                }`}
               >
-                Apply to Selected
+                All ({paintings.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaintingsFilter('for-sale')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  paintingsFilter === 'for-sale'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20'
+                }`}
+              >
+                For Sale ({paintings.filter(p => p.status === 'For Sale').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaintingsFilter('needs-sale-info')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                  paintingsFilter === 'needs-sale-info'
+                    ? 'bg-amber-600 text-white font-bold'
+                    : 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
+                }`}
+              >
+                <span>⚠️ Needs Sale Info</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 text-[10px] font-extrabold">
+                  {paintings.filter(p => p.sale?.needsSaleInfo).length}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaintingsFilter('sold')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  paintingsFilter === 'sold'
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20'
+                }`}
+              >
+                Sold ({paintings.filter(p => p.status === 'Sold' || p.sold).length})
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setShowBulkSaleEdit(!showBulkSaleEdit)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm ${
+                showBulkSaleEdit
+                  ? 'bg-studio-gold text-slate-950 font-bold'
+                  : 'bg-white/10 text-slate-200 hover:bg-white/15'
+              }`}
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>{showBulkSaleEdit ? 'Close Bulk Sale Editor' : 'Quick Bulk Edit Sale Links'}</span>
+            </button>
           </div>
+
+          {/* BULK EDIT SALE LINKS TABLE */}
+          {showBulkSaleEdit && (
+            <div className="bg-slate-900 border border-white/15 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3">
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4 text-studio-gold" />
+                    <span>Quick Bulk Edit: For Sale Artwork Links</span>
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Paste marketplace links, edit prices, and test destinations for your artworks. Marketplace is auto-detected from URL.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveAllBulkPaintings}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-studio-gold text-slate-950 hover:bg-studio-gold-light transition flex items-center gap-1.5 shadow"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save All Changes</span>
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-white/10 text-slate-400 text-[11px] uppercase">
+                      <th className="py-2 px-3">Artwork</th>
+                      <th className="py-2 px-3">Price ($)</th>
+                      <th className="py-2 px-3">Direct Contact</th>
+                      <th className="py-2 px-3">Marketplace</th>
+                      <th className="py-2 px-3">Kind</th>
+                      <th className="py-2 px-3">Direct Artwork URL</th>
+                      <th className="py-2 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {paintings.filter(p => p.status === 'For Sale' || p.sale?.needsSaleInfo || p.sale?.links?.length > 0).map(p => {
+                      const curSale = p.sale || {}
+                      const links = Array.isArray(curSale.links) && curSale.links.length > 0
+                        ? curSale.links
+                        : [{ marketplaceId: 'fineartamerica', kind: 'both', url: '' }]
+                      const img = p.photo || p.customImage || p.thumbnail
+                      return links.map((link, lIdx) => (
+                        <tr key={`${p.id}-${lIdx}`} className="hover:bg-white/[0.02]">
+                          <td className="py-2.5 px-3">
+                            <div className="flex items-center gap-2">
+                              {img && <img src={img} alt="" className="w-9 h-9 object-cover rounded border border-white/10 shrink-0" />}
+                              <div className="min-w-0">
+                                <div className="font-semibold text-white truncate max-w-[160px]">{p.title}</div>
+                                {p.sale?.needsSaleInfo && (
+                                  <span className="text-[9px] text-amber-400 bg-amber-500/20 px-1.5 py-0.2 rounded font-bold">Needs sale info</span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <input
+                              type="text"
+                              value={p.price || curSale.price || ''}
+                              onChange={e => handleBulkSaleFieldChange(p.id, -1, 'price', e.target.value)}
+                              placeholder="e.g. 250"
+                              className="w-20 bg-slate-950 border border-white/10 rounded px-2 py-1 text-xs text-white"
+                            />
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={Boolean(curSale.contactOnly)}
+                              onChange={e => handleBulkSaleFieldChange(p.id, -1, 'contactOnly', e.target.checked)}
+                              className="w-4 h-4 rounded border-white/20 bg-slate-950 text-studio-gold cursor-pointer"
+                              title="No online link: people contact me"
+                            />
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <select
+                              value={link.marketplaceId || 'other'}
+                              onChange={e => handleBulkSaleFieldChange(p.id, lIdx, 'marketplaceId', e.target.value)}
+                              disabled={curSale.contactOnly}
+                              className="bg-slate-950 border border-white/10 rounded px-2 py-1 text-xs text-white disabled:opacity-40"
+                            >
+                              {getMarketplaces(site).map(m => (
+                                <option key={m.id} value={m.id}>{m.name}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <select
+                              value={link.kind || 'both'}
+                              onChange={e => handleBulkSaleFieldChange(p.id, lIdx, 'kind', e.target.value)}
+                              disabled={curSale.contactOnly}
+                              className="bg-slate-950 border border-white/10 rounded px-2 py-1 text-xs text-white disabled:opacity-40"
+                            >
+                              <option value="original">Original</option>
+                              <option value="prints">Prints</option>
+                              <option value="both">Both</option>
+                            </select>
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <input
+                              type="text"
+                              value={link.url || ''}
+                              onChange={e => handleBulkSaleFieldChange(p.id, lIdx, 'url', e.target.value)}
+                              disabled={curSale.contactOnly}
+                              placeholder="https://..."
+                              className="w-full min-w-[200px] bg-slate-950 border border-white/10 rounded px-2.5 py-1 text-xs text-white disabled:opacity-40 font-mono"
+                            />
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                disabled={!link.url}
+                                onClick={() => window.open(link.url.startsWith('http') ? link.url : `https://${link.url}`, '_blank', 'noopener,noreferrer')}
+                                className="p-1 rounded bg-white/5 hover:bg-white/15 text-slate-300 disabled:opacity-30"
+                                title="Test link"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </button>
+                              {lIdx === links.length - 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddBulkSaleLink(p.id)}
+                                  className="p-1 rounded bg-studio-gold/20 hover:bg-studio-gold/30 text-studio-gold"
+                                  title="Add another marketplace link"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {paintings.map(painting => {
@@ -2755,10 +2991,40 @@ export default function Admin() {
                       {/* Currently showcased — reorder & customize */}
                       {featuredItems.length > 0 && (
                         <div className="space-y-2 p-3 rounded-xl bg-studio-magenta/5 border border-studio-magenta/20">
-                          <p className="text-[11px] font-semibold text-studio-magenta uppercase tracking-wider">
-                            Currently Showcased — click ▸ to customize each card
-                          </p>
-                          {featuredItems.map((fi, idx) => {
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-[11px] font-semibold text-studio-magenta uppercase tracking-wider">
+                              Currently Showcased — click ▸ to customize each card
+                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setShowcaseFilter('all')}
+                                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition ${
+                                  showcaseFilter === 'all' ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'
+                                }`}
+                              >
+                                All ({featuredItems.length})
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowcaseFilter('needs-sale-info')}
+                                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition flex items-center gap-1 ${
+                                  showcaseFilter === 'needs-sale-info'
+                                    ? 'bg-amber-500 text-slate-950 font-bold'
+                                    : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
+                                }`}
+                              >
+                                <span>⚠️ Needs Sale Info</span>
+                                <span className="px-1 rounded-full bg-amber-400 text-slate-950 text-[9px] font-extrabold">
+                                  {featuredItems.filter(fi => fi.sale?.needsSaleInfo).length}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {featuredItems
+                            .filter(fi => showcaseFilter === 'all' || (showcaseFilter === 'needs-sale-info' && fi.sale?.needsSaleInfo))
+                            .map((fi, idx) => {
                             const isExpanded = showcaseExpandedId === fi.id
                             const displayThumb = fi.highlightPhoto || fi.thumb
                             return (
@@ -2769,6 +3035,11 @@ export default function Admin() {
                                     <img src={displayThumb} alt={fi.title} className="w-10 h-10 object-cover rounded-md flex-shrink-0" />
                                   )}
                                   <span className="flex-1 text-xs text-white truncate">{fi.title}</span>
+                                  {fi.sale?.needsSaleInfo && (
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0 font-bold">
+                                      ⚠️ Needs sale info
+                                    </span>
+                                  )}
                                   {fi.badge && (
                                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-900/60 text-emerald-300 border border-emerald-500/30 shrink-0">{fi.badge}</span>
                                   )}
@@ -2801,31 +3072,23 @@ export default function Admin() {
                                 {isExpanded && (
                                   <div className="border-t border-white/10 p-3 space-y-3 bg-black/20">
                                     <p className="text-[10px] text-studio-magenta font-semibold uppercase tracking-wider">Customize "{fi.title}"</p>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div className="space-y-3">
                                       <div>
                                         <label className="block text-[11px] font-medium text-slate-400 mb-1">Custom Display Title</label>
                                         <input type="text" value={fi.title}
                                           onChange={e => updateFeaturedItem(fi.id, { title: e.target.value })}
                                           className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
                                       </div>
-                                      <div>
-                                        <label className="block text-[11px] font-medium text-slate-400 mb-1">Badge / Status Label</label>
-                                        <input type="text" placeholder="e.g. For Sale, Sold, New" value={fi.badge}
-                                          onChange={e => updateFeaturedItem(fi.id, { badge: e.target.value })}
-                                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
-                                      </div>
-                                      <div>
-                                        <label className="block text-[11px] font-medium text-slate-400 mb-1">Price (numbers only, e.g. 350)</label>
-                                        <input type="text" placeholder="e.g. 350" value={fi.price}
-                                          onChange={e => updateFeaturedItem(fi.id, { price: e.target.value })}
-                                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
-                                      </div>
-                                      <div>
-                                        <label className="block text-[11px] font-medium text-slate-400 mb-1">Fine Art America Print URL</label>
-                                        <input type="text" placeholder="https://fineartamerica.com/..." value={fi.fineArtAmericaUrl || ''}
-                                          onChange={e => updateFeaturedItem(fi.id, { fineArtAmericaUrl: e.target.value })}
-                                          className="w-full bg-[#13111c] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white" />
-                                      </div>
+
+                                      {/* Replaces old Badge, Price, and FAA Print URL with PaintingSaleEditor */}
+                                      <PaintingSaleEditor
+                                        status={fi.badge || ''}
+                                        onStatusChange={st => updateFeaturedItem(fi.id, { badge: st })}
+                                        sale={fi.sale || { price: fi.price, showPrice: false, needsSaleInfo: false, contactOnly: false, links: [] }}
+                                        onSaleChange={sl => updateFeaturedItem(fi.id, { sale: sl, price: sl.price || fi.price })}
+                                        marketplaces={getMarketplaces(site)}
+                                        compact
+                                      />
                                     </div>
                                     <div>
                                       <label className="block text-[11px] font-medium text-slate-400 mb-1">Custom Display Photo (overrides default thumbnail)</label>
