@@ -6,6 +6,7 @@ import paintingsData from '../data/paintings.json'
 import pagesData from '../data/pages.json'
 import PageBlocks, { BlockVideoEmbed, MediaEmbed } from '../components/PageBlocks'
 import SectionWrap from '../components/SectionWrap'
+import BuyButtons from '../components/BuyButtons'
 
 export default function Home() {
   const [paintings, setPaintings] = useState(paintingsData)
@@ -52,6 +53,7 @@ export default function Home() {
           category: fi.category || livePainting?.category || '',
           medium: fi.medium || livePainting?.medium || '',
           size: fi.size || livePainting?.size || '',
+          sale: fi.sale || livePainting?.sale || null,
         }
       })
     : paintings.filter(p => p.featured || p.highlighted).slice(0, 4)
@@ -234,25 +236,7 @@ export default function Home() {
                       )}
                     </div>
                     
-                    <div className="flex items-center gap-2 pt-1">
-                      <Link
-                        to={`/contact?inquiry=${encodeURIComponent(painting.title)}`}
-                        className="flex-1 py-1.5 px-2 rounded-lg text-xs font-medium text-center bg-white/5 hover:bg-studio-magenta hover:text-white text-slate-300 transition"
-                      >
-                        {homeText.inquireBtn || "Inquire / Buy"}
-                      </Link>
-                      {painting.fineArtAmericaUrl && (
-                        <a
-                          href={painting.fineArtAmericaUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="py-1.5 px-2.5 rounded-lg text-xs font-medium text-center bg-studio-gold/10 hover:bg-studio-gold hover:text-black text-studio-gold transition"
-                          title="Prints on Fine Art America"
-                        >
-                          {homeText.faaPrintBtn || "FAA Print"}
-                        </a>
-                      )}
-                    </div>
+                    <BuyButtons painting={painting} compact className="pt-1" />
                   </div>
 
                 </div>

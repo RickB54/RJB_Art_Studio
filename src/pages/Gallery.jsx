@@ -7,6 +7,7 @@ import initialSite from '../data/site.json'
 import pagesData from '../data/pages.json'
 import PageBlocks from '../components/PageBlocks'
 import SectionWrap from '../components/SectionWrap'
+import BuyButtons from '../components/BuyButtons'
 import { matchesSearch } from '../utils/search'
 
 const PAGE_SIZE = 24
@@ -149,6 +150,7 @@ export default function Gallery() {
           photo: originalImg,
           hasVideo: true,
           fineArtAmericaUrl: matched?.fineArtAmericaUrl || null,
+          sale: matched?.sale || null,
           youtubeUrl: `https://www.youtube.com/watch?v=${v.id}`
         })
       }
@@ -192,6 +194,7 @@ export default function Gallery() {
         photo: photoImg,
         hasVideo: Boolean(vid || pt.youtubeUrl),
         fineArtAmericaUrl: pt.fineArtAmericaUrl || null,
+        sale: pt.sale || null,
         youtubeUrl: pt.youtubeUrl || (vid ? `https://www.youtube.com/watch?v=${vid}` : null)
       })
     }
@@ -652,32 +655,14 @@ export default function Gallery() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 pt-1">
-                        {isForSale ? (
-                          <Link
-                            to={`/contact?inquiry=${encodeURIComponent(item.title)}`}
-                            className="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium text-center bg-white/5 hover:bg-studio-magenta hover:text-white text-slate-200 transition"
-                          >
-                            {galleryText.inquireBuyBtn || "Inquire / Buy"}
-                          </Link>
-                        ) : (
+                        <BuyButtons painting={item} compact />
+                        {(!isForSale && (!item.sale?.links || item.sale.links.length === 0)) && (
                           <Link
                             to={`/painting/${item.id}`}
                             className="flex-1 py-1.5 px-3 rounded-lg text-xs font-medium text-center bg-white/5 hover:bg-white/10 text-slate-300 transition"
                           >
                             {galleryText.viewArtworkBtn || "View Artwork"}
                           </Link>
-                        )}
-                        {item.fineArtAmericaUrl && (
-                          <a
-                            href={item.fineArtAmericaUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="py-1.5 px-3 rounded-lg text-xs font-medium text-center bg-studio-gold/15 hover:bg-studio-gold hover:text-black text-studio-gold transition flex items-center gap-1"
-                            title="Prints on Fine Art America"
-                          >
-                            <ShoppingBag className="w-3 h-3" />
-                            <span>{galleryText.faaPrintsBtn || "FAA Prints"}</span>
-                          </a>
                         )}
                       </div>
 
@@ -777,17 +762,7 @@ export default function Gallery() {
                   <Play className="w-4 h-4" />
                   <span>View Video & Story</span>
                 </Link>
-                {activePainting.fineArtAmericaUrl && (
-                  <a
-                    href={activePainting.fineArtAmericaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-studio-gold/15 border border-studio-gold/30 text-studio-gold hover:bg-studio-gold hover:text-black transition flex items-center gap-1.5"
-                  >
-                    <ShoppingBag className="w-4 h-4" />
-                    <span>Prints</span>
-                  </a>
-                )}
+                <BuyButtons painting={activePainting} compact />
               </div>
             </div>
           </div>

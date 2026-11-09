@@ -4,6 +4,7 @@ import { Play, ArrowLeft, ArrowRight, ShoppingBag, MessageSquare, Sparkles } fro
 import initialPaintings from '../data/paintings.json'
 import initialPlaylists from '../data/playlists.json'
 import initialPages from '../data/pages.json'
+import BuyButtons from '../components/BuyButtons'
 
 // Helper function to turn URLs in text into clickable links while preserving whitespace
 function renderDescriptionWithLinks(text) {
@@ -125,6 +126,7 @@ export default function PaintingDetail() {
           year: hasRealPaintingData ? (matched.year || ytYear) : ytYear,
           displayImage: originalImg || `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`,
           fineArtAmericaUrl: matched?.fineArtAmericaUrl || null,
+          sale: matched?.sale || null,
           hasVideo: true,
           youtubeUrl: `https://www.youtube.com/watch?v=${v.id}`
         })
@@ -159,6 +161,7 @@ export default function PaintingDetail() {
         year: pt.year || null,
         displayImage: photoImg || (vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : pt.thumbnail || '/images/placeholder.webp'),
         fineArtAmericaUrl: pt.fineArtAmericaUrl || null,
+        sale: pt.sale || null,
         hasVideo: Boolean(vid || pt.youtubeUrl),
         youtubeUrl: pt.youtubeUrl || (vid ? `https://www.youtube.com/watch?v=${vid}` : null)
       })
@@ -402,24 +405,15 @@ export default function PaintingDetail() {
 
           {/* Primary Action Buttons */}
           <div className="space-y-3 pt-2">
-            <Link
-              to={`/contact?inquiry=${encodeURIComponent(painting.title)}`}
-              className="w-full py-3 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 transition flex items-center justify-center gap-2"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>{painting.hasPaintingData && !painting.sold ? (pd.buyButtonText || 'Buy / Inquire About This Piece') : (pd.inquireButtonText || 'Inquire / Contact Studio')}</span>
-            </Link>
-
-            {painting.fineArtAmericaUrl && (
-              <a
-                href={painting.fineArtAmericaUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 rounded-xl text-xs sm:text-sm font-semibold bg-studio-gold/15 border border-studio-gold/40 text-studio-gold hover:bg-studio-gold hover:text-black transition flex items-center justify-center gap-2 shadow-sm"
+            <BuyButtons painting={painting} className="w-full flex-col [&>a]:w-full [&>a]:justify-center [&>a]:py-3 [&>a]:text-sm" />
+            {(!painting.status || painting.status === 'Not for sale' || painting.status === 'none') && (!painting.sale?.links || painting.sale.links.length === 0) && (
+              <Link
+                to={`/contact?inquiry=${encodeURIComponent(painting.title)}`}
+                className="w-full py-3 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-studio-magenta to-studio-purple text-white shadow-glow-magenta hover:opacity-95 transition flex items-center justify-center gap-2"
               >
-                <ShoppingBag className="w-4 h-4" />
-                <span>{pd.printsButtonText || 'Order Prints on Fine Art America'}</span>
-              </a>
+                <MessageSquare className="w-4 h-4" />
+                <span>{pd.inquireButtonText || 'Inquire / Contact Studio'}</span>
+              </Link>
             )}
           </div>
 

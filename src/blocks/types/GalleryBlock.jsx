@@ -467,7 +467,7 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
         ) : (
           <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
             {items.map((it, idx) => (
-              <React.Fragment key={it.id || idx}>
+              <div key={it.id || idx} className="space-y-1">
                 <div
                   className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition"
                 >
@@ -566,7 +566,7 @@ export function GalleryBlockEditor({ block, onUpdateField, onUpdateBlock }) {
                   />
                 </div>
               )}
-              </React.Fragment>
+              </div>
             ))}
           </div>
         )}
